@@ -5,8 +5,9 @@ Word of warning - there are a few errors and typos in the tutorial.
 import numpy as np
 from typing import Callable, Tuple
 
-from unc.envs import CompassWorld, BlurryCompassWorld
-from unc.particle_filter import step
+from unc.envs import CompassWorld
+from unc.envs.wrappers import BlurryWrapper
+from unc.particle_filter import step, state_stats
 
 
 def effective_sample_size(weights: np.ndarray) -> float:
@@ -23,25 +24,6 @@ def pidxes(state: np.ndarray, particles: np.ndarray) -> list:
             idxes.append(i)
 
     return idxes
-
-
-def state_stats(particles: np.ndarray, weights: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Return the mean and std dev of the three state variables
-    :param particles:
-    :param weights:
-    :return:
-    """
-    mean = np.zeros_like(particles[0], dtype=np.float32)
-    variance = np.zeros_like(particles[0], dtype=np.float32)
-
-    for i, (p, w) in enumerate(zip(particles, weights)):
-        mean += w.astype(np.float32) * p.astype(np.float32)
-
-    for i, (p, w) in enumerate(zip(particles, weights)):
-        variance += w.astype(np.float32) * ((p.astype(np.float32) - mean) ** 2)
-
-    return mean, variance
 
 
 def run_pf_random_policy(env: CompassWorld,
@@ -131,7 +113,8 @@ def test_BlurryCW():
 
     for i, seed in enumerate(seeds):
         np.random.seed(seed)
-        env = BlurryCompassWorld(seed=seed, random_start=True, blur_prob=blur_prob)
+        env = CompassWorld(seed=seed, random_start=True)
+        env = BlurryWrapper(env, blur_prob=blur_prob)
         steps_to_one[i], updates_to_one[i] = run_pf_random_policy(env, log_interval=log_interval, weight_update_interval=weight_update_interval)
 
     print(f"Finished running {n_runs}. "

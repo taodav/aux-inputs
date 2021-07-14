@@ -7,4 +7,4 @@ def save_info(results_path: Path, info: dict):
 
 
 def load_info(results_path: Path):
-    return np.load(results_path).item()
+    return np.load(results_path, allow_pickle=True).item()

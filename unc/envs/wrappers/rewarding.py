@@ -1,21 +1,21 @@
 import numpy as np
-from unc.envs.compass import CompassWorld
+
+from .wrapper import CompassWorldWrapper
 
 
-class RewardingCompassWorld(CompassWorld):
+class RewardingWrapper(CompassWorldWrapper):
     """
     Compass World where you get rewarded if you're directly facing the green wall.
     """
+    priority = 1
 
     def get_reward(self) -> int:
-        obs = self.get_obs(self.state)
-        if obs[4] == 1:
+        if self.state == np.array([1, 1, 3]):
             return 1
         return 0
 
     def get_terminal(self) -> bool:
-        obs = self.get_obs(self.state)
-        if obs[4] == 1:
+        if self.state == np.array([1, 1, 3]):
             return True
         return False
 
@@ -32,10 +32,10 @@ class RewardingCompassWorld(CompassWorld):
             delete_mask = np.ones_like(eligible_state_indices, dtype=np.bool)
             delete_mask[remove_idx] = False
             eligible_state_indices = eligible_state_indices[delete_mask, ...]
-            start_state_idx = self._rng.choice(eligible_state_indices)
+            start_state_idx = self.rng.choice(eligible_state_indices)
 
             self.state = all_states[start_state_idx]
         else:
-            self.state = np.array([3, 3, self._rng.choice(np.arange(0, 4))], dtype=np.int16)
+            self.state = np.array([3, 3, self.rng.choice(np.arange(0, 4))], dtype=np.int16)
 
         return self.get_obs(self.state)

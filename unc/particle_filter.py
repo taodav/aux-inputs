@@ -2,6 +2,25 @@ import numpy as np
 from typing import Callable, Tuple
 
 
+def state_stats(particles: np.ndarray, weights: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Return the mean and std dev of the three state variables
+    :param particles:
+    :param weights:
+    :return:
+    """
+    mean = np.zeros_like(particles[0], dtype=np.float32)
+    variance = np.zeros_like(particles[0], dtype=np.float32)
+
+    for i, (p, w) in enumerate(zip(particles, weights)):
+        mean += w.astype(np.float32) * p.astype(np.float32)
+
+    for i, (p, w) in enumerate(zip(particles, weights)):
+        variance += w.astype(np.float32) * ((p.astype(np.float32) - mean) ** 2)
+
+    return mean, variance
+
+
 def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
          transition_fn: Callable,
          emit_prob: Callable,

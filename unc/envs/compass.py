@@ -15,12 +15,20 @@ class CompassWorld(gym.Env):
         self.action_space = gym.spaces.Discrete(3)
         self.size = size
         self.random_start = random_start
-        self._rng = np.random.RandomState(seed)
+        self.rng = np.random.RandomState(seed)
 
         self._state_max = [6, 6, 3]
         self._state_min = [1, 1, 0]
 
         self._state = None
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, state: np.ndarray):
+        self._state = state
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         obs = np.zeros(5)

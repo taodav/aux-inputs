@@ -1,10 +1,15 @@
 import numpy as np
+from typing import Union
 
-from .compass import CompassWorld
+from unc.envs.wrappers import CompassWorldWrapper
+from unc.envs.compass import CompassWorld
 
 
-class BlurryCompassWorld(CompassWorld):
-    def __init__(self, blur_prob: float = 0.1, **kwargs):
+class BlurryWrapper(CompassWorldWrapper):
+    priority = 1
+
+    def __init__(self, env: Union[CompassWorld, CompassWorldWrapper],
+                 blur_prob: float = 0.1, *args, **kwargs):
         """
         Stochastic version of Compass World where the observation emittance function is stochastic.
         We add stochasticity by changing our observation function to emit a different colored wall
@@ -12,17 +17,17 @@ class BlurryCompassWorld(CompassWorld):
         :param blur_prob:
         :param kwargs:
         """
-        super(BlurryCompassWorld, self).__init__(**kwargs)
+        super(BlurryWrapper, self).__init__(env, *args, **kwargs)
         self.blur_prob = blur_prob
 
         assert self.blur_prob <= 1.0, "Probability exceeds 1."
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
 
-        if self._rng.random() < self.blur_prob:
+        if self.rng.random() < self.blur_prob:
             # In this case, we select a random color to emit.
             obs = np.zeros(5)
-            random_idx = self._rng.choice(np.arange(self.observation_space.shape[0]))
+            random_idx = self.rng.choice(np.arange(self.observation_space.shape[0]))
             obs[random_idx] = 1
             return obs
 

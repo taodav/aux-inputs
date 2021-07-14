@@ -11,6 +11,7 @@ from unc.agents import Agent
 
 class Trainer:
     def __init__(self, args: Args, agent: Agent, env: gym.Env):
+        self.args = args
         self.discounting = args.discounting
         self.epsilon = args.epsilon
         self.total_steps = args.total_steps
@@ -35,7 +36,9 @@ class Trainer:
         self.info = {
             'episode_reward': [],
             'episode_length': [],
-            'loss': []
+            'reward': [],
+            'loss': [],
+            'args': self.args.as_dict()
         }
         self.num_steps = 0
 
@@ -56,6 +59,8 @@ class Trainer:
                     action = self.agent.act(obs).item()
 
                 next_obs, reward, done, info = self.env.step(action)
+
+                self.info['reward'].append(reward)
 
                 # Preprocess everything for updating
                 next_obs, reward, done, info, action = self.preprocess_step(next_obs, reward, done, info, action)

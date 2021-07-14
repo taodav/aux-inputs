@@ -13,13 +13,18 @@ if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
 
+    # Some argument post-processing
+    results_fname = get_results_fname(args)
+    args.results_fname = results_fname
+
     # Seeding
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     rng = np.random.RandomState(args.seed)
 
     # Initializing our environment
-    env_class = get_env(args.env)
+    # TODO: TEST THIS
+    env_class = get_env(args.seed, env_str=args.env, blur_prob=args.blur_prob)
     train_env = env_class(seed=args.seed, random_start=args.random_start)
 
     # Initialize model, optimizer and agent
@@ -37,7 +42,7 @@ if __name__ == "__main__":
 
     # Save results
     results_fname = get_results_fname(args)
-    results_path = args.results_dir / results_fname
+    results_path = args.results_dir / args.results_fname
     print(f"Saving results to {results_path}")
     save_info(results_path, trainer.get_info())
 

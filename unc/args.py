@@ -10,13 +10,17 @@ from definitions import ROOT_DIR
 class Args(Tap):
     env: str = "sr"
     """
-    What environment do we use? combine keys as follows:
+    What environment do we use? combine the following keys in any order:
+    (order will be dictated by priority of components (check priorities in their corresponding wrappers))
     r = reward
-    sr = state observations + reward
-    (NOT IMPLEMENTED) pr = particle filter + reward
+    s = ground-truth state concatenated to observation
+    b = with some prob., sample a random observation over the ground-truth. "Blurry observations" 
+    p = particle filter observations, where the mean and variance of the particles are prepended to observation
+    m = (NOT IMPLEMENTED) particle filter MEAN particles observations + reward
     """
-    total_steps: int = 10000  # Total number of steps to take
-    max_episode_steps: int = 500  # Maximum number of steps in an episode
+    total_steps: int = 20000  # Total number of steps to take
+    max_episode_steps: int = 1000  # Maximum number of steps in an episode
+    blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100  # How many nodes in our hidden layer of our neural network?
