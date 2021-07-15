@@ -10,12 +10,12 @@ class RewardingWrapper(CompassWorldWrapper):
     priority = 1
 
     def get_reward(self) -> int:
-        if self.state == np.array([1, 1, 3]):
+        if (self.state == np.array([1, 1, 3])).all():
             return 1
         return 0
 
     def get_terminal(self) -> bool:
-        if self.state == np.array([1, 1, 3]):
+        if (self.state == np.array([1, 1, 3])).all():
             return True
         return False
 
@@ -39,3 +39,8 @@ class RewardingWrapper(CompassWorldWrapper):
             self.state = np.array([3, 3, self.rng.choice(np.arange(0, 4))], dtype=np.int16)
 
         return self.get_obs(self.state)
+
+    def step(self, action: int):
+        obs, _, _, info = self.env.step(action)
+
+        return obs, self.get_reward(), self.get_terminal(), info

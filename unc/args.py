@@ -21,6 +21,7 @@ class Args(Tap):
     total_steps: int = 20000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
+    update_weight_interval: int = 1  # How often do we update our particle weights?
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100  # How many nodes in our hidden layer of our neural network?

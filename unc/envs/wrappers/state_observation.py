@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from typing import Union
+from typing import Union, Tuple
 
 from unc.envs.wrappers import CompassWorldWrapper
 from unc.envs import CompassWorld
@@ -21,9 +21,20 @@ class StateObservationWrapper(CompassWorldWrapper):
         self.observation_space = gym.spaces.Box(low=np.array([1, 1, 0, 0, 0, 0, 0, 0]), high=np.array([6, 6, 3, 1, 1, 1, 1, 1]), dtype=np.int16)
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
-        obs = super(StateObservationWrapper, self).get_obs(state)
-        state = self.state.copy()
+        obs = self.env.get_obs(state)
+        state = state.copy()
         
         return np.concatenate((state, obs), axis=0)
+
+    def reset(self, **kwargs) -> np.ndarray:
+        self.env.reset(**kwargs)
+        return self.get_obs(self.state)
+
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
+        _, reward, done, info = self.env.step(action)
+
+        return self.get_obs(self.state), reward, done, info
+
+
 
 

@@ -11,8 +11,9 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
     """
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
     run_dict = {
-        'env': ['sr', 'r'],
-        'seed': [(i + 2020) for i in range(30)]
+        'env': ['sr', 'r', 'pr'],
+        'update_weight_interval': [1, 100, 300],
+        'seed': [(i + 2020) for i in range(10)]
     }
 
     runs_path = runs_dir / runs_fname
@@ -29,8 +30,24 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
 
     for i, args in enumerate(product(*values)):
         run_string = "python main.py"
+
+        # We do some filtering based on whether or not this is a particle filter run
+        is_pf_run = False
         for k, v in zip(keys, args):
-            run_string += f" --{k.replace('_', '-')} {v}"
+            if k == "env" and "p" in v:
+                is_pf_run = True
+
+        skip = False
+        for k, v in zip(keys, args):
+            if not is_pf_run and k == 'update_weight_interval' and v > 1:
+                # Since non-pf runs don't use this hyperparam, skip the ones not needed
+                skip = True
+                break
+            run_string += f" --{k} {v}"
+
+        if skip:
+            continue
+
         run_string += "\n"
         f.write(run_string)
 

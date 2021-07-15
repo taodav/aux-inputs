@@ -14,8 +14,10 @@ class ParticleFilterWrapper(CompassWorldWrapper):
     Observations are structured like so:
     [mean_y, var_y, mean_x, var_x, mean_dir, var_dir, *obs]
     """
+    priority = 2
 
-    def __init__(self, env: Union[CompassWorld, CompassWorldWrapper], *args, **kwargs):
+    def __init__(self, env: Union[CompassWorld, CompassWorldWrapper], *args,
+                 update_weight_interval: int = 1, **kwargs):
         super(ParticleFilterWrapper, self).__init__(env, *args, **kwargs)
 
         self.observation_space = gym.spaces.Box(
@@ -24,10 +26,8 @@ class ParticleFilterWrapper(CompassWorldWrapper):
 
         self.particles = None
         self.weights = None
-
-    @property
-    def priority(self) -> int:
-        return 2
+        self.env_step = 0
+        self.update_weight_interval = update_weight_interval
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         """
@@ -36,30 +36,32 @@ class ParticleFilterWrapper(CompassWorldWrapper):
         :return:
         """
         mean, variance = state_stats(self.particles, self.weights)
-        pf_state = np.array(list(zip(mean, variance)))
+        pf_state = np.array(list(zip(mean, variance))).flatten()
         
-        original_obs = super(ParticleFilterWrapper, self).get_obs(state)
+        original_obs = self.env.get_obs(state)
         return np.concatenate((pf_state, original_obs), axis=0)
 
     def reset(self, **kwargs) -> np.ndarray:
-        super(ParticleFilterWrapper, self).reset(**kwargs)
+        self.env.reset(**kwargs)
         # Instantiate particles and weights
         self.particles = self.sample_all_states()
         self.weights = np.ones(self.particles.shape[0]) / self.particles.shape[0]
 
         # Update them based on the first observation
-        original_obs = super(ParticleFilterWrapper, self).get_obs(self.state)
+        original_obs = self.env.get_obs(self.state)
         self.weights, self.particles = step(self.weights, self.particles, original_obs,
                                             self.transition, self.emit_prob)
 
         return self.get_obs(self.state)
 
     def step(self, action: int):
-        original_obs, reward, done, info = super(ParticleFilterWrapper, self).step(action)
+        original_obs, reward, done, info = self.env.step(action)
+        self.env_step += 1
 
         # Update our particles and weights after doing a transition
         self.weights, self.particles = step(self.weights, self.particles, original_obs,
-                                            self.transition, self.emit_prob)
+                                            self.transition, self.emit_prob, action=action,
+                                            update_weights=self.env_step % self.update_weight_interval == 0)
 
         return self.get_obs(self.state), reward, done, info
 

@@ -24,8 +24,7 @@ if __name__ == "__main__":
 
     # Initializing our environment
     # TODO: TEST THIS
-    env_class = get_env(args.seed, env_str=args.env, blur_prob=args.blur_prob)
-    train_env = env_class(seed=args.seed, random_start=args.random_start)
+    train_env = get_env(args.seed, env_str=args.env, blur_prob=args.blur_prob, random_start=args.random_start)
 
     # Initialize model, optimizer and agent
     model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
