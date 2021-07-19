@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union
+from typing import Union, Tuple
 
 from unc.envs.wrappers import CompassWorldWrapper
 from unc.envs.compass import CompassWorld
@@ -31,13 +31,21 @@ class BlurryWrapper(CompassWorldWrapper):
             obs[random_idx] = 1
             return obs
 
-        return super(BlurryCompassWorld, self).get_obs(state)
+        return super(BlurryWrapper, self).get_obs(state)
 
     def emit_prob(self, state: np.ndarray, obs: np.ndarray) -> float:
 
-        ground_truth_obs = super(BlurryCompassWorld, self).get_obs(state)
+        ground_truth_obs = super(BlurryWrapper, self).get_obs(state)
         if (ground_truth_obs == obs).all():
             return (1 - self.blur_prob) + self.blur_prob
 
         return self.blur_prob
 
+    def reset(self, **kwargs) -> np.ndarray:
+        self.env.reset(**kwargs)
+        return self.get_obs(self.state)
+
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
+        _, reward, done, info = self.env.step(action)
+
+        return self.get_obs(self.state), reward, done, info

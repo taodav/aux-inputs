@@ -1,60 +1,180 @@
-python main.py --env sr --seed 2020
-python main.py --env sr --seed 2021
-python main.py --env sr --seed 2022
-python main.py --env sr --seed 2023
-python main.py --env sr --seed 2024
-python main.py --env sr --seed 2025
-python main.py --env sr --seed 2026
-python main.py --env sr --seed 2027
-python main.py --env sr --seed 2028
-python main.py --env sr --seed 2029
-python main.py --env sr --seed 2030
-python main.py --env sr --seed 2031
-python main.py --env sr --seed 2032
-python main.py --env sr --seed 2033
-python main.py --env sr --seed 2034
-python main.py --env sr --seed 2035
-python main.py --env sr --seed 2036
-python main.py --env sr --seed 2037
-python main.py --env sr --seed 2038
-python main.py --env sr --seed 2039
-python main.py --env sr --seed 2040
-python main.py --env sr --seed 2041
-python main.py --env sr --seed 2042
-python main.py --env sr --seed 2043
-python main.py --env sr --seed 2044
-python main.py --env sr --seed 2045
-python main.py --env sr --seed 2046
-python main.py --env sr --seed 2047
-python main.py --env sr --seed 2048
-python main.py --env sr --seed 2049
-python main.py --env r --seed 2020
-python main.py --env r --seed 2021
-python main.py --env r --seed 2022
-python main.py --env r --seed 2023
-python main.py --env r --seed 2024
-python main.py --env r --seed 2025
-python main.py --env r --seed 2026
-python main.py --env r --seed 2027
-python main.py --env r --seed 2028
-python main.py --env r --seed 2029
-python main.py --env r --seed 2030
-python main.py --env r --seed 2031
-python main.py --env r --seed 2032
-python main.py --env r --seed 2033
-python main.py --env r --seed 2034
-python main.py --env r --seed 2035
-python main.py --env r --seed 2036
-python main.py --env r --seed 2037
-python main.py --env r --seed 2038
-python main.py --env r --seed 2039
-python main.py --env r --seed 2040
-python main.py --env r --seed 2041
-python main.py --env r --seed 2042
-python main.py --env r --seed 2043
-python main.py --env r --seed 2044
-python main.py --env r --seed 2045
-python main.py --env r --seed 2046
-python main.py --env r --seed 2047
-python main.py --env r --seed 2048
-python main.py --env r --seed 2049
+python main.py --env pmr --update_weight_interval 1 --seed 2020
+python main.py --env pmr --update_weight_interval 1 --seed 2021
+python main.py --env pmr --update_weight_interval 1 --seed 2022
+python main.py --env pmr --update_weight_interval 1 --seed 2023
+python main.py --env pmr --update_weight_interval 1 --seed 2024
+python main.py --env pmr --update_weight_interval 1 --seed 2025
+python main.py --env pmr --update_weight_interval 1 --seed 2026
+python main.py --env pmr --update_weight_interval 1 --seed 2027
+python main.py --env pmr --update_weight_interval 1 --seed 2028
+python main.py --env pmr --update_weight_interval 1 --seed 2029
+python main.py --env pmr --update_weight_interval 1 --seed 2030
+python main.py --env pmr --update_weight_interval 1 --seed 2031
+python main.py --env pmr --update_weight_interval 1 --seed 2032
+python main.py --env pmr --update_weight_interval 1 --seed 2033
+python main.py --env pmr --update_weight_interval 1 --seed 2034
+python main.py --env pmr --update_weight_interval 1 --seed 2035
+python main.py --env pmr --update_weight_interval 1 --seed 2036
+python main.py --env pmr --update_weight_interval 1 --seed 2037
+python main.py --env pmr --update_weight_interval 1 --seed 2038
+python main.py --env pmr --update_weight_interval 1 --seed 2039
+python main.py --env pmr --update_weight_interval 1 --seed 2040
+python main.py --env pmr --update_weight_interval 1 --seed 2041
+python main.py --env pmr --update_weight_interval 1 --seed 2042
+python main.py --env pmr --update_weight_interval 1 --seed 2043
+python main.py --env pmr --update_weight_interval 1 --seed 2044
+python main.py --env pmr --update_weight_interval 1 --seed 2045
+python main.py --env pmr --update_weight_interval 1 --seed 2046
+python main.py --env pmr --update_weight_interval 1 --seed 2047
+python main.py --env pmr --update_weight_interval 1 --seed 2048
+python main.py --env pmr --update_weight_interval 1 --seed 2049
+python main.py --env pmr --update_weight_interval 2 --seed 2020
+python main.py --env pmr --update_weight_interval 2 --seed 2021
+python main.py --env pmr --update_weight_interval 2 --seed 2022
+python main.py --env pmr --update_weight_interval 2 --seed 2023
+python main.py --env pmr --update_weight_interval 2 --seed 2024
+python main.py --env pmr --update_weight_interval 2 --seed 2025
+python main.py --env pmr --update_weight_interval 2 --seed 2026
+python main.py --env pmr --update_weight_interval 2 --seed 2027
+python main.py --env pmr --update_weight_interval 2 --seed 2028
+python main.py --env pmr --update_weight_interval 2 --seed 2029
+python main.py --env pmr --update_weight_interval 2 --seed 2030
+python main.py --env pmr --update_weight_interval 2 --seed 2031
+python main.py --env pmr --update_weight_interval 2 --seed 2032
+python main.py --env pmr --update_weight_interval 2 --seed 2033
+python main.py --env pmr --update_weight_interval 2 --seed 2034
+python main.py --env pmr --update_weight_interval 2 --seed 2035
+python main.py --env pmr --update_weight_interval 2 --seed 2036
+python main.py --env pmr --update_weight_interval 2 --seed 2037
+python main.py --env pmr --update_weight_interval 2 --seed 2038
+python main.py --env pmr --update_weight_interval 2 --seed 2039
+python main.py --env pmr --update_weight_interval 2 --seed 2040
+python main.py --env pmr --update_weight_interval 2 --seed 2041
+python main.py --env pmr --update_weight_interval 2 --seed 2042
+python main.py --env pmr --update_weight_interval 2 --seed 2043
+python main.py --env pmr --update_weight_interval 2 --seed 2044
+python main.py --env pmr --update_weight_interval 2 --seed 2045
+python main.py --env pmr --update_weight_interval 2 --seed 2046
+python main.py --env pmr --update_weight_interval 2 --seed 2047
+python main.py --env pmr --update_weight_interval 2 --seed 2048
+python main.py --env pmr --update_weight_interval 2 --seed 2049
+python main.py --env pmr --update_weight_interval 5 --seed 2020
+python main.py --env pmr --update_weight_interval 5 --seed 2021
+python main.py --env pmr --update_weight_interval 5 --seed 2022
+python main.py --env pmr --update_weight_interval 5 --seed 2023
+python main.py --env pmr --update_weight_interval 5 --seed 2024
+python main.py --env pmr --update_weight_interval 5 --seed 2025
+python main.py --env pmr --update_weight_interval 5 --seed 2026
+python main.py --env pmr --update_weight_interval 5 --seed 2027
+python main.py --env pmr --update_weight_interval 5 --seed 2028
+python main.py --env pmr --update_weight_interval 5 --seed 2029
+python main.py --env pmr --update_weight_interval 5 --seed 2030
+python main.py --env pmr --update_weight_interval 5 --seed 2031
+python main.py --env pmr --update_weight_interval 5 --seed 2032
+python main.py --env pmr --update_weight_interval 5 --seed 2033
+python main.py --env pmr --update_weight_interval 5 --seed 2034
+python main.py --env pmr --update_weight_interval 5 --seed 2035
+python main.py --env pmr --update_weight_interval 5 --seed 2036
+python main.py --env pmr --update_weight_interval 5 --seed 2037
+python main.py --env pmr --update_weight_interval 5 --seed 2038
+python main.py --env pmr --update_weight_interval 5 --seed 2039
+python main.py --env pmr --update_weight_interval 5 --seed 2040
+python main.py --env pmr --update_weight_interval 5 --seed 2041
+python main.py --env pmr --update_weight_interval 5 --seed 2042
+python main.py --env pmr --update_weight_interval 5 --seed 2043
+python main.py --env pmr --update_weight_interval 5 --seed 2044
+python main.py --env pmr --update_weight_interval 5 --seed 2045
+python main.py --env pmr --update_weight_interval 5 --seed 2046
+python main.py --env pmr --update_weight_interval 5 --seed 2047
+python main.py --env pmr --update_weight_interval 5 --seed 2048
+python main.py --env pmr --update_weight_interval 5 --seed 2049
+python main.py --env pmr --update_weight_interval 10 --seed 2020
+python main.py --env pmr --update_weight_interval 10 --seed 2021
+python main.py --env pmr --update_weight_interval 10 --seed 2022
+python main.py --env pmr --update_weight_interval 10 --seed 2023
+python main.py --env pmr --update_weight_interval 10 --seed 2024
+python main.py --env pmr --update_weight_interval 10 --seed 2025
+python main.py --env pmr --update_weight_interval 10 --seed 2026
+python main.py --env pmr --update_weight_interval 10 --seed 2027
+python main.py --env pmr --update_weight_interval 10 --seed 2028
+python main.py --env pmr --update_weight_interval 10 --seed 2029
+python main.py --env pmr --update_weight_interval 10 --seed 2030
+python main.py --env pmr --update_weight_interval 10 --seed 2031
+python main.py --env pmr --update_weight_interval 10 --seed 2032
+python main.py --env pmr --update_weight_interval 10 --seed 2033
+python main.py --env pmr --update_weight_interval 10 --seed 2034
+python main.py --env pmr --update_weight_interval 10 --seed 2035
+python main.py --env pmr --update_weight_interval 10 --seed 2036
+python main.py --env pmr --update_weight_interval 10 --seed 2037
+python main.py --env pmr --update_weight_interval 10 --seed 2038
+python main.py --env pmr --update_weight_interval 10 --seed 2039
+python main.py --env pmr --update_weight_interval 10 --seed 2040
+python main.py --env pmr --update_weight_interval 10 --seed 2041
+python main.py --env pmr --update_weight_interval 10 --seed 2042
+python main.py --env pmr --update_weight_interval 10 --seed 2043
+python main.py --env pmr --update_weight_interval 10 --seed 2044
+python main.py --env pmr --update_weight_interval 10 --seed 2045
+python main.py --env pmr --update_weight_interval 10 --seed 2046
+python main.py --env pmr --update_weight_interval 10 --seed 2047
+python main.py --env pmr --update_weight_interval 10 --seed 2048
+python main.py --env pmr --update_weight_interval 10 --seed 2049
+python main.py --env pmr --update_weight_interval 20 --seed 2020
+python main.py --env pmr --update_weight_interval 20 --seed 2021
+python main.py --env pmr --update_weight_interval 20 --seed 2022
+python main.py --env pmr --update_weight_interval 20 --seed 2023
+python main.py --env pmr --update_weight_interval 20 --seed 2024
+python main.py --env pmr --update_weight_interval 20 --seed 2025
+python main.py --env pmr --update_weight_interval 20 --seed 2026
+python main.py --env pmr --update_weight_interval 20 --seed 2027
+python main.py --env pmr --update_weight_interval 20 --seed 2028
+python main.py --env pmr --update_weight_interval 20 --seed 2029
+python main.py --env pmr --update_weight_interval 20 --seed 2030
+python main.py --env pmr --update_weight_interval 20 --seed 2031
+python main.py --env pmr --update_weight_interval 20 --seed 2032
+python main.py --env pmr --update_weight_interval 20 --seed 2033
+python main.py --env pmr --update_weight_interval 20 --seed 2034
+python main.py --env pmr --update_weight_interval 20 --seed 2035
+python main.py --env pmr --update_weight_interval 20 --seed 2036
+python main.py --env pmr --update_weight_interval 20 --seed 2037
+python main.py --env pmr --update_weight_interval 20 --seed 2038
+python main.py --env pmr --update_weight_interval 20 --seed 2039
+python main.py --env pmr --update_weight_interval 20 --seed 2040
+python main.py --env pmr --update_weight_interval 20 --seed 2041
+python main.py --env pmr --update_weight_interval 20 --seed 2042
+python main.py --env pmr --update_weight_interval 20 --seed 2043
+python main.py --env pmr --update_weight_interval 20 --seed 2044
+python main.py --env pmr --update_weight_interval 20 --seed 2045
+python main.py --env pmr --update_weight_interval 20 --seed 2046
+python main.py --env pmr --update_weight_interval 20 --seed 2047
+python main.py --env pmr --update_weight_interval 20 --seed 2048
+python main.py --env pmr --update_weight_interval 20 --seed 2049
+python main.py --env pmr --update_weight_interval 50 --seed 2020
+python main.py --env pmr --update_weight_interval 50 --seed 2021
+python main.py --env pmr --update_weight_interval 50 --seed 2022
+python main.py --env pmr --update_weight_interval 50 --seed 2023
+python main.py --env pmr --update_weight_interval 50 --seed 2024
+python main.py --env pmr --update_weight_interval 50 --seed 2025
+python main.py --env pmr --update_weight_interval 50 --seed 2026
+python main.py --env pmr --update_weight_interval 50 --seed 2027
+python main.py --env pmr --update_weight_interval 50 --seed 2028
+python main.py --env pmr --update_weight_interval 50 --seed 2029
+python main.py --env pmr --update_weight_interval 50 --seed 2030
+python main.py --env pmr --update_weight_interval 50 --seed 2031
+python main.py --env pmr --update_weight_interval 50 --seed 2032
+python main.py --env pmr --update_weight_interval 50 --seed 2033
+python main.py --env pmr --update_weight_interval 50 --seed 2034
+python main.py --env pmr --update_weight_interval 50 --seed 2035
+python main.py --env pmr --update_weight_interval 50 --seed 2036
+python main.py --env pmr --update_weight_interval 50 --seed 2037
+python main.py --env pmr --update_weight_interval 50 --seed 2038
+python main.py --env pmr --update_weight_interval 50 --seed 2039
+python main.py --env pmr --update_weight_interval 50 --seed 2040
+python main.py --env pmr --update_weight_interval 50 --seed 2041
+python main.py --env pmr --update_weight_interval 50 --seed 2042
+python main.py --env pmr --update_weight_interval 50 --seed 2043
+python main.py --env pmr --update_weight_interval 50 --seed 2044
+python main.py --env pmr --update_weight_interval 50 --seed 2045
+python main.py --env pmr --update_weight_interval 50 --seed 2046
+python main.py --env pmr --update_weight_interval 50 --seed 2047
+python main.py --env pmr --update_weight_interval 50 --seed 2048
+python main.py --env pmr --update_weight_interval 50 --seed 2049

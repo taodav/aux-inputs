@@ -9,7 +9,7 @@ class CompassWorld(gym.Env):
 
     def __init__(self, size: int = 8,
                  seed: int = 2021,
-                 random_start: bool = False):
+                 random_start: bool = True):
         super(CompassWorld, self).__init__()
         self.observation_space = gym.spaces.MultiBinary(5)
         self.action_space = gym.spaces.Discrete(3)
