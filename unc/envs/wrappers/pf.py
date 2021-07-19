@@ -13,21 +13,29 @@ class ParticleFilterWrapper(CompassWorldWrapper):
 
     Observations are structured like so:
     [mean_y, var_y, mean_x, var_x, mean_dir, var_dir, *obs]
+
+    if mean_only is True:
+    [mean_y, mean_x, mean_dir, *obs]
     """
     priority = 2
 
     def __init__(self, env: Union[CompassWorld, CompassWorldWrapper], *args,
-                 update_weight_interval: int = 1, **kwargs):
+                 update_weight_interval: int = 1, mean_only: bool = False, **kwargs):
         super(ParticleFilterWrapper, self).__init__(env, *args, **kwargs)
-
-        self.observation_space = gym.spaces.Box(
-            low=np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-            high=np.array([6, 36, 6, 36, 4, 16, 1, 1, 1, 1, 1]))
-
         self.particles = None
         self.weights = None
         self.env_step = 0
         self.update_weight_interval = update_weight_interval
+        self.mean_only = mean_only
+
+        if self.mean_only:
+            self.observation_space = gym.spaces.Box(
+                low=np.array([1, 1, 0, 0, 0, 0, 0, 0]),
+                high=np.array([6, 6, 4, 1, 1, 1, 1, 1]))
+        else:
+            self.observation_space = gym.spaces.Box(
+                low=np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+                high=np.array([6, 36, 6, 36, 4, 16, 1, 1, 1, 1, 1]))
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         """
@@ -36,7 +44,10 @@ class ParticleFilterWrapper(CompassWorldWrapper):
         :return:
         """
         mean, variance = state_stats(self.particles, self.weights)
-        pf_state = np.array(list(zip(mean, variance))).flatten()
+        if self.mean_only:
+            pf_state = np.array(mean)
+        else:
+            pf_state = np.array(list(zip(mean, variance))).flatten()
         
         original_obs = self.env.get_obs(state)
         return np.concatenate((pf_state, original_obs), axis=0)

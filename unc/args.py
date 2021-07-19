@@ -12,13 +12,14 @@ class Args(Tap):
     """
     What environment do we use? combine the following keys in any order:
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))
-    r = reward
-    s = ground-truth state concatenated to observation
-    b = with some prob., sample a random observation over the ground-truth. "Blurry observations" 
-    p = particle filter observations, where the mean and variance of the particles are prepended to observation
-    m = (NOT IMPLEMENTED) particle filter MEAN particles observations + reward
+    r = Reward.
+    s = Ground-truth state concatenated to observation.
+    b = With some prob., sample a random observation over the ground-truth. "Blurry observations" .
+    p = Particle filter observations, where the mean and variance of the particles are prepended to observation.
+    m = Particle filter with only mean particles + observations + reward. This will only work if "p" is in env string.
+    If m is in string without p, nothing happens.
     """
-    total_steps: int = 20000  # Total number of steps to take
+    total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
     update_weight_interval: int = 1  # How often do we update our particle weights?

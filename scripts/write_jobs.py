@@ -10,10 +10,15 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
     :return:
     """
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
+    # run_dict = {
+    #     'env': ['sr', 'r', 'pr'],
+    #     'update_weight_interval': [1, 10, 20, 50],
+    #     'seed': [(i + 2020) for i in range(30)]
+    # }
     run_dict = {
-        'env': ['sr', 'r', 'pr'],
-        'update_weight_interval': [1, 100, 300],
-        'seed': [(i + 2020) for i in range(10)]
+        'env': ['pmr'],
+        'update_weight_interval': [1, 2, 5, 10, 20, 50],
+        'seed': [(i + 2020) for i in range(30)]
     }
 
     runs_path = runs_dir / runs_fname
@@ -27,7 +32,7 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
     for k, v in run_dict.items():
         keys.append(k)
         values.append(v)
-
+    num_runs = 0
     for i, args in enumerate(product(*values)):
         run_string = "python main.py"
 
@@ -50,8 +55,9 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
 
         run_string += "\n"
         f.write(run_string)
+        num_runs += 1
 
-        print(i, run_string)
+        print(num_runs, run_string)
 
 
 if __name__ == "__main__":
