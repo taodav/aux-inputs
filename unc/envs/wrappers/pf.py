@@ -20,18 +20,26 @@ class ParticleFilterWrapper(CompassWorldWrapper):
     priority = 2
 
     def __init__(self, env: Union[CompassWorld, CompassWorldWrapper], *args,
-                 update_weight_interval: int = 1, mean_only: bool = False, **kwargs):
+                 update_weight_interval: int = 1, mean_only: bool = False,
+                 vars_only: bool = False, **kwargs):
         super(ParticleFilterWrapper, self).__init__(env, *args, **kwargs)
+        assert not (mean_only and vars_only), "Can't have both mean and vars only"
         self.particles = None
         self.weights = None
         self.env_step = 0
         self.update_weight_interval = update_weight_interval
         self.mean_only = mean_only
+        self.vars_only = vars_only
 
         if self.mean_only:
             self.observation_space = gym.spaces.Box(
                 low=np.array([1, 1, 0, 0, 0, 0, 0, 0]),
                 high=np.array([6, 6, 4, 1, 1, 1, 1, 1]))
+        elif self.vars_only:
+            self.observation_space = gym.spaces.Box(
+                low=np.array([0, 0, 0, 0, 0, 0, 0, 0]),
+                high=np.array([36, 36, 16, 1, 1, 1, 1, 1])
+            )
         else:
             self.observation_space = gym.spaces.Box(
                 low=np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
@@ -46,6 +54,8 @@ class ParticleFilterWrapper(CompassWorldWrapper):
         mean, variance = state_stats(self.particles, self.weights)
         if self.mean_only:
             pf_state = np.array(mean)
+        elif self.vars_only:
+            pf_state = np.array(variance)
         else:
             pf_state = np.array(list(zip(mean, variance))).flatten()
         

@@ -121,7 +121,8 @@ class Trainer:
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
 
-    def preprocess_step(self, obs: np.ndarray,
+    @staticmethod
+    def preprocess_step(obs: np.ndarray,
                         reward: float,
                         done: bool,
                         info: dict,

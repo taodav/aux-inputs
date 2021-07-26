@@ -6,7 +6,8 @@ from unc.args import Args, get_results_fname
 from unc.trainer import Trainer
 from unc.models import QNetwork
 from unc.agents import SarsaAgent
-from unc.utils import save_info
+from unc.utils import save_info, save_gif
+from unc.eval import test_episodes
 
 
 if __name__ == "__main__":
@@ -14,8 +15,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Some argument post-processing
-    results_fname = get_results_fname(args)
-    args.results_fname = results_fname
+    results_fname, results_fname_npy = get_results_fname(args)
+    args.results_fname = results_fname_npy
 
     # Seeding
     np.random.seed(args.seed)
@@ -43,9 +44,20 @@ if __name__ == "__main__":
     trainer.train()
 
     # Save results
-    results_fname = get_results_fname(args)
     results_path = args.results_dir / args.results_fname
-    print(f"Saving results to {results_path}")
-    save_info(results_path, trainer.get_info())
+    info = trainer.get_info()
 
+    # Potentially run a test episode
+    if args.view_test_ep:
+        imgs, rews = test_episodes(agent, train_env, n_episodes=5,
+                                   render=True, max_episode_steps=args.max_episode_steps)
+        gif_path = args.results_dir / f"{results_fname}.gif"
+
+        print(f"Saving gif of test episode to {gif_path}")
+        save_gif(imgs, gif_path)
+
+        info['test_rews'] = rews
+
+    print(f"Saving results to {results_path}")
+    save_info(results_path, info)
 

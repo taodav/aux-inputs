@@ -8,16 +8,17 @@ from pathlib import Path
 from definitions import ROOT_DIR
 
 class Args(Tap):
-    env: str = "sr"
+    env: str = "s"
     """
     What environment do we use? combine the following keys in any order:
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))
-    r = Reward.
     s = Ground-truth state concatenated to observation.
     b = With some prob., sample a random observation over the ground-truth. "Blurry observations" .
     p = Particle filter observations, where the mean and variance of the particles are prepended to observation.
-    m = Particle filter with only mean particles + observations + reward. This will only work if "p" is in env string.
-    If m is in string without p, nothing happens.
+    m = Particle filter with only mean of particles + observations + reward. This will only work if "p" is in env string.
+    v = Particle filter with only variance of particles + observations + reward. This will only work if "p" is in env string.
+        If m or v is in string without p, nothing happens.
+    f = Fixed Compass World where the green terminal state is in the middle of the west wall.
     """
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
@@ -36,6 +37,7 @@ class Args(Tap):
     log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
     results_dir: Path = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
+    view_test_ep: bool = False  # Do we create a gif of a test episode after training?
 
     def process_args(self) -> None:
         # Set our device
@@ -56,6 +58,7 @@ def md5(args: Args) -> str:
 
 def get_results_fname(args: Args):
     time_str = ctime(time())
-    results_fname = f"{md5(args)}_{time_str}.npy"
-    return results_fname
+    results_fname_npy = f"{md5(args)}_{time_str}.npy"
+    results_fname = f"{md5(args)}_{time_str}"
+    return results_fname, results_fname_npy
 
