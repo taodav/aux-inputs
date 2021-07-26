@@ -3,3 +3,6 @@ gym
 numpy
 typed-argument-parser
 tensorboard
+pillow
+matplotlib
+-e .

@@ -5,11 +5,11 @@
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/slurm-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/slurm-%j-%n-%a.out
-#SBATCH --cpus-per-task=20
-#SBATCH --mem=4G
-#SBATCH --time=0-3:00
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=40G
+#SBATCH --time=0-8:00
 
-cd ../../  # Go to main project folder
+cd ../  # Go to main project folder
 source venv/bin/activate
 
 # The -u means ungrouped - output is ungrouped and printed.

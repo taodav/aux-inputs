@@ -1,10 +1,13 @@
 import numpy as np
 import gym
+import matplotlib.pyplot as plt
 
 from typing import Tuple
+from unc.utils import arr_to_viz
+from .base import Environment
 
 
-class CompassWorld(gym.Env):
+class CompassWorld(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
     def __init__(self, size: int = 8,
@@ -17,7 +20,7 @@ class CompassWorld(gym.Env):
         self.random_start = random_start
         self.rng = np.random.RandomState(seed)
 
-        self._state_max = [6, 6, 3]
+        self._state_max = [self.size - 2, self.size - 2, 3]
         self._state_min = [1, 1, 0]
 
         self._state = None
@@ -58,9 +61,13 @@ class CompassWorld(gym.Env):
         return obs
 
     def get_reward(self) -> int:
+        if (self.state == np.array([1, 1, 3])).all():
+            return 1
         return 0
 
     def get_terminal(self) -> bool:
+        if (self.state == np.array([1, 1, 3])).all():
+            return True
         return False
 
     def reset(self) -> np.ndarray:
@@ -78,10 +85,20 @@ class CompassWorld(gym.Env):
         if self.random_start:
             all_states = self.sample_all_states()
             eligible_state_indices = np.arange(0, all_states.shape[0])
-            start_state_idx = self._rng.choice(eligible_state_indices)
+
+            # Make sure to remove goal state from start states
+            remove_idx = None
+            for i in eligible_state_indices:
+                if (all_states[i] == np.array([1, 1, 3])).all():
+                    remove_idx = i
+            delete_mask = np.ones_like(eligible_state_indices, dtype=np.bool)
+            delete_mask[remove_idx] = False
+            eligible_state_indices = eligible_state_indices[delete_mask, ...]
+            start_state_idx = self.rng.choice(eligible_state_indices)
+
             self.state = all_states[start_state_idx]
         else:
-            self.state = np.array([3, 3, self._rng.choice(np.arange(0, 4))], dtype=np.int16)
+            self.state = np.array([3, 3, self.rng.choice(np.arange(0, 4))], dtype=np.int16)
 
         return self.get_obs(self.state)
 
@@ -115,8 +132,8 @@ class CompassWorld(gym.Env):
         :param n: number of states to sample
         :return: sampled states
         """
-        poss = self._rng.choice(np.arange(1, self.size - 1, dtype=np.int16), size=(n, 2))
-        dirs = self._rng.choice(np.arange(0, len(self.direction_mapping), dtype=np.int16), size=(n, 1))
+        poss = self.rng.choice(np.arange(1, self.size - 1, dtype=np.int16), size=(n, 2))
+        dirs = self.rng.choice(np.arange(0, len(self.direction_mapping), dtype=np.int16), size=(n, 1))
         return np.concatenate([poss, dirs], axis=-1)
 
     def sample_all_states(self) -> np.ndarray:
@@ -148,4 +165,56 @@ class CompassWorld(gym.Env):
         self.state = self.transition(self.state, action)
 
         return self.get_obs(self.state), self.get_reward(), self.get_terminal(), {}
+
+    def generate_array(self) -> np.ndarray:
+        """
+        Generate a numpy array representing agent state.
+        Mappings for indices are as follows:
+        0 = white space
+        1 = orange wall
+        2 = yellow wall
+        3 = red wall
+        4 = blue wall
+        5 = green wall
+        6 = agent facing NORTH
+        7 = agent facing EAST
+        8 = agent facing SOUTH
+        9 = agent facing WEST
+        :return:
+        """
+        viz_array = np.zeros((self.size, self.size), dtype=np.uint8)
+
+        # WEST wall
+        viz_array[:, 0] = 4
+        viz_array[1, 0] = 5
+
+        # EAST wall
+        viz_array[:, self.size - 1] = 2
+
+        # NORTH wall
+        viz_array[0, :] = 1
+
+        # SOUTH wall
+        viz_array[self.size - 1, :] = 3
+
+        viz_array[self.state[0], self.state[1]] = self.state[-1] + 6
+        return viz_array
+
+    def render(self, mode='rgb_array') -> np.ndarray:
+        """
+        Generates a
+        :param mode:
+        :return:
+        """
+        assert mode == 'rgb_array'
+
+        arr = self.generate_array()
+        return arr_to_viz(arr, scale=10)
+
+
+if __name__ == "__main__":
+    env = CompassWorld()
+    env.reset()
+    plt.imshow(env.render())
+    plt.show()
 

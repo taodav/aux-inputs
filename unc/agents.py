@@ -9,10 +9,13 @@ from unc.args import Args
 
 class Agent:
     def act(self, state: Any):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def update(self, state: Any, action: Any, next_state: Any, gamma: Any, reward: Any):
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    def set_eps(self, eps: float):
+        raise NotImplementedError()
 
 
 class SarsaAgent(Agent):
