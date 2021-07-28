@@ -5,6 +5,7 @@ from typing import Union
 from unc.envs import CompassWorld
 from unc.envs.wrappers import CompassWorldWrapper
 from unc.particle_filter import step, state_stats
+from unc.utils import arr_to_viz, append_text
 
 
 class ParticleFilterWrapper(CompassWorldWrapper):

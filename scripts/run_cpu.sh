@@ -5,8 +5,8 @@
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/slurm-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/slurm-%j-%n-%a.out
-#SBATCH --cpus-per-task=40
-#SBATCH --mem=40G
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=20G
 #SBATCH --time=0-8:00
 
 cd ../  # Go to main project folder

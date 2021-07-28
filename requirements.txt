@@ -5,4 +5,5 @@ typed-argument-parser
 tensorboard
 pillow
 matplotlib
+opencv-python
 -e .

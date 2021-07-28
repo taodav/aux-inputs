@@ -19,6 +19,7 @@ class Args(Tap):
     v = Particle filter with only variance of particles + observations + reward. This will only work if "p" is in env string.
         If m or v is in string without p, nothing happens.
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
+    w = Whole-state observations + color observation. This encodes all particles/states in a single array.
     """
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
@@ -26,7 +27,11 @@ class Args(Tap):
     update_weight_interval: int = 1  # How often do we update our particle weights?
 
     step_size: float = 0.0001  # Step size for our neural network
-    n_hidden: int = 100  # How many nodes in our hidden layer of our neural network?
+    n_hidden: int = 100
+    """
+    How many nodes in our hidden layer of our neural network?
+    0 for linear function approximation.
+    """
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability
     random_start: bool = True  # Do we have a random initial state distribution?
@@ -34,10 +39,12 @@ class Args(Tap):
     seed: int = 2021  # Random seed
     device: Union[str, torch.device] = "cuda"  # What device do we use? (cpu | cuda)
 
+    test_eps: float = 0.0  # What's our test epsilon?
     log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
     results_dir: Path = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
+    save_model: bool = False  # Do we save our model after finishing training?
 
     def process_args(self) -> None:
         # Set our device

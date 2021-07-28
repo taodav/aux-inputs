@@ -3,7 +3,7 @@ Particle filter based on 'A tutorial on particle filters for online nonlinear/no
 Word of warning - there are a few errors and typos in the tutorial.
 """
 import numpy as np
-from typing import Callable, Tuple
+from typing import Tuple
 
 from unc.envs import CompassWorld
 from unc.envs.wrappers import BlurryWrapper

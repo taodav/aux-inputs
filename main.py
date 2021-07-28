@@ -6,7 +6,7 @@ from unc.args import Args, get_results_fname
 from unc.trainer import Trainer
 from unc.models import QNetwork
 from unc.agents import SarsaAgent
-from unc.utils import save_info, save_gif
+from unc.utils import save_info, save_video
 from unc.eval import test_episodes
 
 
@@ -50,13 +50,23 @@ if __name__ == "__main__":
     # Potentially run a test episode
     if args.view_test_ep:
         imgs, rews = test_episodes(agent, train_env, n_episodes=5,
-                                   render=True, max_episode_steps=args.max_episode_steps)
-        gif_path = args.results_dir / f"{results_fname}.gif"
+                                   render=True, test_eps=args.test_eps,
+                                   max_episode_steps=args.max_episode_steps)
+        vod_path = args.results_dir / f"{results_fname}.mp4"
 
-        print(f"Saving gif of test episode to {gif_path}")
-        save_gif(imgs, gif_path)
+        print(f"Saving render of test episode(s) to {vod_path}")
+
+        # save_gif(imgs, gif_path)
+        save_video(imgs, vod_path)
 
         info['test_rews'] = rews
+
+    if args.save_model:
+        model_path = args.results_dir / f"{results_fname}.pth"
+        print(f"Saving model parameters to {model_path}")
+
+        agent.save(model_path)
+
 
     print(f"Saving results to {results_path}")
     save_info(results_path, info)

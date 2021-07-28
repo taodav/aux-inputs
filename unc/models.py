@@ -11,11 +11,19 @@ class QNetwork(nn.Module):
         self.n_hidden = n_hidden
         self.n_actions = n_actions
 
-        self.l1 = nn.Linear(self.n_features, self.n_hidden)
-        self.l2 = nn.Linear(self.n_hidden, self.n_actions)
+        if self.n_hidden == 0:
+            self.l2 = nn.Linear(self.n_features, self.n_actions)
+            for w in self.parameters():
+                w.data.fill_(0.)
+        else:
+            self.l1 = nn.Linear(self.n_features, self.n_hidden)
+            self.l2 = nn.Linear(self.n_hidden, self.n_actions)
 
     def forward(self, x: torch.Tensor):
-        out = F.relu(self.l1(x))
+        if self.n_hidden > 0:
+            out = F.relu(self.l1(x))
+        else:
+            out = x
         out = self.l2(out)
         return out
 

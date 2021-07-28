@@ -18,8 +18,28 @@ class CompassWorldWrapper(gym.Wrapper):
             assert self.env.priority <= self.priority
 
     @property
+    def weights(self):
+        return self.env.weights
+
+    @weights.setter
+    def weights(self, weights):
+        self.env.weights = weights
+
+    @property
+    def particles(self):
+        return self.env.particles
+
+    @particles.setter
+    def particles(self, particles):
+        self.env.particles = particles
+
+    @property
     def state(self) -> np.ndarray:
         return self.env.state
+
+    @property
+    def size(self) -> int:
+        return self.env.size
 
     @state.setter
     def state(self, state) -> None:
@@ -45,3 +65,6 @@ class CompassWorldWrapper(gym.Wrapper):
 
     def sample_all_states(self) -> np.ndarray:
         return self.env.sample_all_states()
+
+    def render(self, mode='rgb_array', **kwargs):
+        return self.env.render(mode=mode, **kwargs)

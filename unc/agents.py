@@ -3,8 +3,10 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from typing import Any
+from pathlib import Path
 
 from unc.args import Args
+from unc.models import QNetwork
 
 
 class Agent:
@@ -29,6 +31,7 @@ class SarsaAgent(Agent):
         self.n_actions = n_actions
         self.eps = args.epsilon
         self.device = args.device
+        self.args = args
 
         self._rng = rng
 
@@ -110,6 +113,40 @@ class SarsaAgent(Agent):
 
         return loss.item()
 
+    def save(self, path: Path):
+        """
+        Saves the agent's parameters in a given path.
+        :param path: path to save to (including file name).
+        """
+        to_save = {
+            'model': self.model.state_dict(),
+            'n_features': self.model.n_features,
+            'n_hidden': self.model.n_hidden,
+            'n_actions': self.model.n_actions,
+            'optimizer': self.optimizer.state_dict(),
+            'args': self.args.as_dict(),
+            'rng': self._rng
+        }
+        torch.save(to_save, path)
+
+    @staticmethod
+    def load(path: Path, device: torch.device) -> Agent:
+        # This is hardcoded for now. In the future we'd want to models & agents based
+        # on some helper function.
+        loaded = torch.load(path)
+
+        model = QNetwork(loaded['n_features'], loaded['n_hidden'], loaded['n_actions']).to(device)
+        optimizer = torch.optim.Adam(model.parameters())
+
+        # Load our state dicts
+        model.load_state_dict(loaded['model'])
+        optimizer.load_state_dict(loaded['optimizer'])
+
+        args = Args()
+        args.from_dict(loaded['args'])
+        agent = SarsaAgent(model, optimizer, loaded['n_actions'], loaded['rng'], args)
+
+        return agent
 
 
 

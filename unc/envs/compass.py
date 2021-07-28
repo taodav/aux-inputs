@@ -3,7 +3,6 @@ import gym
 import matplotlib.pyplot as plt
 
 from typing import Tuple
-from unc.utils import arr_to_viz
 from .base import Environment
 
 
@@ -24,6 +23,11 @@ class CompassWorld(Environment):
         self._state_min = [1, 1, 0]
 
         self._state = None
+
+        # This is for particle filter states.
+        # We need this def so that we can pass particles and weights between wrappers.
+        self.particles = None
+        self.weights = None
 
     @property
     def state(self):
@@ -200,16 +204,6 @@ class CompassWorld(Environment):
         viz_array[self.state[0], self.state[1]] = self.state[-1] + 6
         return viz_array
 
-    def render(self, mode='rgb_array') -> np.ndarray:
-        """
-        Generates a
-        :param mode:
-        :return:
-        """
-        assert mode == 'rgb_array'
-
-        arr = self.generate_array()
-        return arr_to_viz(arr, scale=10)
 
 
 if __name__ == "__main__":

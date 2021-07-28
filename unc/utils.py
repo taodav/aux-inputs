@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 
 def save_info(results_path: Path, info: dict):
@@ -16,6 +16,17 @@ def save_gif(arr: np.ndarray, path: Path, duration=400):
 
     gif[0].save(path, save_all=True, append_images=gif[1:], duration=duration, loop=0)
 
+
+def save_video(arr: np.ndarray, path:Path, fps: int = 2):
+    import cv2
+
+    length, h, w, c = arr.shape
+    vw = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h), True)
+
+    for i in range(length * fps):
+        frame = cv2.cvtColor(arr[i // fps], cv2.COLOR_RGB2BGR)
+        vw.write(frame)
+    vw.release()
 
 def west_facing_triangle(size: int) -> np.ndarray:
     grid = np.zeros((size, size))
@@ -38,15 +49,18 @@ def south_facing_triangle(size: int) -> np.ndarray:
     return np.flip(north_facing_triangle(size), axis=0)
 
 
-def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0):
+def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, w_p: int = 0):
     rgb = np.repeat(one_d_array[..., np.newaxis], 3, axis=-1)
-    rgb[rgb == 0] = 255
-    rgb[rgb == 1] = val
+    background = (rgb == 0)
+    rgb[background] = 255
+    rgb[:, :, :2] -= w_p
+    rgb[1 - background] = val
 
     return rgb
 
 
-def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True) -> np.ndarray:
+def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
+               background_weights: np.ndarray = None) -> np.ndarray:
     """
     Convert array representation of Compass World state to
     a scaled RGB array.
@@ -54,6 +68,7 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True) -> np.
     :param arr: Array representation of Compass World (ref. CompassWorld.render)
     :param scale: Scale in which to make visualization. Each grid will be scalexscale pixels wide.
     :param grid_lines: Do we draw grid lines or not?
+    :param background_weights: Weights to color the background.
     :return: numpy array which you can plot.
     """
     space_color = np.array([255, 255, 255], dtype=np.uint8)
@@ -80,20 +95,32 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True) -> np.
     for y, row in enumerate(arr):
         for x, val in enumerate(row):
             assert val <= 9, "index out of range for image"
+            w_p = 0
+            if background_weights is not None:
+                # w is between [0, 1]
+                w = background_weights[y, x]
+
+                # 1 needs to be nearly solid blue w' ~ 127
+                # 0 needs to be nearly white w' ~ 0
+                # we then subtract the RG channels by w'
+                w_p = int(w * 127)
+
             if val == 6:
                 north = north_facing_triangle(scale)
-                to_fill = generate_agent_rgb(north, val=0)
+                to_fill = generate_agent_rgb(north, val=0, w_p=w_p)
             elif val == 7:
                 east = east_facing_triangle(scale)
-                to_fill = generate_agent_rgb(east, val=0)
+                to_fill = generate_agent_rgb(east, val=0, w_p=w_p)
             elif val == 8:
                 south = south_facing_triangle(scale)
-                to_fill = generate_agent_rgb(south, val=0)
+                to_fill = generate_agent_rgb(south, val=0, w_p=w_p)
             elif val == 9:
                 west = west_facing_triangle(scale)
-                to_fill = generate_agent_rgb(west, val=0)
+                to_fill = generate_agent_rgb(west, val=0, w_p=w_p)
             else:
                 to_fill = color_map[val]
+                if val == 0:
+                    to_fill[:2] -= w_p
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
                                 x * (scale + 1) + 1:(x + 1) * (scale + 1)] = to_fill
@@ -102,5 +129,27 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True) -> np.
                                 x * scale:(x + 1) * scale] = to_fill
 
     return final_viz_array
+
+
+def append_text(viz_array: np.ndarray, to_append: str) -> np.ndarray:
+    h, w, _ = viz_array.shape
+    font = ImageFont.truetype("Ubuntu-B.ttf", 24)
+
+    img_to_guide = Image.new('RGB', (w, h // 2), (255, 255, 255))
+
+    d = ImageDraw.Draw(img_to_guide)
+    d.text((0, 0), to_append, (0, 0, 0), font=font)
+
+    text_w, text_h = d.textsize(to_append)
+
+    img_to_append = Image.new('RGB', (w, h // 2), (255, 255, 255))
+    d_actual = ImageDraw.Draw(img_to_append)
+    d_actual.text(((w - text_w) // 2, (h // 2 - text_h) // 2), to_append, fill=(0, 0, 0), font=font)
+    arr_to_append = np.array(img_to_append)
+
+    final_image = np.concatenate((viz_array, arr_to_append), axis=0)
+
+    return final_image
+
 
 
