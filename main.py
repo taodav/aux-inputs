@@ -28,6 +28,7 @@ if __name__ == "__main__":
                         env_str=args.env,
                         blur_prob=args.blur_prob,
                         random_start=args.random_start,
+                        size=args.size,
                         update_weight_interval=args.update_weight_interval)
 
     # Initialize model, optimizer and agent

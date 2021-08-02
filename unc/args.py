@@ -21,6 +21,7 @@ class Args(Tap):
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
     w = Whole-state observations + color observation. This encodes all particles/states in a single array.
     """
+    size: int = 8  # How large do we want each dimension of our gridworld to be?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
@@ -56,6 +57,7 @@ class Args(Tap):
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.results_dir /= self.env
+        self.results_dir /= str(self.size)
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
 

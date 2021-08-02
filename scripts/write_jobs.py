@@ -12,16 +12,13 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
     run_dict = {
         'env': ['fpw', 'fsw'],
+        # 'env': ['fp', 'fs', 'fpm', 'fpv'],
         # 'env': ['fpv'],
+        'size': [9],
         'update_weight_interval': [1],
         'seed': [(i + 2020) for i in range(30)],
         'total_steps': [60000]
     }
-    # run_dict = {
-    #     'env': ['pv'],
-    #     'update_weight_interval': [1],
-    #     'seed': [(i + 2020) for i in range(30)]
-    # }
 
     runs_path = runs_dir / runs_fname
 

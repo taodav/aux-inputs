@@ -17,6 +17,7 @@ def get_env(seed: int, env_str: str = "s",
             random_start: bool = True,
             blur_prob: float = 0.1,
             update_weight_interval: int = 1,
+            size: int = 8,
             render: bool = True):
 
     ground_truth = False
@@ -30,9 +31,9 @@ def get_env(seed: int, env_str: str = "s",
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
 
     if "f" in env_str:
-        env = FixedCompassWorld(seed=seed, random_start=random_start)
+        env = FixedCompassWorld(seed=seed, random_start=random_start, size=size)
     else:
-        env = CompassWorld(seed=seed, random_start=random_start)
+        env = CompassWorld(seed=seed, random_start=random_start, size=size)
 
     for w in ordered_wrapper_list:
         if w == BlurryWrapper:

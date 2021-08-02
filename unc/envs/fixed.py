@@ -19,7 +19,7 @@ class FixedCompassWorld(CompassWorld):
             # Make sure to remove goal state from start states
             remove_idx = None
             for i in eligible_state_indices:
-                if (all_states[i] == np.array([3, 1, 3])).all():
+                if (all_states[i] == np.array([(self.size - 1) // 2, 1, 3])).all():
                     remove_idx = i
             delete_mask = np.ones_like(eligible_state_indices, dtype=np.bool)
             delete_mask[remove_idx] = False
@@ -51,7 +51,7 @@ class FixedCompassWorld(CompassWorld):
             # Facing WEST
             if state[1] == 1:
                 # On the border
-                if state[0] == 3:
+                if state[0] == (self.size - 1) // 2:
                     obs[4] = 1
                 else:
                     obs[3] = 1
@@ -61,12 +61,12 @@ class FixedCompassWorld(CompassWorld):
         return obs
 
     def get_reward(self) -> int:
-        if (self.state == np.array([3, 1, 3])).all():
+        if (self.state == np.array([(self.size - 1) // 2, 1, 3])).all():
             return 1
         return 0
 
     def get_terminal(self) -> bool:
-        if (self.state == np.array([3, 1, 3])).all():
+        if (self.state == np.array([(self.size - 1) // 2, 1, 3])).all():
             return True
         return False
 
@@ -75,7 +75,7 @@ class FixedCompassWorld(CompassWorld):
 
         # WEST wall
         viz_array[:, 0] = 4
-        viz_array[3, 0] = 5
+        viz_array[(self.size - 1) // 2, 0] = 5
 
         # EAST wall
         viz_array[:, self.size - 1] = 2
