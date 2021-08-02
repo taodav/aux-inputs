@@ -49,12 +49,16 @@ def south_facing_triangle(size: int) -> np.ndarray:
     return np.flip(north_facing_triangle(size), axis=0)
 
 
+def plot_arr(arr: np.ndarray):
+    Image.fromarray(np.uint8(arr)).show()
+
+
 def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, w_p: int = 0):
     rgb = np.repeat(one_d_array[..., np.newaxis], 3, axis=-1)
     background = (rgb == 0)
     rgb[background] = 255
     rgb[:, :, :2] -= w_p
-    rgb[1 - background] = val
+    rgb[(1 - background).astype(np.bool)] = val
 
     return rgb
 
@@ -103,7 +107,8 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                 # 1 needs to be nearly solid blue w' ~ 127
                 # 0 needs to be nearly white w' ~ 0
                 # we then subtract the RG channels by w'
-                w_p = int(w * 127)
+                if w > 0:
+                    w_p = int(w * 155) + 30
 
             if val == 6:
                 north = north_facing_triangle(scale)
@@ -118,8 +123,8 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                 west = west_facing_triangle(scale)
                 to_fill = generate_agent_rgb(west, val=0, w_p=w_p)
             else:
-                to_fill = color_map[val]
-                if val == 0:
+                to_fill = np.copy(color_map[val])
+                if val == 0 and w_p > 0:
                     to_fill[:2] -= w_p
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
