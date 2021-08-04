@@ -50,3 +50,21 @@ def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
         updated_weights = unnormalized_updated_weights
 
     return updated_weights, updated_particles
+
+
+def resample(weights: np.ndarray, particles: np.ndarray, rng: np.random.RandomState = None) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Resample particles w.r.t. given weights.
+    Assume we sample the same number of particles that exist in the input particles.
+    :param weights: weights to resample from
+    :param particles: particles to resample from
+    :return: Tuple of (new_weights, new_particles).
+    """
+    sampler = rng if rng is not None else np.random
+    new_particle_idxes = sampler.choice(np.arange(particles.shape[0]), p=weights, size=len(particles), replace=True)
+    new_particles = particles[new_particle_idxes]
+    # new_particles_p = np.array([sampler.choice(particles, p=weights, replace=True) for i in range(len(particles))])
+    new_weights = np.ones_like(weights) / len(weights)
+
+    return new_weights, new_particles
+

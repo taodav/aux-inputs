@@ -13,9 +13,9 @@ class RenderWrapper(CompassWorldWrapper):
         :return:
         """
         assert self.weights is not None and self.particles is not None
-        background = np.zeros((self.size, self.size))
+        background = np.zeros((self.size, self.size, 4))
         for p, w in zip(self.particles, self.weights):
-            background[p[0], p[1]] += w
+            background[p[0], p[1], p[2]] += w
 
         return background
 

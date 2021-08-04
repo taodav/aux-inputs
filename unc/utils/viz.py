@@ -1,52 +1,58 @@
 import numpy as np
-from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-
-def save_info(results_path: Path, info: dict):
-    np.save(results_path, info)
-
-
-def load_info(results_path: Path):
-    return np.load(results_path, allow_pickle=True).item()
+def east_triangle(size: int) -> np.ndarray:
+    grid = np.ones((size, size))
+    up_tri = np.triu(grid)
+    east = np.flip(up_tri, axis=0) * up_tri
+    return east
 
 
-def save_gif(arr: np.ndarray, path: Path, duration=400):
-    gif = [Image.fromarray(img) for img in arr]
-
-    gif[0].save(path, save_all=True, append_images=gif[1:], duration=duration, loop=0)
+def south_triangle(size: int) -> np.ndarray:
+    return east_triangle(size).T
 
 
-def save_video(arr: np.ndarray, path:Path, fps: int = 2):
-    import cv2
+def west_triangle(size: int) -> np.ndarray:
+    return np.flip(east_triangle(size), axis=1)
 
-    length, h, w, c = arr.shape
-    vw = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h), True)
 
-    for i in range(length * fps):
-        frame = cv2.cvtColor(arr[i // fps], cv2.COLOR_RGB2BGR)
-        vw.write(frame)
-    vw.release()
+def north_triangle(size: int) -> np.ndarray:
+    return np.flip(south_triangle(size), axis=0)
 
-def west_facing_triangle(size: int) -> np.ndarray:
+
+def cross(size: int) -> np.ndarray:
+    grid = np.zeros((size, size))
+    indices = np.arange(size)
+    grid[indices, indices] = 1
+    rev_diag = np.flip(grid, axis=0)
+    cross = np.maximum(grid, rev_diag)
+    return cross
+
+
+def west_facing_agent(size: int, width: int = 2) -> np.ndarray:
     grid = np.zeros((size, size))
     left_tri = np.ones_like(grid[:grid.shape[0] // 2, :])
     bottom_half = np.triu(left_tri, k=size // 4 + 1)
     top_half = np.flip(bottom_half, axis=0)
-    return np.concatenate((top_half, bottom_half), axis=0)
+
+    bs = np.triu(left_tri, k=size // 4 + 1 + width)
+    ts = np.flip(bs, axis=0)
+    smaller = np.concatenate((ts, bs), axis=0)
+    larger = np.concatenate((top_half, bottom_half), axis=0)
+    return larger - smaller
 
 
-def north_facing_triangle(size: int) -> np.ndarray:
-    west = west_facing_triangle(size)
+def north_facing_agent(size: int, width: int = 2) -> np.ndarray:
+    west = west_facing_agent(size, width=width)
     return west.T
 
 
-def east_facing_triangle(size: int) -> np.ndarray:
-    return np.flip(west_facing_triangle(size), axis=1)
+def east_facing_agent(size: int, width: int = 2) -> np.ndarray:
+    return np.flip(west_facing_agent(size, width=width), axis=1)
 
 
-def south_facing_triangle(size: int) -> np.ndarray:
-    return np.flip(north_facing_triangle(size), axis=0)
+def south_facing_agent(size: int, width: int = 2) -> np.ndarray:
+    return np.flip(north_facing_agent(size, width=width), axis=0)
 
 
 def plot_arr(arr: np.ndarray):
@@ -111,16 +117,16 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                     w_p = int(w * 155) + 30
 
             if val == 6:
-                north = north_facing_triangle(scale)
+                north = north_facing_agent(scale)
                 to_fill = generate_agent_rgb(north, val=0, w_p=w_p)
             elif val == 7:
-                east = east_facing_triangle(scale)
+                east = east_facing_agent(scale)
                 to_fill = generate_agent_rgb(east, val=0, w_p=w_p)
             elif val == 8:
-                south = south_facing_triangle(scale)
+                south = south_facing_agent(scale)
                 to_fill = generate_agent_rgb(south, val=0, w_p=w_p)
             elif val == 9:
-                west = west_facing_triangle(scale)
+                west = west_facing_agent(scale)
                 to_fill = generate_agent_rgb(west, val=0, w_p=w_p)
             else:
                 to_fill = np.copy(color_map[val])
@@ -128,10 +134,10 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                     to_fill[:2] -= w_p
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
-                                x * (scale + 1) + 1:(x + 1) * (scale + 1)] = to_fill
+                x * (scale + 1) + 1:(x + 1) * (scale + 1)] = to_fill
             else:
                 final_viz_array[y * scale:(y + 1) * scale,
-                                x * scale:(x + 1) * scale] = to_fill
+                x * scale:(x + 1) * scale] = to_fill
 
     return final_viz_array
 
@@ -155,6 +161,4 @@ def append_text(viz_array: np.ndarray, to_append: str) -> np.ndarray:
     final_image = np.concatenate((viz_array, arr_to_append), axis=0)
 
     return final_image
-
-
 

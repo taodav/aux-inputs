@@ -14,6 +14,7 @@ class Args(Tap):
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))
     s = Ground-truth state concatenated to observation.
     b = With some prob., sample a random observation over the ground-truth. "Blurry observations" .
+    i = SLIP (i for ice) - When you move forward, with some prob., stay in the same spot.
     p = Particle filter observations, where the mean and variance of the particles are prepended to observation.
     m = Particle filter with only mean of particles + observations + reward. This will only work if "p" is in env string.
     v = Particle filter with only variance of particles + observations + reward. This will only work if "p" is in env string.
@@ -22,10 +23,14 @@ class Args(Tap):
     w = Whole-state observations + color observation. This encodes all particles/states in a single array.
     """
     size: int = 8  # How large do we want each dimension of our gridworld to be?
+    slip: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
+
     update_weight_interval: int = 1  # How often do we update our particle weights?
+    resample_interval: int = 1  # [STOCHASTICITY] How often do we resample our particles?
+    n_particles: int = -1  # How many particles do we sample? If -1, assign one particle per state.
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100

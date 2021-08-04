@@ -19,8 +19,8 @@ class CompassWorld(Environment):
         self.random_start = random_start
         self.rng = np.random.RandomState(seed)
 
-        self._state_max = [self.size - 2, self.size - 2, 3]
-        self._state_min = [1, 1, 0]
+        self.state_max = [self.size - 2, self.size - 2, 3]
+        self.state_min = [1, 1, 0]
 
         self._state = None
 
@@ -116,7 +116,7 @@ class CompassWorld(Environment):
             new_state[-1] = (state[-1] - 1) % 4
 
         # Wall interactions
-        new_state = np.maximum(np.minimum(new_state, self._state_max), self._state_min)
+        new_state = np.maximum(np.minimum(new_state, self.state_max), self.state_min)
 
         return new_state
 

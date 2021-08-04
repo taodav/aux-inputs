@@ -26,6 +26,14 @@ class CompassWorldWrapper(gym.Wrapper):
         self.env.weights = weights
 
     @property
+    def state_max(self):
+        return self.env.state_max
+
+    @property
+    def state_min(self):
+        return self.env.state_min
+
+    @property
     def particles(self):
         return self.env.particles
 

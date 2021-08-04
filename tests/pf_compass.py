@@ -5,9 +5,9 @@ Word of warning - there are a few errors and typos in the tutorial.
 import numpy as np
 from typing import Tuple
 
-from unc.envs import CompassWorld
+from unc.envs import CompassWorld, get_env
 from unc.envs.wrappers import BlurryWrapper
-from unc.particle_filter import step, state_stats
+from unc.particle_filter import step, state_stats, resample
 
 
 def effective_sample_size(weights: np.ndarray) -> float:
@@ -29,7 +29,9 @@ def pidxes(state: np.ndarray, particles: np.ndarray) -> list:
 def run_pf_random_policy(env: CompassWorld,
                          steps: int = 10000,
                          log_interval: int = 1000,
-                         weight_update_interval: int = 1) -> Tuple[int, int]:
+                         weight_update_interval: int = 1,
+                         resample_every: int = None,
+                         n_particles: int = -1) -> Tuple[int, int]:
     """
     Run a particle filter on a random policy in Compass World.
     :param steps: Maximum steps to take
@@ -38,8 +40,10 @@ def run_pf_random_policy(env: CompassWorld,
     """
 
     obs = env.reset()
-
-    particles = env.sample_all_states()
+    if n_particles == -1:
+        particles = env.sample_all_states()
+    else:
+        particles = env.sample_states(n=n_particles)
     # particles = np.array([env.state])
     weights = np.ones(len(particles)) / len(particles)
     action = None
@@ -47,8 +51,9 @@ def run_pf_random_policy(env: CompassWorld,
     total_steps = 0
     update_steps = 0
     particle_to_follow = pidxes(env.state, particles)[0]
+    resample_every = resample_every if resample_every is not None else float('inf')
 
-    for s in range(steps):
+    for s in range(1, steps + 1):
         update_weights = s % weight_update_interval == 0
         weights, particles = step(weights, particles, obs, env.transition, env.emit_prob,
                                   action=action, update_weights=update_weights)
@@ -73,16 +78,21 @@ def run_pf_random_policy(env: CompassWorld,
             print(f"Step {s}, "
                   f"Effective sample size: {esses[-1]:.2f}")
 
+        if resample_every > 0 and s % resample_every == 0:
+            weights, particles = resample(weights, particles, env.rng)
+
         action = env.action_space.sample()
         obs, rew, done, info = env.step(action)
         total_steps += 1
         update_steps += 1 if update_weights else 0
 
+
     return total_steps, update_steps
 
 
 def test_CW():
-    n_runs = 30
+    # n_runs = 30
+    n_runs = 1
     weight_update_interval = 100
     log_interval = weight_update_interval
     seeds = np.arange(0, n_runs) + 2022
@@ -123,5 +133,27 @@ def test_BlurryCW():
           f"Average number of updates to one particle: "
           f"{updates_to_one.mean():.4f} +/- {updates_to_one.std() / n_runs:.2f}")
 
+
+def test_SlipCW():
+    n_runs = 30
+    weight_update_interval = 1
+    log_interval = 10
+    seeds = np.arange(0, n_runs) + 2022
+    steps_to_one = np.zeros_like(seeds)
+    updates_to_one = np.zeros_like(seeds)
+    slip_prob = 0.1
+    env_str = "fi"
+
+    for i, seed in enumerate(seeds):
+        np.random.seed(seed)
+        env = get_env(seed, env_str, slip_prob=slip_prob)
+        steps_to_one[i], updates_to_one[i] = \
+            run_pf_random_policy(env, log_interval=log_interval,
+                                 weight_update_interval=weight_update_interval,
+                                 resample_every=None,
+                                 n_particles=2000)
+
+
+
 if __name__ == "__main__":
-    test_BlurryCW()
+    test_SlipCW()
