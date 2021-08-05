@@ -20,6 +20,20 @@ def north_triangle(size: int) -> np.ndarray:
     return np.flip(south_triangle(size), axis=0)
 
 
+def triangle(size: int, direction: int):
+    assert direction >= 0 and direction < 4
+    if direction == 0:
+        return north_triangle(size)
+    elif direction == 1:
+        return east_triangle(size)
+    elif direction == 2:
+        return south_triangle(size)
+    elif direction == 3:
+        return west_triangle(size)
+
+    raise NotImplementedError()
+
+
 def cross(size: int) -> np.ndarray:
     grid = np.zeros((size, size))
     indices = np.arange(size)
@@ -29,7 +43,7 @@ def cross(size: int) -> np.ndarray:
     return cross
 
 
-def west_facing_agent(size: int, width: int = 2) -> np.ndarray:
+def west_facing_agent(size: int, width: int = 5) -> np.ndarray:
     grid = np.zeros((size, size))
     left_tri = np.ones_like(grid[:grid.shape[0] // 2, :])
     bottom_half = np.triu(left_tri, k=size // 4 + 1)
@@ -59,14 +73,35 @@ def plot_arr(arr: np.ndarray):
     Image.fromarray(np.uint8(arr)).show()
 
 
-def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, w_p: int = 0):
+def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, background_weights: np.ndarray = None):
     rgb = np.repeat(one_d_array[..., np.newaxis], 3, axis=-1)
-    background = (rgb == 0)
-    rgb[background] = 255
-    rgb[:, :, :2] -= w_p
-    rgb[(1 - background).astype(np.bool)] = val
+    agent = (rgb == 1)
+    if background_weights is not None:
+        rgb = background_weights
+        rgb[agent.astype(bool)] = val
 
     return rgb
+
+
+def generate_background_tile(size: int, background_weights: np.ndarray, grid_color: np.ndarray = None):
+    """
+    Create a background tile that's split by cardinal directions.
+    Each cardinal direction has a weight defined in background_weights
+    :param background_weights: size 4 weight vector
+    :param grid_color:
+    :return:
+    """
+    grid = np.zeros((size, size, 3)) + 255
+    for i, w in enumerate(background_weights):
+        if w > 0:
+            w_p = int(w * 155) + 30
+            color = np.array([255 - w_p, 255 - w_p, 255])
+            tile = triangle(size, i)
+            grid[tile.astype(bool)] = color
+
+    c = cross(size)
+    grid[c.astype(bool)] = grid_color
+    return grid
 
 
 def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
@@ -88,6 +123,7 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
     blue_color = np.array([0, 0, 255], dtype=np.uint8)
     green_color = np.array([0, 255, 0], dtype=np.uint8)
     agent_color = np.array([0, 0, 0], dtype=np.uint8)
+    grid_color = None
 
     color_map = [space_color, orange_color, yellow_color, red_color, blue_color, green_color, agent_color]
 
@@ -105,7 +141,7 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
     for y, row in enumerate(arr):
         for x, val in enumerate(row):
             assert val <= 9, "index out of range for image"
-            w_p = 0
+            background = None
             if background_weights is not None:
                 # w is between [0, 1]
                 w = background_weights[y, x]
@@ -113,25 +149,25 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                 # 1 needs to be nearly solid blue w' ~ 127
                 # 0 needs to be nearly white w' ~ 0
                 # we then subtract the RG channels by w'
-                if w > 0:
-                    w_p = int(w * 155) + 30
+                background = generate_background_tile(scale, w, grid_color)
 
             if val == 6:
                 north = north_facing_agent(scale)
-                to_fill = generate_agent_rgb(north, val=0, w_p=w_p)
+                to_fill = generate_agent_rgb(north, val=0, background_weights=background)
             elif val == 7:
                 east = east_facing_agent(scale)
-                to_fill = generate_agent_rgb(east, val=0, w_p=w_p)
+                to_fill = generate_agent_rgb(east, val=0, background_weights=background)
             elif val == 8:
                 south = south_facing_agent(scale)
-                to_fill = generate_agent_rgb(south, val=0, w_p=w_p)
+                to_fill = generate_agent_rgb(south, val=0, background_weights=background)
             elif val == 9:
                 west = west_facing_agent(scale)
-                to_fill = generate_agent_rgb(west, val=0, w_p=w_p)
+                to_fill = generate_agent_rgb(west, val=0, background_weights=background)
             else:
                 to_fill = np.copy(color_map[val])
-                if val == 0 and w_p > 0:
-                    to_fill[:2] -= w_p
+                if val == 0:
+                    to_fill = background
+
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
                 x * (scale + 1) + 1:(x + 1) * (scale + 1)] = to_fill
