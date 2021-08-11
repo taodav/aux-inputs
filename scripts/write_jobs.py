@@ -11,12 +11,19 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
     """
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
     run_dict = {
-        # 'env': ['fpw', 'fsw'],
-        'env': ['fp', 'fs', 'fpm', 'fpv', 'f'],
+        # 'env': ['fpg', 'fsg'],
+        # 'env': ['fp', 'fs', 'fpm', 'fpv', 'f'],
+        'env': ['fipg', 'fisg', 'fi'],
         'size': [9],
         'update_weight_interval': [1],
+        # 'resample_interval': [10, 20],
+        'n_particles': [1000],
         'seed': [(i + 2020) for i in range(30)],
-        'total_steps': [150000]
+        # 'seed': [2000],
+        'total_steps': [300000],
+        # 'total_steps': [150000],
+        # 'save_model': [None]
+
     }
 
     runs_path = runs_dir / runs_fname
@@ -46,7 +53,10 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
                 # Since non-pf runs don't use this hyperparam, skip the ones not needed
                 skip = True
                 break
-            run_string += f" --{k} {v}"
+            if v is None:
+                run_string += f" --{k}"
+            else:
+                run_string += f" --{k} {v}"
 
         if skip:
             continue
@@ -64,6 +74,6 @@ if __name__ == "__main__":
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(runs_dir)
+    generate_runs(runs_dir, runs_fname='runs_stochastic.txt')
 
 

@@ -20,10 +20,10 @@ class Args(Tap):
     v = Particle filter with only variance of particles + observations + reward. This will only work if "p" is in env string.
         If m or v is in string without p, nothing happens.
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
-    w = Whole-state observations + color observation. This encodes all particles/states in a single array.
+    g = global-state observations + color observation. This encodes all particles/states in a single array.
     """
     size: int = 8  # How large do we want each dimension of our gridworld to be?
-    slip: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
+    slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?

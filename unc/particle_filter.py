@@ -33,7 +33,10 @@ def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
     # First we propagate the particles
     if action is not None:
         for i, p in enumerate(particles):
-            updated_particles[i] = transition_fn(p, action)
+            # Some small optimization: If particle weights are 0, we don't apply the
+            # transition function.
+            if weights[i] > 10e-10:
+                updated_particles[i] = transition_fn(p, action)
 
     # Now we re-weight based on emission probabilities
     if update_weights:
@@ -43,9 +46,12 @@ def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
             unnormalized_updated_weights[i] = weights[i] * emit_prob(p, next_obs)
 
         # Normalize our weights again
-        updated_weights = unnormalized_updated_weights / np.sum(unnormalized_updated_weights)
+        sum_weights = np.sum(unnormalized_updated_weights)
+        if sum_weights == 0:
+            updated_weights = None
+        else:
+            updated_weights = unnormalized_updated_weights / sum_weights
 
-        assert not np.isnan(updated_weights).any()
     else:
         updated_weights = unnormalized_updated_weights
 

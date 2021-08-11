@@ -56,16 +56,16 @@ def west_facing_agent(size: int, width: int = 5) -> np.ndarray:
     return larger - smaller
 
 
-def north_facing_agent(size: int, width: int = 2) -> np.ndarray:
+def north_facing_agent(size: int, width: int = 5) -> np.ndarray:
     west = west_facing_agent(size, width=width)
     return west.T
 
 
-def east_facing_agent(size: int, width: int = 2) -> np.ndarray:
+def east_facing_agent(size: int, width: int = 5) -> np.ndarray:
     return np.flip(west_facing_agent(size, width=width), axis=1)
 
 
-def south_facing_agent(size: int, width: int = 2) -> np.ndarray:
+def south_facing_agent(size: int, width: int = 5) -> np.ndarray:
     return np.flip(north_facing_agent(size, width=width), axis=0)
 
 

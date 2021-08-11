@@ -57,6 +57,17 @@ def run_pf_random_policy(env: CompassWorld,
         update_weights = s % weight_update_interval == 0
         weights, particles = step(weights, particles, obs, env.transition, env.emit_prob,
                                   action=action, update_weights=update_weights)
+        if weights is None:
+            print("=============RESETTING WEIGHTS=============")
+            # If all our weights are 0, we get None for weights and have to
+            # re-initialize particles
+            if n_particles == -1:
+                particles = env.sample_all_states()
+            else:
+                particles = env.sample_states(n=n_particles)
+
+            weights = np.ones(particles.shape[0]) / particles.shape[0]
+
         # state_in_particles = False
         # print(particles[particle_to_follow], env.state, action)
         # current_state_prob = 0
@@ -151,7 +162,7 @@ def test_SlipCW():
             run_pf_random_policy(env, log_interval=log_interval,
                                  weight_update_interval=weight_update_interval,
                                  resample_every=None,
-                                 n_particles=2000)
+                                 n_particles=1000)
 
 
 

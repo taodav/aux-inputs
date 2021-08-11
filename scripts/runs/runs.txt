@@ -1,150 +1,30 @@
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000
-python main.py --env fp --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000
-python main.py --env fs --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000
-python main.py --env fpm --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000
-python main.py --env fpv --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000
-python main.py --env f --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2020 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2021 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2022 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2023 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2024 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2025 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2026 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2027 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2028 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2029 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2030 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2031 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2032 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2033 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2034 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2035 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2036 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2037 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2038 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2039 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2040 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2041 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2042 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2043 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2044 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2045 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2046 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2047 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2048 --total_steps 150000 --save_model
+python main.py --env fsg --size 9 --update_weight_interval 1 --seed 2049 --total_steps 150000 --save_model

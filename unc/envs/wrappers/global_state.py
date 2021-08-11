@@ -6,7 +6,7 @@ from .wrapper import CompassWorldWrapper
 from unc.envs import CompassWorld
 
 
-class WholeStateObservationWrapper(CompassWorldWrapper):
+class GlobalStateObservationWrapper(CompassWorldWrapper):
     priority = 3
 
     def __init__(self, env: Union[CompassWorld, CompassWorldWrapper],
@@ -18,7 +18,7 @@ class WholeStateObservationWrapper(CompassWorldWrapper):
         particle filter wrapper MUST be part of env.
         :param ground_truth: Do we encode the ground truth state or the particles?
         """
-        super(WholeStateObservationWrapper, self).__init__(env)
+        super(GlobalStateObservationWrapper, self).__init__(env)
 
         self.ground_truth = ground_truth
 
@@ -40,7 +40,7 @@ class WholeStateObservationWrapper(CompassWorldWrapper):
         obs = obs.flatten()
 
         # We assume that the color observation is always the last five observations
-        color_obs = self.env.get_obs(state)[-5:]
+        color_obs = self.unwrapped.get_obs(state)
         obs = np.concatenate((obs, color_obs))
 
         return obs

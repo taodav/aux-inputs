@@ -28,6 +28,7 @@ if __name__ == "__main__":
                         env_str=args.env,
                         blur_prob=args.blur_prob,
                         random_start=args.random_start,
+                        slip_prob=args.slip_prob,
                         size=args.size,
                         n_particles=args.n_particles,
                         update_weight_interval=args.update_weight_interval)
