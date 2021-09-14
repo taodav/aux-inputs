@@ -16,13 +16,14 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
         'env': ['fipg', 'fisg', 'fi'],
         'size': [9],
         'update_weight_interval': [1],
-        # 'resample_interval': [10, 20],
+        'resample_interval': [20],
         'n_particles': [1000],
         'seed': [(i + 2020) for i in range(30)],
         # 'seed': [2000],
         'total_steps': [300000],
+        'slip_turn': [True]
         # 'total_steps': [150000],
-        # 'save_model': [None]
+        # 'save_model': [True]
 
     }
 
@@ -53,8 +54,10 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt') -> List[str]:
                 # Since non-pf runs don't use this hyperparam, skip the ones not needed
                 skip = True
                 break
-            if v is None:
+            if v is True:
                 run_string += f" --{k}"
+            elif v is False:
+                continue
             else:
                 run_string += f" --{k} {v}"
 

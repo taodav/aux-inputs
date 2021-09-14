@@ -24,6 +24,7 @@ class Args(Tap):
     """
     size: int = 8  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
+    slip_turn: bool = False  # If we're in the slip setting, do we slip on turns as well?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?

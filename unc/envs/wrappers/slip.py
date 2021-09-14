@@ -9,7 +9,7 @@ class SlipWrapper(CompassWorldWrapper):
     priority = 1
 
     def __init__(self, env: Union[CompassWorld, CompassWorldWrapper],
-                 slip_prob: float = 0.1, *args, **kwargs):
+                 slip_prob: float = 0.1, slip_turn: bool = True, *args, **kwargs):
         """
         Stochastic version of Compass World where you have a chance of "slipping" when
         moving forward and remaining in the same grid. The probability of this happening
@@ -19,6 +19,7 @@ class SlipWrapper(CompassWorldWrapper):
         """
         super(SlipWrapper, self).__init__(env, *args, **kwargs)
         self.slip_prob = slip_prob
+        self.slip_turn = slip_turn
 
         assert self.slip_prob <= 1.0, "Probability exceeds 1."
 
@@ -34,6 +35,19 @@ class SlipWrapper(CompassWorldWrapper):
         self.state = self.transition(self.state, action)
 
         return self.get_obs(self.state), self.get_reward(), self.get_terminal(), {}
+
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
+        if self.slip_turn:
+            same_actions = np.arange(actions.shape[0])
+        else:
+            same_actions = np.argwhere((actions == 0))[:, 0]
+
+        same_mask = self.rng.choice([0, 1], p=[1 - self.slip_prob, self.slip_prob], size=same_actions.shape[0])
+        same_idx = same_actions[same_mask.astype(bool)]
+        next_states = self.env.batch_transition(states, actions)
+        next_states[same_idx] = states[same_idx]
+
+        return next_states
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         new_state = state.copy()

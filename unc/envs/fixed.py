@@ -1,5 +1,6 @@
 import numpy as np
 from .compass import CompassWorld
+from unc.utils.data import batch_wall_split
 
 
 class FixedCompassWorld(CompassWorld):
@@ -31,6 +32,25 @@ class FixedCompassWorld(CompassWorld):
             self.state = np.array([3, 3, self.rng.choice(np.arange(0, 4))], dtype=np.int16)
 
         return self.get_obs(self.state)
+
+    def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
+        """
+        Batch version of get_obs.
+        :param state: batch x 3 size
+        :return: batch x 5 observation
+        """
+        assert len(states.shape) == 2
+        batch_size = states.shape[0]
+        res = np.zeros((batch_size, 5), dtype=np.uint8)
+
+        n_wall, e_wall, s_wall, b_wall, g_wall = batch_wall_split(states, self.size, green_idx=(self.size - 1) // 2)
+
+        res[n_wall] = [1, 0, 0, 0, 0]
+        res[e_wall] = [0, 1, 0, 0, 0]
+        res[s_wall] = [0, 0, 1, 0, 0]
+        res[b_wall] = [0, 0, 0, 1, 0]
+        res[g_wall] = [0, 0, 0, 0, 1]
+        return res
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
 

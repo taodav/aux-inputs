@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+from typing import Any
 
 
 class Environment(gym.Env):
@@ -15,7 +16,7 @@ class Environment(gym.Env):
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         raise NotImplementedError()
 
-    def get_reward(self) -> int:
+    def get_reward(self, prev_state: np.ndarray = None, action: int = None) -> int:
         raise NotImplementedError()
 
     def get_terminal(self) -> bool:
@@ -27,7 +28,7 @@ class Environment(gym.Env):
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         raise NotImplementedError()
 
-    def emit_prob(self, state: np.ndarray, obs: np.ndarray) -> float:
+    def emit_prob(self, state: Any, obs: np.ndarray) -> float:
         pass
     
     def step(self, action: int):

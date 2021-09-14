@@ -78,7 +78,9 @@ def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, background_weights
     agent = (rgb == 1)
     if background_weights is not None:
         rgb = background_weights
-        rgb[agent.astype(bool)] = val
+    else:
+        rgb = np.ones_like(rgb) * 255
+    rgb[agent.astype(bool)] = val
 
     return rgb
 
@@ -165,7 +167,7 @@ def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
                 to_fill = generate_agent_rgb(west, val=0, background_weights=background)
             else:
                 to_fill = np.copy(color_map[val])
-                if val == 0:
+                if val == 0 and background is not None:
                     to_fill = background
 
             if grid_lines:

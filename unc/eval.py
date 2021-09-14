@@ -10,7 +10,7 @@ from unc.trainer import Trainer
 
 def test_episodes(agent: Agent, env: Union[CompassWorld, CompassWorldWrapper],
                  n_episodes: int = 1, test_eps: float = 0.0, render: bool = True,
-                  max_episode_steps: int = 1000) -> Tuple[np.ndarray, np.ndarray]:
+                  max_episode_steps: int = 1000, show_obs: bool = True, show_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     imgs = []
     all_rews = []
     for ep in range(n_episodes):
@@ -19,7 +19,9 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, CompassWorldWrapper],
 
         obs = np.array([env.reset()])
         if render:
-            imgs.append(env.render(mode='rgb_array'))
+            imgs.append(env.render(mode='rgb_array',
+                                   show_obs=show_obs,
+                                   show_weights=show_weights))
 
         agent.set_eps(test_eps)
 
@@ -31,7 +33,9 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, CompassWorldWrapper],
 
             rews.append(reward)
             if render:
-                imgs.append(env.render(mode='rgb_array'))
+                imgs.append(env.render(mode='rgb_array',
+                                       show_obs=show_obs,
+                                       show_weights=show_weights))
 
             if done:
                 break

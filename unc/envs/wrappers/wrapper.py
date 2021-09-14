@@ -53,6 +53,9 @@ class CompassWorldWrapper(gym.Wrapper):
     def state(self, state) -> None:
         self.env.state = state
 
+    def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
+        return self.env.batch_get_obs(states)
+
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         return self.env.get_obs(state)
 
@@ -61,6 +64,9 @@ class CompassWorldWrapper(gym.Wrapper):
 
     def get_terminal(self) -> bool:
         return self.env.get_terminal()
+
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
+        return self.env.batch_transition(states, actions)
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         return self.env.transition(state, action)

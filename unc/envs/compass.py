@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from typing import Tuple
 from .base import Environment
+from unc.utils.data import batch_wall_split
 
 
 class CompassWorld(Environment):
@@ -36,6 +37,55 @@ class CompassWorld(Environment):
     @state.setter
     def state(self, state: np.ndarray):
         self._state = state
+
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
+        full_direction_mapping = np.concatenate(
+            (self.direction_mapping, np.zeros(self.direction_mapping.shape[0], dtype=np.int16)[:, np.newaxis]), axis=-1)
+
+        directions = np.arange(4)
+        next_states = states.copy()
+
+        forward_states = np.argwhere((actions == 0))[:, 0]
+
+        def forward(states: np.ndarray, f_states: np.ndarray, direction: int) -> np.ndarray:
+            relative_d_forward_states = np.argwhere(states[f_states][:, 2] == direction)
+            d_forward_states = forward_states[relative_d_forward_states][:, 0]
+            return d_forward_states
+
+        for d in directions:
+            d_forward_states = forward(states, forward_states, d)
+            next_states[d_forward_states] += full_direction_mapping[d]
+
+        right_states = np.argwhere((actions == 1))[:, 0]
+        next_right_states = next_states[right_states]
+        next_right_states[:, 2] = (states[right_states][:, 2] + 1) % 4
+        next_states[right_states] = next_right_states
+
+        left_states = np.argwhere((actions == 2))[:, 0]
+        next_left_states = next_states[left_states]
+        next_left_states[:, 2] = (states[left_states][:, 2] - 1) % 4
+        next_states[left_states] = next_left_states
+
+        return np.maximum(np.minimum(next_states, self.state_max), self.state_min)
+
+    def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
+        """
+        Batch version of get_obs.
+        :param state: batch x 3 size
+        :return: batch x 5 observation
+        """
+        assert len(states.shape) == 2
+        batch_size = states.shape[0]
+        res = np.zeros((batch_size, 5), dtype=np.uint8)
+
+        n_wall, e_wall, s_wall, b_wall, g_wall = batch_wall_split(states, self.size, green_idx=1)
+
+        res[n_wall] = [1, 0, 0, 0, 0]
+        res[e_wall] = [0, 1, 0, 0, 0]
+        res[s_wall] = [0, 0, 1, 0, 0]
+        res[b_wall] = [0, 0, 0, 1, 0]
+        res[g_wall] = [0, 0, 0, 0, 1]
+        return res
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         obs = np.zeros(5)
@@ -120,15 +170,15 @@ class CompassWorld(Environment):
 
         return new_state
 
-    def emit_prob(self, state: np.ndarray, obs: np.ndarray) -> float:
+    def emit_prob(self, states: np.ndarray, obs: np.ndarray) -> np.ndarray:
         """
-        Get the probability of emitting a given observation given a state
-        :param state: underlying state
-        :param obs: observation
+        Get the probability of emitting a batch of observations given states
+        :param state: underlying state, size batch_size x 3
+        :param obs: observation, size batch_size x 5
         :return: probability of emitting (either 0 or 1 for this deterministic environment).
         """
-        ground_truth_obs = self.get_obs(state)
-        return float((ground_truth_obs == obs).all())
+        ground_truth_obs = self.batch_get_obs(states)
+        return (ground_truth_obs == obs).min(axis=-1).astype(np.float)
 
     def sample_states(self, n: int = 10) -> np.ndarray:
         """

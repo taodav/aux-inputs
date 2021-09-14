@@ -50,7 +50,7 @@ class ParticleFilterWrapper(CompassWorldWrapper):
         # Update them based on the first observation
         # color_obs = self.unwrapped.get_obs(self.state)
         self.weights, self.particles = step(self.weights, self.particles, color_obs,
-                                            self.transition, self.emit_prob)
+                                            self.batch_transition, self.emit_prob)
 
         return color_obs
 
@@ -60,7 +60,7 @@ class ParticleFilterWrapper(CompassWorldWrapper):
 
         # Update our particles and weights after doing a transition
         self.weights, self.particles = step(self.weights, self.particles, color_obs,
-                                            self.transition, self.emit_prob, action=action,
+                                            self.batch_transition, self.emit_prob, action=action,
                                             update_weights=self.env_step % self.update_weight_interval == 0)
 
         if self.weights is None:

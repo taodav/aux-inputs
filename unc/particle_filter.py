@@ -22,7 +22,7 @@ def state_stats(particles: np.ndarray, weights: np.ndarray) -> Tuple[np.ndarray,
 
 
 def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
-         transition_fn: Callable,
+         batch_transition_fn: Callable,
          emit_prob: Callable,
          action: int = None,
          update_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
@@ -32,18 +32,21 @@ def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
 
     # First we propagate the particles
     if action is not None:
-        for i, p in enumerate(particles):
-            # Some small optimization: If particle weights are 0, we don't apply the
-            # transition function.
-            if weights[i] > 10e-10:
-                updated_particles[i] = transition_fn(p, action)
+        batch_actions = np.ones(particles.shape[0]) * action
+        updated_particles = batch_transition_fn(particles, batch_actions)
+        # for i, p in enumerate(particles):
+        #     # Some small optimization: If particle weights are 0, we don't apply the
+        #     # transition function.
+        #     if weights[i] > 10e-10:
+        #         updated_particles[i] = transition_fn(p, action)
 
     # Now we re-weight based on emission probabilities
     if update_weights:
-        for i, p in enumerate(updated_particles):
-            if 1 - weights[i] < 10e-10:
-                continue
-            unnormalized_updated_weights[i] = weights[i] * emit_prob(p, next_obs)
+        unnormalized_updated_weights = weights * emit_prob(updated_particles, next_obs)
+        # for i, p in enumerate(updated_particles):
+        #     if 1 - weights[i] < 10e-10:
+        #         continue
+        #     unnormalized_updated_weights[i] = weights[i] * emit_prob(p, next_obs)
 
         # Normalize our weights again
         sum_weights = np.sum(unnormalized_updated_weights)

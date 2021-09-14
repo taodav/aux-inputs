@@ -19,6 +19,7 @@ def get_env(seed: int, env_str: str = "s",
             random_start: bool = True,
             blur_prob: float = 0.1,
             slip_prob: float = 0.1,
+            slip_turn: bool = True,
             update_weight_interval: int = 1,
             size: int = 8,
             resample_interval: int = None,
@@ -51,7 +52,7 @@ def get_env(seed: int, env_str: str = "s",
         if w == BlurryWrapper:
             env = w(env, blur_prob=blur_prob)
         elif w == SlipWrapper:
-            env = w(env, slip_prob=slip_prob)
+            env = w(env, slip_prob=slip_prob, slip_turn=slip_turn)
         elif w == ParticleFilterWrapper:
             env = w(env, update_weight_interval=update_weight_interval,
                     resample_interval=resample_interval, n_particles=n_particles)
