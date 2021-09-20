@@ -1,13 +1,12 @@
-import gym
 import numpy as np
 from typing import Union
 
-from unc.envs import CompassWorld
-from unc.envs.wrappers import CompassWorldWrapper
-from unc.particle_filter import step, resample
+from unc.envs.compass import CompassWorld
+from unc.particle_filter import batch_step, resample
+from .wrapper import CompassWorldWrapper
 
 
-class ParticleFilterWrapper(CompassWorldWrapper):
+class CompassParticleFilterWrapper(CompassWorldWrapper):
     """
     Particle filter observations.
 
@@ -29,7 +28,7 @@ class ParticleFilterWrapper(CompassWorldWrapper):
                  update_weight_interval: int = 1,  resample_interval: int = None,
                  n_particles: int = -1,
                  **kwargs):
-        super(ParticleFilterWrapper, self).__init__(env, *args, **kwargs)
+        super(CompassParticleFilterWrapper, self).__init__(env, *args, **kwargs)
         self.particles = None
         self.weights = None
         self.env_step = 0
@@ -49,7 +48,7 @@ class ParticleFilterWrapper(CompassWorldWrapper):
 
         # Update them based on the first observation
         # color_obs = self.unwrapped.get_obs(self.state)
-        self.weights, self.particles = step(self.weights, self.particles, color_obs,
+        self.weights, self.particles = batch_step(self.weights, self.particles, color_obs,
                                             self.batch_transition, self.emit_prob)
 
         return color_obs
@@ -59,7 +58,7 @@ class ParticleFilterWrapper(CompassWorldWrapper):
         self.env_step += 1
 
         # Update our particles and weights after doing a transition
-        self.weights, self.particles = step(self.weights, self.particles, color_obs,
+        self.weights, self.particles = batch_step(self.weights, self.particles, color_obs,
                                             self.batch_transition, self.emit_prob, action=action,
                                             update_weights=self.env_step % self.update_weight_interval == 0)
 

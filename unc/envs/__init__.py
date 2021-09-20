@@ -1,21 +1,78 @@
+from pathlib import Path
+import unc.envs.wrappers.compass as cw
+import unc.envs.wrappers.rocksample as rw
+
 from .compass import CompassWorld
 from .fixed import FixedCompassWorld
+from .rocksample import RockSample
 from .base import Environment
-from unc.envs.wrappers import *
+from definitions import ROOT_DIR
 
-wrapper_map = {
-    's': StateObservationWrapper,
-    'i': SlipWrapper,
-    'b': BlurryWrapper,
-    'p': ParticleFilterWrapper,
-    'g': GlobalStateObservationWrapper,
-    'l': LocalStateObservationWrapper,
+
+compass_wrapper_map = {
+    's': cw.StateObservationWrapper,
+    'i': cw.SlipWrapper,
+    'b': cw.BlurryWrapper,
+    'p': cw.CompassParticleFilterWrapper,
+    'g': cw.GlobalStateObservationWrapper,
+    'l': cw.LocalStateObservationWrapper,
     'm': None,
     'v': None,
     'f': None
 }
 
-def get_env(seed: int, env_str: str = "s",
+rocksample_wrapper_map = {
+    'g': rw.GlobalStateObservationWrapper,
+    'p': rw.RocksParticleFilterWrapper
+}
+
+def get_env(seed: int, env_str: str = "r", *args, **kwargs):
+    if "r" in env_str:
+        env_str = env_str.replace('r', '')
+        env = get_rocksample_env(seed, env_str, *args, **kwargs)
+    else:
+        if "c" in env_str:
+            env_str = env_str.replace('c', '')
+        env = get_compass_env(seed, *args, env_str=env_str, **kwargs)
+    return env
+
+
+def get_rocksample_env(seed: int, env_str: str = "r",
+                       config_path: Path = Path(ROOT_DIR, "unc", "envs", "configs", "rock_sample_config.json"),
+                       *args,
+                       update_weight_interval: int = 1,
+                       resample_interval: int = None,
+                       n_particles: int = 100,
+                       render: bool = True,
+                       **kwargs):
+    ground_truth = False
+    if "g" in env_str and "s" in env_str:
+        ground_truth = True
+        env_str = env_str.replace("s", "")
+
+    list_w = list(set(env_str))
+    wrapper_list = [rocksample_wrapper_map[w] for w in list_w if rocksample_wrapper_map[w] is not None]
+
+    ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
+
+    env = RockSample(config_path, seed)
+    for w in ordered_wrapper_list:
+        if w == rw.RocksParticleFilterWrapper:
+            env = w(env, update_weight_interval=update_weight_interval,
+                    resample_interval=resample_interval,
+                    n_particles=n_particles)
+        elif w == rw.GlobalStateObservationWrapper:
+            env = w(env, ground_truth=ground_truth)
+        else:
+            env = w(env)
+
+    if render:
+        env = rw.RockRenderWrapper(env)
+
+    return env
+
+
+def get_compass_env(seed: int, env_str: str = "s",
             random_start: bool = True,
             blur_prob: float = 0.1,
             slip_prob: float = 0.1,
@@ -39,7 +96,7 @@ def get_env(seed: int, env_str: str = "s",
         resample_interval = None
 
     list_w = list(set(env_str))
-    wrapper_list = [wrapper_map[w] for w in list_w if wrapper_map[w] is not None]
+    wrapper_list = [compass_wrapper_map[w] for w in list_w if compass_wrapper_map[w] is not None]
 
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
 
@@ -49,22 +106,22 @@ def get_env(seed: int, env_str: str = "s",
         env = CompassWorld(seed=seed, random_start=random_start, size=size)
 
     for w in ordered_wrapper_list:
-        if w == BlurryWrapper:
+        if w == cw.BlurryWrapper:
             env = w(env, blur_prob=blur_prob)
-        elif w == SlipWrapper:
+        elif w == cw.SlipWrapper:
             env = w(env, slip_prob=slip_prob, slip_turn=slip_turn)
-        elif w == ParticleFilterWrapper:
+        elif w == cw.CompassParticleFilterWrapper:
             env = w(env, update_weight_interval=update_weight_interval,
                     resample_interval=resample_interval, n_particles=n_particles)
-        elif w == LocalStateObservationWrapper:
+        elif w == cw.LocalStateObservationWrapper:
             env = w(env, mean_only='m' in env_str, vars_only='v' in env_str)
-        elif w == GlobalStateObservationWrapper:
+        elif w == cw.GlobalStateObservationWrapper:
             assert "m" not in env_str and "v" not in env_str, "'m' or 'v' doesn't make sense with 'w'"
             env = w(env, ground_truth=ground_truth)
         else:
             env = w(env)
 
     if render:
-        env = RenderWrapper(env)
+        env = cw.CompassRenderWrapper(env)
 
     return env

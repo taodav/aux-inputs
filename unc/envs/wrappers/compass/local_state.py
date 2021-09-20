@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union, Tuple
 
 from .wrapper import CompassWorldWrapper
-from unc.envs import CompassWorld
+from unc.envs.compass import CompassWorld
 from unc.particle_filter import state_stats
 
 

@@ -2,8 +2,8 @@ import gym
 import numpy as np
 from typing import Union, Tuple
 
-from unc.envs.wrappers import CompassWorldWrapper
-from unc.envs import CompassWorld
+from .wrapper import CompassWorldWrapper
+from unc.envs.compass import CompassWorld
 
 
 class StateObservationWrapper(CompassWorldWrapper):

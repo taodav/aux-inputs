@@ -1,8 +1,8 @@
 import numpy as np
 from typing import Union, Tuple
 
-from unc.envs.wrappers import CompassWorldWrapper
 from unc.envs.compass import CompassWorld
+from .wrapper import CompassWorldWrapper
 
 
 class BlurryWrapper(CompassWorldWrapper):

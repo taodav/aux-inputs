@@ -1,9 +1,9 @@
 import numpy as np
-from unc.utils import arr_to_viz, append_text
+from unc.utils import compass_arr_to_viz, append_text
 from .wrapper import CompassWorldWrapper
 
 
-class RenderWrapper(CompassWorldWrapper):
+class CompassRenderWrapper(CompassWorldWrapper):
     priority = float('inf')
 
     def _generate_weighted_background(self) -> np.ndarray:
@@ -35,7 +35,7 @@ class RenderWrapper(CompassWorldWrapper):
         if show_weights:
             background_weights = self._generate_weighted_background()
 
-        viz = arr_to_viz(arr, scale=100, background_weights=background_weights)
+        viz = compass_arr_to_viz(arr, scale=100, background_weights=background_weights)
         if show_obs:
             obs = self.get_obs(self.state)
             np.set_printoptions(precision=2)

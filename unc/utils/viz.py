@@ -1,6 +1,123 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+# ==========================================================
+#                        ROCKSAMPLE
+# ==========================================================
+
+
+def create_circular_mask(h, w, center=None, radius=None):
+
+    if center is None: # use the middle of the image
+        center = (int(w/2), int(h/2))
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+
+    mask = dist_from_center <= radius
+    return mask
+
+def generate_rock_agent_rgb(size: int, agent_color: np.ndarray) -> np.ndarray:
+    agent_mask = create_circular_mask(size, size, radius=size // 3)
+    rgb = np.repeat(agent_mask[..., np.newaxis], 3, axis=-1)
+    rgb = np.ones_like(rgb) * 255
+    rgb[agent_mask.astype(bool)] = agent_color
+    return rgb
+
+
+def create_rectangle(h, w, thickness=2, length=None, width=None):
+    grid = np.zeros((h, w))
+    if length is None:
+        length = h - 2
+    if width is None:
+        width = w - 2
+
+    assert h > length and w > width
+    h_space = (h - length) // 2
+    w_space = (w - width) // 2
+
+    # East/West
+    w_range_pos = np.arange(thickness) + w_space
+    w_range = np.concatenate([w_range_pos, -(w_range_pos + 1)])
+    grid[h_space:-h_space, w_range] = 1
+
+    # North/South
+    h_range_pos = np.arange(thickness) + h_space
+    h_range = np.concatenate([h_range_pos, -(h_range_pos + 1)])
+    grid[h_range, w_space:-w_space] = 1
+    return grid
+
+
+def generate_rock_rgb(size: int, rock_color: np.ndarray, weight: float = None,
+                      background_color: np.ndarray = None):
+    if weight is not None and background_color is None:
+        w_p = int(weight * 155) + 30 if weight > 0 else 0
+        background_color = np.array([255 - w_p, 255 - w_p, 255])
+    l = size - size // 4
+    rock_mask = create_rectangle(size, size, thickness=5, length=l, width=l)
+    rgb = np.repeat(rock_mask[..., np.newaxis], 3, axis=-1)
+    if weight is not None:
+        rgb[:, :] = background_color
+    else:
+        rgb = np.ones_like(rgb) * 255
+    rgb[rock_mask.astype(bool)] = rock_color
+    return rgb
+
+
+def rocksample_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
+                          background_weights: np.ndarray = None) -> np.ndarray:
+    space_color = np.array([255, 255, 255], dtype=np.uint8)
+    rock_color = np.array([255, 167, 0], dtype=np.uint8)
+    goal_color = np.array([0, 150, 0])
+    agent_color = np.array([0, 0, 0], dtype=np.uint8)
+    grid_color = None
+
+    size = arr.shape[0] * scale
+
+    if grid_lines:
+        size += arr.shape[0] + 1
+        grid_color = np.array([150, 150, 150], dtype=np.uint8)
+
+    final_viz_array = np.zeros((size, size, 3), dtype=np.uint8)
+
+    if grid_lines:
+        final_viz_array[::(scale + 1)] = grid_color
+        final_viz_array[:, ::(scale + 1)] = grid_color
+
+    for y, row in enumerate(arr):
+        for x, val in enumerate(row):
+            if val == 1:
+                # AGENT
+                to_fill = generate_rock_agent_rgb(scale, agent_color)
+            elif val == 2:
+                # ROCK
+                to_fill = generate_rock_rgb(scale, rock_color, weight=background_weights[y, x] if background_weights is not None else None)
+            elif val == 3:
+                # AGENT + ROCK
+                background = generate_rock_rgb(scale, rock_color, weight=background_weights[y, x] if background_weights is not None else None)
+                agent = generate_rock_agent_rgb(scale, agent_color)
+                background[(agent != 255).astype(bool)] = agent[(agent != 255).astype(bool)]
+                to_fill = background
+            elif val == 4:
+                to_fill = np.copy(goal_color)
+            else:
+                to_fill = np.copy(space_color)
+
+            if grid_lines:
+                final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
+                x * (scale + 1) + 1:(x + 1) * (scale + 1)] = to_fill
+            else:
+                final_viz_array[y * scale:(y + 1) * scale,
+                x * scale:(x + 1) * scale] = to_fill
+
+    return final_viz_array
+
+# ==========================================================
+#                      COMPASS WORLD
+# ==========================================================
+
 def east_triangle(size: int) -> np.ndarray:
     grid = np.ones((size, size))
     up_tri = np.triu(grid)
@@ -106,8 +223,8 @@ def generate_background_tile(size: int, background_weights: np.ndarray, grid_col
     return grid
 
 
-def arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
-               background_weights: np.ndarray = None) -> np.ndarray:
+def compass_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
+                       background_weights: np.ndarray = None) -> np.ndarray:
     """
     Convert array representation of Compass World state to
     a scaled RGB array.

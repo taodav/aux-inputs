@@ -11,6 +11,7 @@ from unc.utils.data import euclidian_dist, manhattan_dist, half_dist_prob
 class RockSample(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
+
     def __init__(self, config_file: Path, seed: int):
         """
         RockSample environment.
@@ -24,7 +25,7 @@ class RockSample(Environment):
         """
         with open(config_file) as f:
             config = json.load(f)
-        self.n = config['size']
+        self.size = config['size']
         self.k = config['rocks']
         self.half_efficiency_distance = config['half_efficiency_distance']
         self.bad_rock_reward = config['bad_rock_reward']
@@ -32,18 +33,18 @@ class RockSample(Environment):
         self.exit_reward = config['exit_reward']
         self.seed = seed
 
-        self.observation_space = gym.spaces.Discrete(self.k + 2)
+        self.observation_space = gym.spaces.MultiBinary(self.k + 2)
         self.action_space = gym.spaces.Discrete(self.k + 5)
         self.rng = np.random.RandomState(seed)
-        self.position_max = [self.n - 1, self.n - 1]
+        self.position_max = [self.size - 1, self.size - 1]
         self.position_min = [0, 0]
 
         self.rock_positions = None
         self.rock_morality = None
         self.agent_position = None
-        self.agent_init_position = None
+        # self.agent_init_position = None
         self.sampled_rocks = None
-        self.current_rocks_obs = np.zeros(self.k)
+        self.current_rocks_obs = np.zeros(self.k, dtype=np.int16)
 
         # Given a random seed, generate the map
         self.generate_map()
@@ -75,13 +76,20 @@ class RockSample(Environment):
         self.current_rocks_obs = cro
 
     def generate_map(self):
-        rows_range = np.arange(0, self.n)
+        rows_range = np.arange(0, self.size)
         cols_range = rows_range[:-1]
-        possible_rock_positions = np.array(list(product(rows_range, cols_range)))
-        all_positions_idx = self.rng.choice(possible_rock_positions.shape[0], self.k + 1, replace=False)
+        possible_rock_positions = np.array(list(product(rows_range, cols_range)), dtype=np.int16)
+        all_positions_idx = self.rng.choice(possible_rock_positions.shape[0], self.k, replace=False)
         all_positions = possible_rock_positions[all_positions_idx]
-        self.agent_init_position = all_positions[0]
-        self.rock_positions = all_positions[1:]
+        self.rock_positions = all_positions
+
+    def sample_positions(self, n: int = 1):
+        rows_range = np.arange(0, self.size)
+        cols_range = rows_range[:-1]
+        possible_positions = np.array(list(product(rows_range, cols_range)), dtype=np.int16)
+        sample_idx = self.rng.choice(possible_positions.shape[0], n, replace=True)
+        sample_position = np.array(possible_positions[sample_idx], dtype=np.int16)
+        return sample_position
 
     def sample_morality(self) -> np.ndarray:
         assert self.rock_positions is not None
@@ -89,7 +97,10 @@ class RockSample(Environment):
         return ((rand_int & (1 << np.arange(self.k))) > 0).astype(int)
 
     def get_terminal(self) -> bool:
-        return self.agent_position[1] == (self.n - 1)
+        return self.agent_position[1] == (self.size - 1)
+
+    def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         """
@@ -112,15 +123,16 @@ class RockSample(Environment):
         :return: reward
         """
         rew = 0
-        pposition, prock_morality, psampled_rocks, pcurrent_rocks_obs = self.unpack_state(prev_state)
 
         if action == 4:
             # If we're SAMPLING
             ele = (self.rock_positions == self.agent_position)
             idx = np.nonzero(ele[:, 0] & ele[:, 1])[0]
             if idx.shape[0] > 0:
+                idx = idx[0]
                 # If we're on a rock, we get rewards by sampling accordingly
-                rew = self.good_rock_reward if self.rock_morality[idx] > 0 else self.bad_rock_reward
+                _, prev_rock_morality, _, _ = self.unpack_state(prev_state)
+                rew = self.good_rock_reward if prev_rock_morality[idx] > 0 else self.bad_rock_reward
 
         elif action < 4:
             # If we're MOVING
@@ -132,7 +144,10 @@ class RockSample(Environment):
     def reset(self):
         self.sampled_rocks = np.zeros(len(self.rock_positions)).astype(bool)
         self.rock_morality = self.sample_morality()
-        self.agent_position = self.agent_init_position.copy()
+        self.agent_position = self.sample_positions(1)[0]
+        self.current_rocks_obs = np.zeros_like(self.current_rocks_obs)
+
+        return self.get_obs(self.state)
 
     def unpack_state(self, state: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         position = state[:2]
@@ -146,7 +161,10 @@ class RockSample(Environment):
                    current_rocks_obs: np.ndarray):
         return np.concatenate([position, rock_morality, sampled_rocks, current_rocks_obs])
 
-    def transition(self, state: Any, action: int) -> np.ndarray:
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()
+
+    def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         position, rock_morality, sampled_rocks, current_rocks_obs = self.unpack_state(state)
 
         if action > 4:
@@ -173,12 +191,18 @@ class RockSample(Environment):
                 idx = idx[0]
                 new_sampled_rocks = sampled_rocks.copy()
                 new_rocks_obs = current_rocks_obs.copy()
+                new_rock_morality = rock_morality.copy()
 
                 new_sampled_rocks[idx] = 1
 
                 # If this rock was actually good, we sampled it now it turns bad.
                 # Elif this rock is bad, we sample a bad rock and return 0
                 new_rocks_obs[idx] = 0
+                new_rock_morality[idx] = 0
+
+                sampled_rocks = new_sampled_rocks
+                current_rocks_obs = new_rocks_obs
+                rock_morality = new_rock_morality
 
             # If we sample a space with no rocks, nothing happens for transition.
         else:
@@ -188,15 +212,46 @@ class RockSample(Environment):
 
         return self.pack_state(position, rock_morality, sampled_rocks, current_rocks_obs)
 
+    def emit_prob(self, states: np.ndarray, obs: np.ndarray) -> np.ndarray:
+        """
+        With rock sample, we use an UNWEIGHTED particle filter
+        (like in the POMCP paper). This function will simply return an array
+        of shape (len(states),) of 1's
+        :param states: size (batch_size, *state_shape)
+        :param obs: size (batch_size, *obs_shape)
+        :return: array of 1's of shape (batch_size, )
+        """
+        if len(states.shape) > 1:
+            ones = np.ones(states.shape[0])
+        else:
+            ones = np.ones(1)
+        return ones
+
     def step(self, action: int):
-        next_state = self.transition(self.state, action)
-        prev_state = self.state.copy()
-        self.state = next_state
-        rew = self.get_reward(prev_state, action)
+        prev_state = self.state
+        self.state = self.transition(self.state, action)
 
+        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
 
+    def generate_array(self) -> np.ndarray:
+        """
+        Generate numpy array representing state.
+        Mappings are as follows:
+        0 = white space
+        1 = agent
+        2 = rock
+        3 = agent + rock
+        4 = goal
+        :return:
+        """
+        viz_array = np.zeros((self.size, self.size))
 
+        viz_array[self.rock_positions[:, 0], self.rock_positions[:, 1]] = 2
 
+        viz_array[self.agent_position[0], self.agent_position[1]] += 1
+
+        viz_array[:, self.size - 1] = 4
+        return viz_array
 
 
 

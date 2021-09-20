@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Union, Tuple
 
-from unc.envs.wrappers import CompassWorldWrapper
+from .wrapper import CompassWorldWrapper
 from unc.envs.compass import CompassWorld
 
 

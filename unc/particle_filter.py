@@ -21,7 +21,7 @@ def state_stats(particles: np.ndarray, weights: np.ndarray) -> Tuple[np.ndarray,
     return mean, variance
 
 
-def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
+def batch_step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
          batch_transition_fn: Callable,
          emit_prob: Callable,
          action: int = None,
@@ -60,6 +60,43 @@ def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
 
     return updated_weights, updated_particles
 
+
+def step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
+       transition_fn: Callable,
+       emit_prob: Callable,
+       action: int = None,
+       update_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    assert weights.shape[0] == particles.shape[0]
+    updated_particles = particles.copy()
+    unnormalized_updated_weights = weights.copy()
+
+    # First we propagate the particles
+    if action is not None:
+        batch_actions = np.ones(particles.shape[0]) * action
+        for i, p in enumerate(particles):
+            # Some small optimization: If particle weights are 0, we don't apply the
+            # transition function.
+            if weights[i] > 10e-10:
+                updated_particles[i] = transition_fn(p, action)
+
+    # Now we re-weight based on emission probabilities
+    if update_weights:
+        for i, p in enumerate(updated_particles):
+            if 1 - weights[i] < 10e-10:
+                continue
+            unnormalized_updated_weights[i] = weights[i] * emit_prob(p, next_obs)[0]
+
+        # Normalize our weights again
+        sum_weights = np.sum(unnormalized_updated_weights)
+        if sum_weights == 0:
+            updated_weights = None
+        else:
+            updated_weights = unnormalized_updated_weights / sum_weights
+
+    else:
+        updated_weights = unnormalized_updated_weights
+
+    return updated_weights, updated_particles
 
 def resample(weights: np.ndarray, particles: np.ndarray, rng: np.random.RandomState = None) -> Tuple[np.ndarray, np.ndarray]:
     """

@@ -222,7 +222,7 @@ class CompassWorld(Environment):
 
     def generate_array(self) -> np.ndarray:
         """
-        Generate a numpy array representing agent state.
+        Generate a numpy array representing state.
         Mappings for indices are as follows:
         0 = white space
         1 = orange wall

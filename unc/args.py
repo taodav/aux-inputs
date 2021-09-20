@@ -10,7 +10,11 @@ from definitions import ROOT_DIR
 class Args(Tap):
     env: str = "s"
     """
-    What environment do we use? combine the following keys in any order:
+    What environment do we use? 
+    r = RockSample
+    c (or nothing) = compass world
+    
+    Combine the following keys in any order for additional add-ons for COMPASS WORLD:
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))
     s = Ground-truth state concatenated to observation.
     b = With some prob., sample a random observation over the ground-truth. "Blurry observations" .
@@ -41,9 +45,11 @@ class Args(Tap):
     """
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability
+    anneal_steps: int = 0  # If we do epsilon annealing, over how many steps do we anneal epsilon?
+    epsilon_start: float = 1.0  # If we do epsilon annealing, where do we start the epsilon?
     random_start: bool = True  # Do we have a random initial state distribution?
 
-    seed: int = 2021  # Random seed
+    seed: int = 2020  # Random seed
     device: Union[str, torch.device] = "cuda"  # What device do we use? (cpu | cuda)
 
     test_eps: float = 0.0  # What's our test epsilon?
@@ -63,7 +69,7 @@ class Args(Tap):
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.results_dir /= self.env
-        self.results_dir /= str(self.size)
+        # self.results_dir /= str(self.size)
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
 

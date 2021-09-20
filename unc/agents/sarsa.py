@@ -2,22 +2,12 @@ import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
-from typing import Any
 from pathlib import Path
 
 from unc.args import Args
 from unc.models import QNetwork
 
-
-class Agent:
-    def act(self, state: Any):
-        raise NotImplementedError()
-
-    def update(self, state: Any, action: Any, next_state: Any, gamma: Any, reward: Any):
-        raise NotImplementedError()
-
-    def set_eps(self, eps: float):
-        raise NotImplementedError()
+from .base import Agent
 
 
 class SarsaAgent(Agent):
