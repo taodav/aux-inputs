@@ -6,4 +6,5 @@ tensorboard
 pillow
 matplotlib
 opencv-python
+dill
 -e .

@@ -28,6 +28,7 @@ class RockSamplerAgent(Agent):
         assert target_type in ['rock', 'goal']
         self.target_position = target_position
         self.target_type = target_type
+        self.finished_current_option = False
 
     def act(self, state: np.ndarray):
         """
@@ -35,11 +36,11 @@ class RockSamplerAgent(Agent):
         :param state:
         :return:
         """
+        position = state[:2]
         if self.target_type == 'goal':
             # EXIT
             return 1
 
-        position = state[:2]
         if np.all(self.target_position == position):
             if not self.finished_current_option:
                 # If we're in position but haven't finished, this means we need to sample

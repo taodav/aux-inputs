@@ -59,6 +59,8 @@ class Args(Tap):
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     save_model: bool = False  # Do we save our model after finishing training?
 
+    batch_size: int = 64  # Batch size for buffer training
+
     def process_args(self) -> None:
         # Set our device
         self.device = torch.device(self.device) if torch.cuda.is_available() else torch.device('cpu')

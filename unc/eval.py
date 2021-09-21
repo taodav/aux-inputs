@@ -5,7 +5,7 @@ from typing import Union, Tuple
 
 from unc.envs import CompassWorld
 from unc.agents import Agent
-from unc.trainer import Trainer
+from unc.trainers.trainer import Trainer
 
 
 def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],

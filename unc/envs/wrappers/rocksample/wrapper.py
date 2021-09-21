@@ -44,9 +44,17 @@ class RockSampleWrapper(gym.Wrapper):
     def rock_positions(self):
         return self.env.rock_positions
 
+    @rock_positions.setter
+    def rock_positions(self, positions: np.ndarray):
+        self.env.rock_positions = positions
+
     @property
     def rock_morality(self):
         return self.env.rock_morality
+
+    @property
+    def state_space(self):
+        return self.env.state_space
 
     @particles.setter
     def particles(self, particles):

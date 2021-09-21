@@ -6,11 +6,11 @@ from itertools import product
 from pathlib import Path
 
 from unc.envs.base import Environment
-from unc.utils.data import euclidian_dist, manhattan_dist, half_dist_prob
+from unc.utils.data import euclidian_dist, half_dist_prob
+
 
 class RockSample(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
-
 
     def __init__(self, config_file: Path, seed: int):
         """
@@ -34,6 +34,7 @@ class RockSample(Environment):
         self.seed = seed
 
         self.observation_space = gym.spaces.MultiBinary(self.k + 2)
+        self.state_space = gym.spaces.MultiBinary(2 + 3 * self.k)
         self.action_space = gym.spaces.Discrete(self.k + 5)
         self.rng = np.random.RandomState(seed)
         self.position_max = [self.size - 1, self.size - 1]
@@ -42,7 +43,6 @@ class RockSample(Environment):
         self.rock_positions = None
         self.rock_morality = None
         self.agent_position = None
-        # self.agent_init_position = None
         self.sampled_rocks = None
         self.current_rocks_obs = np.zeros(self.k, dtype=np.int16)
 

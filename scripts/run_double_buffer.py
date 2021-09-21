@@ -3,16 +3,21 @@ import numpy as np
 
 from unc.envs import get_env
 from unc.args import Args, get_results_fname
-from unc.trainers.trainer import Trainer
+from unc.trainers import DoubleBufferTrainer
 from unc.models import QNetwork
 from unc.agents import SarsaAgent
-from unc.utils import save_info, save_video
+from unc.utils import save_info, save_video, ReplayBuffer
+from unc.sampler import Sampler
 from unc.eval import test_episodes
+
+from definitions import ROOT_DIR
+from pathlib import Path
 
 
 if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
+    buffer_path = Path(ROOT_DIR, 'data', f'buffer_{args.env}_2021.pkl')
 
     # Some argument post-processing
     results_fname, results_fname_npy = get_results_fname(args)
@@ -22,6 +27,11 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     rng = np.random.RandomState(args.seed)
+
+    replay_dict = Sampler.load(buffer_path)
+
+    rock_positions = replay_dict['rock_positions']
+    prefilled_buffer = replay_dict['buffer']
 
     # Initializing our environment
     train_env = get_env(args.seed,
@@ -34,6 +44,9 @@ if __name__ == "__main__":
                         n_particles=args.n_particles,
                         update_weight_interval=args.update_weight_interval)
 
+    # Here we have to manually set the same rock positions
+    train_env.rock_positions = rock_positions
+
     # Initialize model, optimizer and agent
     model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.step_size)
@@ -41,7 +54,7 @@ if __name__ == "__main__":
                        args)
 
     # Initialize our trainer
-    trainer = Trainer(args, agent, train_env)
+    trainer = DoubleBufferTrainer(args, agent, train_env, prefilled_buffer)
     trainer.reset()
 
     # Train!

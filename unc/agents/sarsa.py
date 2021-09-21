@@ -67,7 +67,7 @@ class SarsaAgent(Agent):
         if model is None:
             model = self.model
         state = self.preprocess_state(state)
-        action = torch.tensor([action], dtype=torch.long, device=self.device)
+        action = torch.tensor(action, dtype=torch.long, device=self.device).unsqueeze(-1)
         return torch.gather(model(state), dim=1, index=action).squeeze(dim=1)  # squeeze
 
     def update(self, state: np.ndarray,
@@ -90,6 +90,8 @@ class SarsaAgent(Agent):
         with torch.no_grad():
             next_action = self.act(next_state)
             q1 = self.Q(next_state, next_action)
+            # q1s = self.model(self.preprocess_state(next_state))
+            # q1 = q1s.max(dim=1)[0]
 
         # Casting
         gamma = torch.tensor(gamma, dtype=torch.float32, device=self.device)
