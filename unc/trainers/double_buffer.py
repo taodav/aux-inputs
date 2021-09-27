@@ -8,13 +8,18 @@ from unc.envs import RockSample
 from unc.envs.wrappers.rocksample import RockSampleWrapper
 from unc.agents import Agent
 from unc.utils import ReplayBuffer
+from unc.utils.viz import generate_greedy_action_array
 
 from .trainer import Trainer
+
+# DEBUGGING
+from unc.utils import plot_arr
+
 
 
 class DoubleBufferTrainer(Trainer):
     def __init__(self, args: Args, agent: Agent, env: Union[RockSample, RockSampleWrapper],
-                 prefilled_buffer: ReplayBuffer, p_prefilled: float = 0.5):
+                 prefilled_buffer: ReplayBuffer, p_prefilled: float = 0.25):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
 
@@ -31,10 +36,26 @@ class DoubleBufferTrainer(Trainer):
 
         self.batch_size = args.batch_size
 
+        # self.buffer = ReplayBuffer(args.total_steps, self.env.rng, self.env.observation_space.shape)
         self.buffer = ReplayBuffer(prefilled_buffer.capacity, self.env.rng, self.env.observation_space.shape)
         self.prefilled_buffer = prefilled_buffer
 
         self.p_prefilled = p_prefilled
+
+    # FOR DEBUGGING
+    def plot_current_state(self):
+        obs = np.array([self.env.get_obs(self.env.state)])
+        with torch.no_grad():
+            qs = self.agent.Qs(obs)
+            action = torch.argmax(qs, dim=1).cpu().numpy()[0]
+            qs = qs.squeeze(0).numpy()
+
+        greedy_action_arr = generate_greedy_action_array(self.env, self.agent)
+
+        render = self.env.render(action=action, q_vals=qs, show_weights=True, show_rock_info=True,
+                                 greedy_actions=greedy_action_arr)
+        plot_arr(render)
+
 
     def train(self) -> None:
         assert self.info is not None, "Reset the trainer before training"
@@ -56,6 +77,8 @@ class DoubleBufferTrainer(Trainer):
                     action = self.agent.act(obs).item()
 
                 next_obs, reward, done, info = self.env.step(action)
+
+                # self.plot_current_state()
 
                 self.buffer.push({
                     'obs': next_obs, 'reward': reward, 'done': done, 'action': action

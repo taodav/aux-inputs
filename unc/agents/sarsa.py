@@ -49,12 +49,20 @@ class SarsaAgent(Agent):
         :param model: Optional. Potentially use another model to find action-values.
         :return: (b) Greedy actions
         """
-        state = self.preprocess_state(state)
+        qs = self.Qs(state, model=model)
+        return torch.argmax(qs, dim=1).cpu().numpy()
+
+    def Qs(self, state: np.ndarray, model: nn.Module = None) -> torch.tensor:
+        """
+        Get all Q-values given a state.
+        :param state: (b x *state.shape) State to find action-values
+        :param model: Optional. Potenially use another model
+        :return: (b x actions) torch.tensor full of action-values.
+        """
         if model is None:
-            q = self.model(state)
-        else:
-            q = model(state)
-        return torch.argmax(q, dim=1).cpu().numpy()
+            model = self.model
+        state = self.preprocess_state(state)
+        return model(state)
 
     def Q(self, state: np.ndarray, action: np.ndarray, model: nn.Module = None) -> torch.Tensor:
         """
@@ -64,11 +72,9 @@ class SarsaAgent(Agent):
         :param model: Optional. Potenially use another model
         :return: (b) Action-values
         """
-        if model is None:
-            model = self.model
-        state = self.preprocess_state(state)
+        qs = self.Qs(state, model=model)
         action = torch.tensor(action, dtype=torch.long, device=self.device).unsqueeze(-1)
-        return torch.gather(model(state), dim=1, index=action).squeeze(dim=1)  # squeeze
+        return torch.gather(qs, dim=1, index=action).squeeze(dim=1)  # squeeze
 
     def update(self, state: np.ndarray,
                action: np.ndarray,

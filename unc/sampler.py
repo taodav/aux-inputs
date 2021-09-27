@@ -52,18 +52,20 @@ class Sampler:
                 self.env.rng.shuffle(target_idxes)
             target_idx = target_idxes[0]
             target_idxes = target_idxes[1:]
+
+            # If we are trying to get to the goal
             target_str = "goal"
-            target_position = np.array([0, 0])
+
+            # If we sample a rock
             if target_idx < len(self.env.rock_positions):
                 target_str = "rock"
-                target_position = self.env.rock_positions[target_idx]
 
-            self.agent.set_target_position(target_position, target_str)
+            self.agent.set_target(target_idx, target_str)
 
             self.buffer.push_initial(obs, state=self.env.state)
             while True:
                 # NOTE: This is using STATE as input, not observation
-                action = self.agent.act(self.env.state)
+                action = self.agent.act(obs)
                 obs, rew, done, _ = self.env.step(action)
                 episode_rews += rew
                 self.collected += 1

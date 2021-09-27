@@ -1,13 +1,14 @@
 import numpy as np
+import torch
 from PIL import Image, ImageDraw, ImageFont
+from typing import Tuple, List
 
 # ==========================================================
 #                        ROCKSAMPLE
 # ==========================================================
 
 
-def create_circular_mask(h, w, center=None, radius=None):
-
+def create_circular_mask(h: int, w: int, center: Tuple[int, int] = None, radius: int = None):
     if center is None: # use the middle of the image
         center = (int(w/2), int(h/2))
     if radius is None: # use the smallest distance between the center and image walls
@@ -19,15 +20,22 @@ def create_circular_mask(h, w, center=None, radius=None):
     mask = dist_from_center <= radius
     return mask
 
+
+def create_rocksample_agent(h: int, w: int, thickness: int = 3, radius: int = None):
+    grid = create_circular_mask(h, w, radius=radius)
+    grid_inner = create_circular_mask(h, w, radius=radius - thickness)
+    return np.bitwise_xor(grid, grid_inner)
+
+
 def generate_rock_agent_rgb(size: int, agent_color: np.ndarray) -> np.ndarray:
-    agent_mask = create_circular_mask(size, size, radius=size // 3)
+    agent_mask = create_rocksample_agent(size, size, radius=size // 3)
     rgb = np.repeat(agent_mask[..., np.newaxis], 3, axis=-1)
     rgb = np.ones_like(rgb) * 255
     rgb[agent_mask.astype(bool)] = agent_color
     return rgb
 
 
-def create_rectangle(h, w, thickness=2, length=None, width=None):
+def create_rectangle(h: int, w: int, thickness: int = 2, length: int = None, width: int = None):
     grid = np.zeros((h, w))
     if length is None:
         length = h - 2
@@ -66,8 +74,48 @@ def generate_rock_rgb(size: int, rock_color: np.ndarray, weight: float = None,
     return rgb
 
 
+def generate_label(h: int, w: int, str_label: str,
+                   font_size: int = 12):
+    """
+    Generate an h x w x 3 RGB label with str_label in the centre printed.
+    :param h: height
+    :param w: width
+    :param str_label: string to label
+    :param color: color for font
+    :param font_size: what size font do we use
+    :return:
+    """
+    # Start with an all white label
+    label = Image.new('RGB', (w, h), (255, 255, 255))
+    d_actual = ImageDraw.Draw(label)
+    font = ImageFont.truetype("FreeMono.ttf", font_size)
+
+    img_to_guide = Image.new('RGB', (w, h), (255, 255, 255))
+    d = ImageDraw.Draw(img_to_guide)
+    d.text((0, 0), str_label, (0, 0, 0), font=font)
+
+    text_w, text_h = d.textsize(str_label, font)
+    offset_x, offset_y = font.getoffset(str_label)
+    text_w += offset_x
+    text_h += offset_y
+
+    pos = ((w - text_w) // 2, (h - text_h) // 2)
+
+    d_actual.text(pos, str_label, fill=(0, 0, 0), font=font)
+    return np.array(label)
+
+
 def rocksample_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True,
-                          background_weights: np.ndarray = None) -> np.ndarray:
+                          background_weights: np.ndarray = None, greedy_actions: np.ndarray = None) -> np.ndarray:
+    """
+    Make a pixel representation of rock sample state/array
+    :param arr: array representation of the environment
+    :param scale: How large do we scale up?
+    :param grid_lines: Do we show grid lines?
+    :param background_weights: What are the weights for each grid?
+    :param greedy_actions: Do we show optimal actions for each position?
+    :return: array to plot
+    """
     space_color = np.array([255, 255, 255], dtype=np.uint8)
     rock_color = np.array([255, 167, 0], dtype=np.uint8)
     goal_color = np.array([0, 150, 0])
@@ -101,9 +149,16 @@ def rocksample_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = T
                 background[(agent != 255).astype(bool)] = agent[(agent != 255).astype(bool)]
                 to_fill = background
             elif val == 4:
-                to_fill = np.copy(goal_color)
+                to_fill = np.zeros((scale, scale, 3))
+                to_fill[:, :] = np.copy(goal_color)
             else:
-                to_fill = np.copy(space_color)
+                to_fill = np.zeros((scale, scale, 3))
+                to_fill[:, :] = np.copy(space_color)
+
+            if greedy_actions is not None and y < greedy_actions.shape[0] and x < greedy_actions.shape[1]:
+                action_str = greedy_actions[y, x]
+                label = generate_label(scale, scale, action_str)
+                to_fill[(label != 255).astype(bool)] = label[(label != 255).astype(bool)]
 
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
@@ -113,6 +168,30 @@ def rocksample_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = T
                 x * scale:(x + 1) * scale] = to_fill
 
     return final_viz_array
+
+
+def generate_greedy_action_array(env, agent):
+    """
+    NOTE: for ROCKSAMPLE only.
+    :return:
+    """
+    all_pos_states = env.sample_all_states()
+    obses = []
+    for state in all_pos_states:
+        obses.append(env.get_obs(state))
+
+    obses = np.stack(obses)
+    with torch.no_grad():
+        qs = agent.Qs(obses)
+        actions = torch.argmax(qs, dim=1).cpu().numpy()
+
+    arr = np.zeros((env.size, env.size - 1), dtype=np.int16)
+    for act, state in zip(actions, all_pos_states):
+        pos = state[:2]
+        arr[pos[0], pos[1]] = int(act)
+
+    return arr
+
 
 # ==========================================================
 #                      COMPASS WORLD
@@ -297,23 +376,54 @@ def compass_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True
     return final_viz_array
 
 
-def append_text(viz_array: np.ndarray, to_append: str) -> np.ndarray:
+def create_blank(viz_array: np.ndarray):
+    """
+    Create a blank slate below the image, of size viz_array.shape[0] // 2, viz_array.shape[1]
+    :param viz_array:
+    :return:
+    """
     h, w, _ = viz_array.shape
-    font = ImageFont.truetype("Ubuntu-B.ttf", 24)
+    blank_image = Image.new('RGB', (w, h // 2), (255, 255, 255))
+    return blank_image
 
-    img_to_guide = Image.new('RGB', (w, h // 2), (255, 255, 255))
 
-    d = ImageDraw.Draw(img_to_guide)
-    d.text((0, 0), to_append, (0, 0, 0), font=font)
+def write_on_image(canvas: Image, text_cols: List[str], start_pos: Tuple[int, int] = (0, 0)):
+    """
+    Write multiple columns of text onto the given image.
+    :param canvas: PIL image to write on
+    :param text_cols: list of strings, one for each column
+    :param start_pos: starting position
+    :return:
+    """
+    w, h = canvas.size
+    font = ImageFont.truetype("FreeMono.ttf", 24)
 
-    text_w, text_h = d.textsize(to_append)
+    next_position_to_add = start_pos
+    d_actual = ImageDraw.Draw(canvas)
+    for text in text_cols:
+        img_to_guide = Image.new('RGB', (w, h), (255, 255, 255))
 
-    img_to_append = Image.new('RGB', (w, h // 2), (255, 255, 255))
-    d_actual = ImageDraw.Draw(img_to_append)
-    d_actual.text(((w - text_w) // 2, (h // 2 - text_h) // 2), to_append, fill=(0, 0, 0), font=font)
+        d = ImageDraw.Draw(img_to_guide)
+        d.text((0, 0), text, (0, 0, 0), font=font)
+
+        text_w, text_h = d.textsize(text, font)
+        offset_x, offset_y = font.getoffset(text)
+        text_w += offset_x
+        text_h += offset_y
+
+        d_actual.text(next_position_to_add, text, fill=(0, 0, 0), font=font)
+        next_position_to_add = (next_position_to_add[0] + text_w + 20, next_position_to_add[1])
+
+    return canvas
+
+
+def append_text(viz_array: np.ndarray, to_append: List[str]) -> np.ndarray:
+    img_to_append = create_blank(viz_array)
+    img_to_append = write_on_image(img_to_append, to_append, start_pos=(10, 10))
     arr_to_append = np.array(img_to_append)
 
     final_image = np.concatenate((viz_array, arr_to_append), axis=0)
 
     return final_image
+
 

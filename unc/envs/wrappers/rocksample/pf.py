@@ -33,7 +33,8 @@ class RocksParticleFilterWrapper(RockSampleWrapper):
         Here emittance probs are all 1 anyways. We don't need to take an empty step.
         """
         obs = self.env.reset()
-        self.particles = np.zeros((self.n_particles, self.rocks))
+        # self.particles = np.zeros((self.n_particles, self.rocks))
+        self.particles = self.rng.choice([0, 1], (self.n_particles, self.rocks))
 
         self.weights = np.ones(self.particles.shape[0]) / self.particles.shape[0]
 
@@ -60,8 +61,8 @@ class RocksParticleFilterWrapper(RockSampleWrapper):
         # Update our particles and weights after doing a transition
         particle_states = self.obs2state(self.particles)
         self.weights, new_particle_states = step(self.weights, particle_states, obs,
-                                            self.transition, self.emit_prob, action=action,
-                                            update_weights=True)
+                                                 self.transition, self.emit_prob, action=action,
+                                                 update_weights=True)
         self.particles = new_particle_states[:, -self.rocks:]
 
         if self.weights is None:

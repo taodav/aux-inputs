@@ -15,8 +15,9 @@ if __name__ == "__main__":
     data_dir.mkdir(exist_ok=True)
     replay_save_path = Path(data_dir, f'buffer_{env_str}_{seed}.pkl')
     video_save_path = Path(data_dir, f'buffer_{env_str}_{seed}.mp4')
+
     env = get_env(seed, env_str=env_str, n_particles=n_particles)
-    agent = RockSamplerAgent()
+    agent = RockSamplerAgent(env)
 
     sampler = Sampler(env, agent, steps_to_collect=steps_to_collect, render=render)
 

@@ -1,7 +1,7 @@
 import json
 import gym
 import numpy as np
-from typing import Any, Tuple
+from typing import Tuple
 from itertools import product
 from pathlib import Path
 
@@ -90,6 +90,26 @@ class RockSample(Environment):
         sample_idx = self.rng.choice(possible_positions.shape[0], n, replace=True)
         sample_position = np.array(possible_positions[sample_idx], dtype=np.int16)
         return sample_position
+
+    def sample_all_states(self, rock_morality: np.ndarray = None) -> np.ndarray:
+        """
+        Return observations from all possible non-terminal agent positions,
+        with a given rock morality.
+        :param rock_morality:
+        :return:
+        """
+        if rock_morality is None:
+            rock_morality = self.rock_morality
+
+        states = []
+
+        for y in range(self.size):
+            for x in range(self.size - 1):
+                pos = np.array([y, x])
+                state = np.concatenate([pos, rock_morality, self.sampled_rocks, self.current_rocks_obs])
+                states.append(state)
+
+        return np.stack(states)
 
     def sample_morality(self) -> np.ndarray:
         assert self.rock_positions is not None

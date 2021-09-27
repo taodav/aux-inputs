@@ -25,9 +25,15 @@ class RockRenderWrapper(RockSampleWrapper):
 
         return background
 
+
+
     def render(self, mode: str = 'rgb_array', action: int = None,
+               q_vals: np.ndarray = None, show_rock_info: bool = False,
+               greedy_actions: np.ndarray = None,
                show_weights: bool = False, **kwargs) -> np.ndarray:
         assert mode == 'rgb_array'
+
+        # TODO: Do greedy_actions
 
         arr = self.env.generate_array()
 
@@ -35,8 +41,36 @@ class RockRenderWrapper(RockSampleWrapper):
         if show_weights:
             background_weights = self._generate_weighted_background()
 
-        viz = rocksample_arr_to_viz(arr, scale=100, background_weights=background_weights)
+        str_greedy_actions = None
+        if greedy_actions is not None:
+            str_greedy_actions = np.array(self.action_map)[greedy_actions]
+
+        viz = rocksample_arr_to_viz(arr, scale=100, background_weights=background_weights,
+                                    greedy_actions=str_greedy_actions)
+
+        strs_to_attach = []
+
+        # Either plot single action or all q-values.
         if action is not None:
-            viz = append_text(viz, self.action_map[action])
+            strs_to_attach.append(self.action_map[action])
+
+        if q_vals is not None:
+            assert q_vals.shape[0] == len(self.action_map)
+            str_to_attach = ""
+            for act, val in zip(self.action_map, q_vals):
+                str_to_attach += f"{act}: {val:.4f}\n"
+
+            strs_to_attach.append(str_to_attach)
+
+        if show_rock_info:
+            # Rock weights are at the end
+            rock_weights = self.get_obs(self.env.state)[-self.rocks:]
+            str_to_attach = ""
+            for pos, w in zip(self.rock_positions, rock_weights):
+                str_to_attach += f"{pos}: {w:.4f}\n"
+
+            strs_to_attach.append(str_to_attach)
+
+        viz = append_text(viz, strs_to_attach)
 
         return viz
