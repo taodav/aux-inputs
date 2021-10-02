@@ -80,7 +80,8 @@ class SarsaAgent(Agent):
                action: np.ndarray,
                next_state: np.ndarray,
                gamma: np.ndarray,
-               reward: np.ndarray) -> float:
+               reward: np.ndarray,
+               next_action: np.ndarray = None) -> float:
         """
         Update our model using the Sarsa(0) target.
         :param state: (b x *state.shape) State to update.
@@ -88,13 +89,15 @@ class SarsaAgent(Agent):
         :param next_state: (b x *state.shape) Next state for targets
         :param gamma: (b) Discount factor. Our done masking is done here too (w/ gamma = 0.0 if terminal)
         :param reward: (b) Rewards
+        :param next_action: (b) Next action to take. For Experience Replay Sarsa only.
         :return: loss from update
         """
         q = self.Q(state, action)
 
         # Here we have our epsilon-soft Sarsa target
         with torch.no_grad():
-            next_action = self.act(next_state)
+            if next_action is None:
+                next_action = self.act(next_state)
             q1 = self.Q(next_state, next_action)
             # q1s = self.model(self.preprocess_state(next_state))
             # q1 = q1s.max(dim=1)[0]
@@ -147,6 +150,33 @@ class SarsaAgent(Agent):
         return agent
 
 
+class ExpectedSarsa(SarsaAgent):
+    def update(self, state: np.ndarray,
+               action: np.ndarray,
+               next_state: np.ndarray,
+               gamma: np.ndarray,
+               reward: np.ndarray,
+               **kwargs) -> float:
 
 
+        q = self.Q(state, action)
 
+        # Here we have our epsilon-soft Sarsa target
+        with torch.no_grad():
+            q1s = self.Qs(next_state)
+            next_greedy_action = torch.argmax(q1s, dim=1)
+            pi = torch.ones_like(q1s) * (self.eps / self.n_actions)
+            pi[torch.arange(len(next_greedy_action)), next_greedy_action] += (1 - self.eps)
+            q1 = (pi * q1s).sum(dim=-1)
+
+        # Casting
+        gamma = torch.tensor(gamma, dtype=torch.float32, device=self.device)
+        reward = torch.tensor(reward, dtype=torch.float32, device=self.device)
+
+        loss = F.mse_loss(q, reward + gamma * q1)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.item()

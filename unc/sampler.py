@@ -42,14 +42,14 @@ class Sampler:
         Collect steps_to_collect samples from the environment.
         :return:
         """
+        all_episode_rews = []
         obs = self.env.reset()
-        target_idxes = []
         episode_rews = 0
         eps = 0
+
         while self.collected < self.steps_to_collect:
-            if len(target_idxes) == 0:
-                target_idxes = np.arange(len(self.env.rock_positions) + 1)
-                self.env.rng.shuffle(target_idxes)
+            target_idxes = np.arange(len(self.env.rock_positions) + 1)
+            self.env.rng.shuffle(target_idxes)
             target_idx = target_idxes[0]
             target_idxes = target_idxes[1:]
 
@@ -62,19 +62,39 @@ class Sampler:
 
             self.agent.set_target(target_idx, target_str)
 
-            self.buffer.push_initial(obs, state=self.env.state)
             while True:
                 # NOTE: This is using STATE as input, not observation
                 action = self.agent.act(obs)
-                obs, rew, done, _ = self.env.step(action)
+                state = self.env.state
+                next_obs, rew, done, _ = self.env.step(action)
+                next_state = self.env.state
+
+                if self.agent.finished_current_option:
+                    target_idx = target_idxes[0]
+                    target_idxes = target_idxes[1:]
+
+                    target_str = "goal"
+
+                    if target_idx < len(self.env.rock_positions):
+                        target_str = "rock"
+
+                    self.agent.set_target(target_idx, target_str)
+
+                next_action = 0
+                if not done:
+                    next_action = self.agent.act(obs)
+
                 episode_rews += rew
                 self.collected += 1
 
                 batch = {
-                    'state': self.env.state,
+                    'state': state,
                     'action': action,
                     'obs': obs,
+                    'next_state': next_state,
+                    'next_obs': next_obs,
                     'reward': rew,
+                    'next_action': next_action,
                     'done': done
                 }
                 self.buffer.push(batch)
@@ -86,17 +106,16 @@ class Sampler:
                     obs = self.env.reset()
                     if self.render:
                         self.imgs.append(self.env.render(show_weights=True, action=action))
-                    target_idxes = []
                     print(f"Finished episode {eps}, episode reward is {episode_rews}")
+                    all_episode_rews.append(episode_rews)
                     episode_rews = 0
                     eps += 1
                     break
 
-                # if self.collected % 100 == 0:
-                #     print(f"Collected {self.collected}")
-
-                if self.agent.finished_current_option or self.collected >= self.steps_to_collect:
+                if self.collected >= self.steps_to_collect:
                     break
+
+                obs = next_obs
 
         self.filled = True
 

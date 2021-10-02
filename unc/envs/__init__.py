@@ -23,6 +23,7 @@ compass_wrapper_map = {
 
 rocksample_wrapper_map = {
     'g': rw.GlobalStateObservationWrapper,
+    'l': rw.LocalStateObservationWrapper,
     'p': rw.RocksParticleFilterWrapper
 }
 
@@ -46,7 +47,7 @@ def get_rocksample_env(seed: int, env_str: str = "r",
                        render: bool = True,
                        **kwargs):
     ground_truth = False
-    if "g" in env_str and "s" in env_str:
+    if ("g" in env_str or "l" in env_str) and "s" in env_str:
         ground_truth = True
         env_str = env_str.replace("s", "")
 
@@ -62,6 +63,8 @@ def get_rocksample_env(seed: int, env_str: str = "r",
                     resample_interval=resample_interval,
                     n_particles=n_particles)
         elif w == rw.GlobalStateObservationWrapper:
+            env = w(env, ground_truth=ground_truth)
+        elif w == rw.LocalStateObservationWrapper:
             env = w(env, ground_truth=ground_truth)
         else:
             env = w(env)

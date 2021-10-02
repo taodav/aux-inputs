@@ -44,6 +44,7 @@ class RockSample(Environment):
         self.rock_morality = None
         self.agent_position = None
         self.sampled_rocks = None
+        self.checked_rocks = None
         self.current_rocks_obs = np.zeros(self.k, dtype=np.int16)
 
         # Given a random seed, generate the map
@@ -163,6 +164,7 @@ class RockSample(Environment):
 
     def reset(self):
         self.sampled_rocks = np.zeros(len(self.rock_positions)).astype(bool)
+        self.checked_rocks = np.zeros_like(self.sampled_rocks).astype(bool)
         self.rock_morality = self.sample_morality()
         self.agent_position = self.sample_positions(1)[0]
         self.current_rocks_obs = np.zeros_like(self.current_rocks_obs)
@@ -250,6 +252,10 @@ class RockSample(Environment):
     def step(self, action: int):
         prev_state = self.state
         self.state = self.transition(self.state, action)
+
+        rock_idx = action - 5
+        if rock_idx >= 0:
+            self.checked_rocks[rock_idx] = True
 
         return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
 

@@ -75,11 +75,11 @@ class RockSampleWrapper(gym.Wrapper):
     def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
         return self.env.batch_get_obs(states)
 
-    def get_obs(self, state: np.ndarray) -> np.ndarray:
-        return self.env.get_obs(state)
+    def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
+        return self.env.get_obs(state, *args, **kwargs)
 
-    def get_reward(self) -> float:
-        return self.env.get_reward()
+    def get_reward(self, *args, **kwargs) -> float:
+        return self.env.get_reward(*args, **kwargs)
 
     def get_terminal(self) -> bool:
         return self.env.get_terminal()
@@ -87,8 +87,8 @@ class RockSampleWrapper(gym.Wrapper):
     def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
         return self.env.batch_transition(states, actions)
 
-    def transition(self, state: np.ndarray, action: int) -> np.ndarray:
-        return self.env.transition(state, action)
+    def transition(self, state: np.ndarray, action: int, *args, **kwargs) -> np.ndarray:
+        return self.env.transition(state, action, *args, **kwargs)
 
     def emit_prob(self, state: np.ndarray, obs: np.ndarray) -> float:
         return self.env.emit_prob(state, obs)

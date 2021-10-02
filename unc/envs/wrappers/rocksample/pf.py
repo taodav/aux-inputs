@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Union
+from typing import Union, Tuple
 
 from unc.envs.rocksample import RockSample
 from unc.particle_filter import step, resample
@@ -55,22 +55,37 @@ class RocksParticleFilterWrapper(RockSampleWrapper):
         return particle_states
 
     def step(self, action: int):
-        obs, reward, done, info = self.env.step(action)
+        prev_state = self.state
+        self.state, self.particles, self.weights = self.transition(self.state, action, self.particles, self.weights)
         self.env_step += 1
 
+        rock_idx = action - 5
+        if rock_idx >= 0:
+            self.checked_rocks[rock_idx] = True
+
+        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
+
+    def transition(self, state: np.ndarray, action: int, particles: np.ndarray = None,
+                   weights: np.ndarray = None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        new_state = self.env.transition(state, action)
+
+        if particles is None or weights is None:
+            return new_state
+
+        obs = self.get_obs(new_state)
+
         # Update our particles and weights after doing a transition
-        particle_states = self.obs2state(self.particles)
-        self.weights, new_particle_states = step(self.weights, particle_states, obs,
+        particle_states = self.obs2state(particles)
+        new_weights, new_particle_states = step(weights, particle_states, obs,
                                                  self.transition, self.emit_prob, action=action,
                                                  update_weights=True)
-        self.particles = new_particle_states[:, -self.rocks:]
+        new_particles = new_particle_states[:, -self.rocks:]
 
-        if self.weights is None:
+        if weights is None:
             # TODO: In case we need particle reinvigoration
             raise NotImplementedError()
 
         if self.env_step % self.resample_interval == 0:
-            self.weights, self.particles = resample(self.weights, self.particles, rng=self.rng)
+            new_weights, new_particles = resample(new_weights, new_particles, rng=self.rng)
 
-        return obs, reward, done, info
-
+        return new_state, new_particles, new_weights

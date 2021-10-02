@@ -427,3 +427,25 @@ def append_text(viz_array: np.ndarray, to_append: List[str]) -> np.ndarray:
     return final_image
 
 
+# FOR DEBUGGING
+
+def plot_current_state(env, agent):
+    obs = np.array([env.get_obs(env.state)])
+    with torch.no_grad():
+        qs = agent.Qs(obs)
+        action = torch.argmax(qs, dim=1).cpu().numpy()[0]
+        qs = qs.squeeze(0).numpy()
+
+    greedy_action_arr = generate_greedy_action_array(env, agent)
+
+    render = env.render(action=action, q_vals=qs, show_weights=True, show_rock_info=True,
+                             greedy_actions=greedy_action_arr)
+    plot_arr(render)
+
+
+def stringify_actions_q_vals(action_map: List, q_vals: np.ndarray) -> str:
+    assert len(action_map) == q_vals.shape[0]
+    str = ""
+    for a, q in zip(action_map, q_vals):
+        str += f"{a}: {q:.3f}\n"
+    return str

@@ -26,6 +26,7 @@ class Args(Tap):
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
     g = global-state observations + color observation. This encodes all particles/states in a single array.
     """
+    algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     size: int = 8  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     slip_turn: bool = False  # If we're in the slip setting, do we slip on turns as well?
@@ -59,7 +60,9 @@ class Args(Tap):
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     save_model: bool = False  # Do we save our model after finishing training?
 
-    batch_size: int = 64  # Batch size for buffer training
+    batch_size: int = 64  # [DOUBLE BUFFER] Batch size for buffer training
+    p_prefilled: float = 0.  # [DOUBLE BUFFER] What percentage of each batch is sampled from our prefilled buffer?
+    buffer_size: int = 20000  # [DOUBLE BUFFER] How large is our "online" buffer?
 
     def process_args(self) -> None:
         # Set our device

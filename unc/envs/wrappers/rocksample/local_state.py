@@ -6,28 +6,30 @@ from .wrapper import RockSampleWrapper
 from unc.envs.rocksample import RockSample
 
 
-class GlobalStateObservationWrapper(RockSampleWrapper):
+class LocalStateObservationWrapper(RockSampleWrapper):
     priority = 3
 
     def __init__(self, env: Union[RockSample, RockSampleWrapper],
                  ground_truth: bool = False):
         """
-        Do we encode position globally?
-        If we do, then we build agent-state as follows
+        Misleading title. Position is still encoded globally.
+
+        In this case, we encode rock observations based on mean and variance.
+        We build agent-state as follows
 
         First env.size * env.size elements are a one-hot encoding of position
-        Last env.rocks features are either the current rock observations, or if
+        Last env.rocks * 2 features are either the current rock observations, or if
         ground_truth = True, then it's the ground truth rock morality (goodness/badness)
         :param env:
         :param ground_truth:
         """
-        super(GlobalStateObservationWrapper, self).__init__(env)
+        super(LocalStateObservationWrapper, self).__init__(env)
 
         self.ground_truth = ground_truth
 
         self.use_pf = hasattr(self, 'particles') and hasattr(self, 'weights')
 
-        low = np.zeros(self.size * self.size + self.rocks)
+        low = np.zeros(self.size * self.size + 2 * self.rocks)
         high = np.ones_like(low)
         self.observation_space = gym.spaces.Box(
             low=low, high=high
@@ -46,10 +48,10 @@ class GlobalStateObservationWrapper(RockSampleWrapper):
                     particles = self.particles
                 if weights is None:
                     weights = self.weights
-
-                rock_obs = np.zeros_like(rock_obs, dtype=np.float)
-                for p, w in zip(particles, weights):
-                    rock_obs += p * w
+                rock_obs = np.zeros(self.rocks * 2, dtype=np.float)
+                for i in range(self.rocks):
+                    rock_obs[2 * i] = (particles[:, i] * weights).sum()
+                    rock_obs[2 * i + 1] = (weights * (particles[:, i] - rock_obs[2 * i])**2).sum()
             else:
                 rock_obs = current_rocks_obs
 

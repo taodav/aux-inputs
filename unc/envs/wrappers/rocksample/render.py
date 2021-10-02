@@ -25,7 +25,11 @@ class RockRenderWrapper(RockSampleWrapper):
 
         return background
 
-
+    def _rock_weights(self) -> np.ndarray:
+        rock_obs = np.zeros(self.rocks, dtype=np.float)
+        for p, w in zip(self.particles, self.weights):
+            rock_obs += p * w
+        return rock_obs
 
     def render(self, mode: str = 'rgb_array', action: int = None,
                q_vals: np.ndarray = None, show_rock_info: bool = False,
@@ -64,7 +68,7 @@ class RockRenderWrapper(RockSampleWrapper):
 
         if show_rock_info:
             # Rock weights are at the end
-            rock_weights = self.get_obs(self.env.state)[-self.rocks:]
+            rock_weights = self._rock_weights()
             str_to_attach = ""
             for pos, w in zip(self.rock_positions, rock_weights):
                 str_to_attach += f"{pos}: {w:.4f}\n"

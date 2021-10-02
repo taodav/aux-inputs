@@ -5,8 +5,8 @@ from unc.envs import get_env
 from unc.args import Args, get_results_fname
 from unc.trainers import DoubleBufferTrainer
 from unc.models import QNetwork
-from unc.agents import SarsaAgent
-from unc.utils import save_info, save_video, ReplayBuffer
+from unc.agents import get_agent
+from unc.utils import save_info, save_video
 from unc.sampler import Sampler
 from unc.eval import test_episodes
 
@@ -50,8 +50,9 @@ if __name__ == "__main__":
     # Initialize model, optimizer and agent
     model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.step_size)
-    agent = SarsaAgent(model, optimizer, train_env.action_space.n, rng,
-                       args)
+    agent_class = get_agent(args.algo)
+    agent = agent_class(model, optimizer, train_env.action_space.n, rng,
+                        args)
 
     # Initialize our trainer
     trainer = DoubleBufferTrainer(args, agent, train_env, prefilled_buffer)
