@@ -140,10 +140,11 @@ class DoubleBufferTrainer(Trainer):
                 bad_diffs.append(all_bad_diff)
                 time_to_check = False
 
+            with torch.no_grad():
+                action = self.agent.act(obs).item()
+
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
-                with torch.no_grad():
-                    action = self.agent.act(obs).item()
 
                 next_obs, reward, done, info = self.env.step(action)
                 next_obs = np.array([next_obs])
@@ -195,6 +196,7 @@ class DoubleBufferTrainer(Trainer):
                     break
 
                 obs = next_obs
+                action = next_action
 
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)
