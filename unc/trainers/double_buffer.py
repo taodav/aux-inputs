@@ -125,7 +125,7 @@ class DoubleBufferTrainer(Trainer):
             episode_reward = 0
             episode_loss = 0
             obs = np.expand_dims(self.env.reset(), 0)
-            action = self.agent.act(obs)
+            action = self.agent.act(obs).item()
 
             # DEBUGGING
             checked_rocks_info = {}
@@ -143,7 +143,7 @@ class DoubleBufferTrainer(Trainer):
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
 
-                next_obs, reward, done, info = self.env.step(action.item())
+                next_obs, reward, done, info = self.env.step(action)
                 next_obs = np.array([next_obs])
 
                 next_action = self.agent.act(next_obs).item()
@@ -197,6 +197,7 @@ class DoubleBufferTrainer(Trainer):
                     break
 
                 obs = next_obs
+                action = next_action
 
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)

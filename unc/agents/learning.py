@@ -6,6 +6,7 @@ import haiku as hk
 import optax
 from functools import partial
 from jax import random, jit, vmap
+from jax.ops import index_add, index_update
 from optax import GradientTransformation
 from pathlib import Path
 from typing import Tuple
@@ -52,19 +53,28 @@ class LearningAgent(Agent):
     def set_eps(self, eps: float):
         self.eps = eps
 
-    # @partial(jit, static_argnums=0)
-    def act(self, state: jnp.ndarray) -> np.ndarray:
+    def act(self, state: np.ndarray) -> np.ndarray:
+        action, self._rand_key = self.functional_act(state, self.network_params, self._rand_key)
+        return action
+
+    @partial(jit, static_argnums=0)
+    def functional_act(self, state: jnp.ndarray,
+                       network_params: hk.Params,
+                       rand_key: random.PRNGKey) \
+            -> Tuple[np.ndarray, random.PRNGKey]:
         """
         Get epsilon-greedy actions given a state
         :param state: (*state.shape) State to find actions
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: epsilon-greedy action
         """
+        probs = jnp.ones(self.n_actions) + self.eps
+        greedy_idx = self.greedy_act(state, network_params)
+        probs = index_add(probs, greedy_idx, 1 - self.eps)
 
-        if self._rng.random() > self.eps:
-            return self.greedy_act(state, self.network_params)
+        key, subkey = random.split(rand_key)
 
-        return self._rng.choice(np.arange(self.n_actions), size=state.shape[0])
+        return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key
 
     @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:

@@ -10,15 +10,16 @@ from unc.utils.data import batch_wall_split
 class CompassWorld(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
-    def __init__(self, size: int = 8,
-                 seed: int = 2021,
+    def __init__(self,
+                 rng: np.random.RandomState = np.random.RandomState(),
+                 size: int = 8,
                  random_start: bool = True):
         super(CompassWorld, self).__init__()
         self.observation_space = gym.spaces.MultiBinary(5)
         self.action_space = gym.spaces.Discrete(3)
         self.size = size
         self.random_start = random_start
-        self.rng = np.random.RandomState(seed)
+        self.rng = rng
 
         self.state_max = [self.size - 2, self.size - 2, 3]
         self.state_min = [1, 1, 0]

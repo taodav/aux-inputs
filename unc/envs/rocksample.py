@@ -1,6 +1,11 @@
 import json
 import gym
+import jax
 import numpy as np
+import jax.numpy as jnp
+from functools import partial
+from jax import jit, random
+from jax.ops import index_update
 from typing import Tuple
 from itertools import product
 from pathlib import Path
@@ -12,7 +17,7 @@ from unc.utils.data import euclidian_dist, half_dist_prob
 class RockSample(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
-    def __init__(self, config_file: Path, seed: int):
+    def __init__(self, config_file: Path, rng: np.random.RandomState, rand_key: jax.random.PRNGKey):
         """
         RockSample environment.
         Observations: position (2) and rock goodness/badness
@@ -31,14 +36,14 @@ class RockSample(Environment):
         self.bad_rock_reward = config['bad_rock_reward']
         self.good_rock_reward = config['good_rock_reward']
         self.exit_reward = config['exit_reward']
-        self.seed = seed
 
         self.observation_space = gym.spaces.MultiBinary(self.k + 2)
         self.state_space = gym.spaces.MultiBinary(2 + 3 * self.k)
         self.action_space = gym.spaces.Discrete(self.k + 5)
-        self.rng = np.random.RandomState(seed)
-        self.position_max = [self.size - 1, self.size - 1]
-        self.position_min = [0, 0]
+        self.rng = rng
+        self.rand_key = rand_key
+        self.position_max = np.array([self.size - 1, self.size - 1])
+        self.position_min = np.array([0, 0])
 
         self.rock_positions = None
         self.rock_morality = None
@@ -186,51 +191,73 @@ class RockSample(Environment):
     def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
         raise NotImplementedError()
 
+    @partial(jit, static_argnums=0)
+    def _check_transition(self, current_rocks_obs: np.ndarray,
+                          position: np.ndarray,
+                          rock_positions: np.ndarray,
+                          rock_morality: np.ndarray,
+                          rand_key: random.PRNGKey,
+                          action: int):
+        rock_idx = action - 5
+        dist = euclidian_dist(position, rock_positions[rock_idx])
+        prob = half_dist_prob(dist, self.half_efficiency_distance)
+
+        # w.p. prob we return correct rock observation.
+        rock_obs = rock_morality[rock_idx]
+        choices = jnp.array([rock_obs, 1 - rock_obs])
+        probs = jnp.array([prob, 1 - prob])
+        key, subkey = random.split(rand_key)
+        rock_obs = random.choice(subkey, choices, (1, ), p=probs)[0]
+
+        new_rocks_obs = index_update(current_rocks_obs, rock_idx, rock_obs)
+        return new_rocks_obs, key
+
+    @partial(jit, static_argnums=0)
+    def _move_transition(self, position: np.ndarray,
+                         direction_mapping: np.ndarray,
+                         position_max: np.ndarray,
+                         position_min: np.ndarray,
+                         action: int):
+        new_pos = position + direction_mapping[action]
+        position = jnp.maximum(jnp.minimum(new_pos, position_max), position_min)
+        return position
+
+    @partial(jit, static_argnums=0)
+    def _sample_transition(self, position: np.ndarray,
+                           sampled_rocks: np.ndarray,
+                           current_rocks_obs: np.ndarray,
+                           rock_mortality: np.ndarray,
+                           rock_positions: np.ndarray):
+        ele = (rock_positions == position)
+        bool_pos = (ele[:, 0] & ele[:, 1]).astype(int)
+
+        zero_arr = jnp.zeros_like(current_rocks_obs)
+        new_sampled_rocks = jnp.minimum(sampled_rocks + bool_pos, zero_arr + 1)
+        new_rocks_obs = jnp.maximum(current_rocks_obs - bool_pos, zero_arr)
+        new_rock_morality = jnp.maximum(rock_mortality - bool_pos, zero_arr)
+        return new_sampled_rocks, new_rocks_obs, new_rock_morality
+
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         position, rock_morality, sampled_rocks, current_rocks_obs = self.unpack_state(state)
 
         if action > 4:
             # CHECK
-            new_rocks_obs = current_rocks_obs.copy()
-            rock_idx = action - 5
-            dist = euclidian_dist(position, self.rock_positions[rock_idx])
-            prob = half_dist_prob(dist, self.half_efficiency_distance)
-
-            # w.p. prob we return correct rock observation.
-            rock_obs = rock_morality[rock_idx]
-            if self.rng.random() > prob:
-                rock_obs = 1 - rock_obs
-
-            new_rocks_obs[rock_idx] = rock_obs
+            new_rocks_obs, self.rand_key = self._check_transition(current_rocks_obs.copy(), position, self.rock_positions,
+                                                                      rock_morality, self.rand_key, action)
             current_rocks_obs = new_rocks_obs
         elif action == 4:
             # SAMPLING
-            ele = (self.rock_positions == position)
-            idx = np.nonzero(ele[:, 0] & ele[:, 1])[0]
-
-            if idx.shape[0] > 0:
-                # If we're on a rock
-                idx = idx[0]
-                new_sampled_rocks = sampled_rocks.copy()
-                new_rocks_obs = current_rocks_obs.copy()
-                new_rock_morality = rock_morality.copy()
-
-                new_sampled_rocks[idx] = 1
-
-                # If this rock was actually good, we sampled it now it turns bad.
-                # Elif this rock is bad, we sample a bad rock and return 0
-                new_rocks_obs[idx] = 0
-                new_rock_morality[idx] = 0
-
-                sampled_rocks = new_sampled_rocks
-                current_rocks_obs = new_rocks_obs
-                rock_morality = new_rock_morality
+            new_sampled_rocks, new_rocks_obs, new_rock_morality = self._sample_transition(
+                position, sampled_rocks, current_rocks_obs, rock_morality, self.rock_positions
+            )
+            sampled_rocks, current_rocks_obs, rock_morality = new_sampled_rocks, new_rocks_obs, new_rock_morality
 
             # If we sample a space with no rocks, nothing happens for transition.
         else:
             # MOVING
-            new_pos = position + self.direction_mapping[action]
-            position = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
+            position = self._move_transition(position, self.direction_mapping,
+                                             self.position_max, self.position_min,
+                                             action)
 
         return self.pack_state(position, rock_morality, sampled_rocks, current_rocks_obs)
 

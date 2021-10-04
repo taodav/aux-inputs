@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple, List
 
@@ -181,9 +180,8 @@ def generate_greedy_action_array(env, agent):
         obses.append(env.get_obs(state))
 
     obses = np.stack(obses)
-    with torch.no_grad():
-        qs = agent.Qs(obses)
-        actions = torch.argmax(qs, dim=1).cpu().numpy()
+    qs = agent.Qs(obses, agent.network_params)
+    actions = np.argmax(qs, axis=1)
 
     arr = np.zeros((env.size, env.size - 1), dtype=np.int16)
     for act, state in zip(actions, all_pos_states):
@@ -428,13 +426,11 @@ def append_text(viz_array: np.ndarray, to_append: List[str]) -> np.ndarray:
 
 
 # FOR DEBUGGING
-
 def plot_current_state(env, agent):
     obs = np.array([env.get_obs(env.state)])
-    with torch.no_grad():
-        qs = agent.Qs(obs)
-        action = torch.argmax(qs, dim=1).cpu().numpy()[0]
-        qs = qs.squeeze(0).numpy()
+    qs = agent.Qs(obs, agent.network_params)
+    action = np.argmax(qs, axis=1)
+    qs = qs[0]
 
     greedy_action_arr = generate_greedy_action_array(env, agent)
 

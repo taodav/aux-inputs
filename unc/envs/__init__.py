@@ -1,3 +1,6 @@
+import numpy as np
+import jax.numpy as jnp
+import jax
 from pathlib import Path
 import unc.envs.wrappers.compass as cw
 import unc.envs.wrappers.rocksample as rw
@@ -27,18 +30,19 @@ rocksample_wrapper_map = {
     'p': rw.RocksParticleFilterWrapper
 }
 
-def get_env(seed: int, env_str: str = "r", *args, **kwargs):
+def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
     if "r" in env_str:
         env_str = env_str.replace('r', '')
-        env = get_rocksample_env(seed, env_str, *args, **kwargs)
+        env = get_rocksample_env(rng, rand_key, env_str, *args, **kwargs)
     else:
         if "c" in env_str:
             env_str = env_str.replace('c', '')
-        env = get_compass_env(seed, *args, env_str=env_str, **kwargs)
+        env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
     return env
 
 
-def get_rocksample_env(seed: int, env_str: str = "r",
+def get_rocksample_env(rng: np.random.RandomState,
+                       rand_key: jax.random.PRNGKey, env_str: str = "r",
                        config_path: Path = Path(ROOT_DIR, "unc", "envs", "configs", "rock_sample_config.json"),
                        *args,
                        update_weight_interval: int = 1,
@@ -56,7 +60,7 @@ def get_rocksample_env(seed: int, env_str: str = "r",
 
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
 
-    env = RockSample(config_path, seed)
+    env = RockSample(config_path, rng, rand_key)
     for w in ordered_wrapper_list:
         if w == rw.RocksParticleFilterWrapper:
             env = w(env, update_weight_interval=update_weight_interval,
@@ -75,7 +79,7 @@ def get_rocksample_env(seed: int, env_str: str = "r",
     return env
 
 
-def get_compass_env(seed: int, env_str: str = "s",
+def get_compass_env(rng: np.random.RandomState, env_str: str = "s",
             random_start: bool = True,
             blur_prob: float = 0.1,
             slip_prob: float = 0.1,
@@ -104,9 +108,9 @@ def get_compass_env(seed: int, env_str: str = "s",
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
 
     if "f" in env_str:
-        env = FixedCompassWorld(seed=seed, random_start=random_start, size=size)
+        env = FixedCompassWorld(rng, random_start=random_start, size=size)
     else:
-        env = CompassWorld(seed=seed, random_start=random_start, size=size)
+        env = CompassWorld(rng, random_start=random_start, size=size)
 
     for w in ordered_wrapper_list:
         if w == cw.BlurryWrapper:
