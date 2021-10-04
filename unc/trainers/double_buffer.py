@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 from typing import Union, List
 from time import time, ctime
@@ -52,26 +51,25 @@ class DoubleBufferTrainer(Trainer):
         new_state = state.copy()
         new_state[:2] = self.env.rock_positions[rock_idx].copy()
         new_obs = np.array([self.env.get_obs(new_state)])
-        q_val = self.agent.Qs(new_obs)
+        q_val = self.agent.Qs(new_obs, self.agent.network_params)
         return q_val, new_state
 
 
     def all_unchecked_rock_q_vals(self, checked: List[bool]):
         unchecked_rocks_info = {}
-        with torch.no_grad():
-            for i, check in enumerate(checked):
-                if not check:
-                    action = 5 + i
-                    before_check_qvals, teleported_state = self.teleported_rock_q_vals(i)
-                    checked_state, new_particles, new_weights = self.env.transition(teleported_state, action, self.env.particles, self.env.weights)
-                    checked_obs = np.array([self.env.get_obs(checked_state, particles=new_particles, weights=new_weights)])
-                    after_check_qvals = self.agent.Qs(checked_obs)
+        for i, check in enumerate(checked):
+            if not check:
+                action = 5 + i
+                before_check_qvals, teleported_state = self.teleported_rock_q_vals(i)
+                checked_state, new_particles, new_weights = self.env.transition(teleported_state, action, self.env.particles, self.env.weights)
+                checked_obs = np.array([self.env.get_obs(checked_state, particles=new_particles, weights=new_weights)])
+                after_check_qvals = self.agent.Qs(checked_obs, self.agent.network_params)
 
-                    unchecked_rocks_info[tuple(self.env.rock_positions[i])] = {
-                        'before': before_check_qvals.squeeze(0).numpy(),
-                        'after': after_check_qvals.squeeze(0).numpy(),
-                        'morality': self.env.rock_morality[i]
-                    }
+                unchecked_rocks_info[tuple(self.env.rock_positions[i])] = {
+                    'before': before_check_qvals.squeeze(0).numpy(),
+                    'after': after_check_qvals.squeeze(0).numpy(),
+                    'morality': self.env.rock_morality[i]
+                }
         return unchecked_rocks_info
 
     def summarize_checks(self, unchecked: dict):
@@ -126,7 +124,8 @@ class DoubleBufferTrainer(Trainer):
         while self.num_steps < self.total_steps:
             episode_reward = 0
             episode_loss = 0
-            obs = np.array([self.env.reset()])
+            obs = np.expand_dims(self.env.reset(), 0)
+            action = self.agent.act(obs)
 
             # DEBUGGING
             checked_rocks_info = {}
@@ -143,14 +142,11 @@ class DoubleBufferTrainer(Trainer):
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
-                with torch.no_grad():
-                    action = self.agent.act(obs).item()
 
-                next_obs, reward, done, info = self.env.step(action)
+                next_obs, reward, done, info = self.env.step(action.item())
                 next_obs = np.array([next_obs])
 
-                with torch.no_grad():
-                    next_action = self.agent.act(next_obs).item()
+                next_action = self.agent.act(next_obs).item()
 
                 self.buffer.push({
                     'obs': obs, 'reward': reward, 'done': done, 'action': action, 'next_obs': next_obs,
@@ -160,8 +156,13 @@ class DoubleBufferTrainer(Trainer):
                 self.info['reward'].append(reward)
 
                 prefilled_bs = int(self.batch_size * self.p_prefilled)
+                online_bs = self.batch_size - prefilled_bs
+                if online_bs > len(self.buffer):
+                    online_bs = len(self.buffer)
+                    prefilled_bs = self.batch_size - online_bs
+
                 prefilled_sample = self.prefilled_buffer.sample(prefilled_bs)
-                sample = self.buffer.sample(self.batch_size - prefilled_bs)
+                sample = self.buffer.sample(online_bs)
 
                 batch_obs = np.concatenate([prefilled_sample['obs'], sample['obs']])
                 batch_reward = np.concatenate([prefilled_sample['reward'], sample['reward']])

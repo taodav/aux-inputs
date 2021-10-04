@@ -153,11 +153,13 @@ class LearningAgent(Agent):
             'args': self.args.as_dict(),
             'rand_key': self._rand_key
         }
-        dill.dump(to_save, path)
+        with open(path, "wb") as f:
+            dill.dump(to_save, f)
 
     @staticmethod
     def load(path: Path) -> Agent:
-        loaded = dill.load(path)
+        with open(path, "rb") as f:
+            loaded = dill.load(f)
         args = Args()
         args.from_dict(loaded['args'])
 
