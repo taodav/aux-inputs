@@ -136,7 +136,7 @@ class LearningAgent(Agent):
         """
 
         loss, self.network_params, self.optimizer_state = \
-            self.functional_update(self.network_params, self.optimizer_state, b.state, b.action, b.next_state, b.gamma, b.reward, b.next_state)
+            self.functional_update(self.network_params, self.optimizer_state, b.state, b.action, b.next_state, b.gamma, b.reward, b.next_action)
         return loss
 
     def save(self, path: Path):

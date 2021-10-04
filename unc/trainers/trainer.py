@@ -81,10 +81,10 @@ class Trainer:
             # pf_episode_vars = []
 
             obs = np.expand_dims(self.env.reset(), 0)
+            action = self.agent.act(obs)
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
-                action = self.agent.act(obs).item()
 
                 # Log particle means and variances
                 # if use_pf:
@@ -94,7 +94,7 @@ class Trainer:
                 #     pf_episode_means.append(means)
                 #     pf_episode_vars.append(vars)
 
-                next_obs, reward, done, info = self.env.step(action)
+                next_obs, reward, done, info = self.env.step(action.item())
 
                 self.info['reward'].append(reward)
 
@@ -103,7 +103,8 @@ class Trainer:
 
                 gamma = (1 - done) * self.discounting
 
-                loss = self.agent.update(Batch(obs, action, next_obs, gamma, reward))
+                next_action = self.agent.act(next_obs)
+                loss = self.agent.update(Batch(obs, action, next_obs, gamma, reward, next_action))
 
                 # Logging
                 episode_loss += loss
@@ -121,6 +122,7 @@ class Trainer:
                     break
 
                 obs = next_obs
+                action = next_action
 
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)
