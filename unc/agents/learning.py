@@ -23,6 +23,7 @@ class LearningAgent(Agent):
                  optimizer: GradientTransformation,
                  n_features: int,
                  n_actions: int,
+                 rng: np.random.RandomState,
                  rand_key: random.PRNGKey,
                  args: Args):
         self.n_features = n_features
@@ -46,6 +47,7 @@ class LearningAgent(Agent):
             self.loss_fn = qlearning_loss
 
         self._rand_key = rand_key
+        self._rng = rng
 
     def set_eps(self, eps: float):
         self.eps = eps
@@ -58,12 +60,11 @@ class LearningAgent(Agent):
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: epsilon-greedy action
         """
-        self._rand_key, subkey = random.split(self._rand_key)
-        if random.uniform(subkey) > self.eps:
+
+        if self._rng.random() > self.eps:
             return self.greedy_act(state, self.network_params)
 
-        self._rand_key, subkey = random.split(self._rand_key)
-        return random.choice(subkey, np.arange(self.n_actions), shape=(state.shape[0],))
+        return self._rng.choice(np.arange(self.n_actions), size=state.shape[0])
 
     @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:

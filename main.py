@@ -21,6 +21,7 @@ if __name__ == "__main__":
 
     # Seeding
     np.random.seed(args.seed)
+    rng = np.random.RandomState(args.seed)
     rand_key = random.PRNGKey(args.seed)
 
     # Initializing our environment
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     network = build_network(args.n_hidden, train_env.action_space.n)
     optimizer = optax.adam(args.step_size)
 
-    agent = LearningAgent(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rand_key,
+    agent = LearningAgent(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rng, rand_key,
                           args)
 
     # Initialize our trainer
