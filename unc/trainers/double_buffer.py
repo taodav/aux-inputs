@@ -131,14 +131,14 @@ class DoubleBufferTrainer(Trainer):
             checked_rocks_info = {}
 
             # DEBUGGING: if we check a rock that's never been sampled before
-            if time_to_check and 'p' in self.args.env:
-                unchecked_q_vals = self.all_unchecked_rock_q_vals(self.env.checked_rocks)
-                checked_rocks_info[self.num_steps] = unchecked_q_vals
-                all_mor, all_good_diff, all_bad_diff = self.summarize_checks(unchecked_q_vals)
-                moralities.append(all_mor)
-                good_diffs.append(all_good_diff)
-                bad_diffs.append(all_bad_diff)
-                time_to_check = False
+            # if time_to_check and 'p' in self.args.env:
+            #     unchecked_q_vals = self.all_unchecked_rock_q_vals(self.env.checked_rocks)
+            #     checked_rocks_info[self.num_steps] = unchecked_q_vals
+            #     all_mor, all_good_diff, all_bad_diff = self.summarize_checks(unchecked_q_vals)
+            #     moralities.append(all_mor)
+            #     good_diffs.append(all_good_diff)
+            #     bad_diffs.append(all_bad_diff)
+            #     time_to_check = False
 
             with torch.no_grad():
                 action = self.agent.act(obs).item()
