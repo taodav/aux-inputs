@@ -60,14 +60,13 @@ class LearningAgent(Agent):
         """
         self._rand_key, subkey = random.split(self._rand_key)
         if random.uniform(subkey) > self.eps:
-            network_params = self.network_params
-            qs = self.network.apply(network_params, state)
-            return jnp.argmax(qs)
+            return self.greedy_act(state, self.network_params)
 
         self._rand_key, subkey = random.split(self._rand_key)
         return random.choice(subkey, np.arange(self.n_actions), shape=(state.shape[0],))
 
-    def greedy_act(self, state: np.ndarray, network_params: hk.Params = None) -> jnp.ndarray:
+    @partial(jit, static_argnums=0)
+    def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
         """
         Get greedy actions given a state
         :param state: (b x *state.shape) State to find actions
@@ -77,15 +76,13 @@ class LearningAgent(Agent):
         qs = self.Qs(state, network_params=network_params)
         return jnp.argmax(qs, axis=1)
 
-    def Qs(self, state: np.ndarray, network_params: hk.Params = None) -> jnp.ndarray:
+    def Qs(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
         """
         Get all Q-values given a state.
         :param state: (b x *state.shape) State to find action-values
         :param model: Optional. Potenially use another model
         :return: (b x actions) torch.tensor full of action-values.
         """
-        if network_params is None:
-            network_params = self.network_params
         return self.network.apply(network_params, state)
 
     def Q(self, state: np.ndarray, action: np.ndarray, network_params: hk.Params = None) -> jnp.ndarray:
