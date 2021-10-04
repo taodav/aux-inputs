@@ -68,7 +68,7 @@ class LearningAgent(Agent):
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: epsilon-greedy action
         """
-        probs = jnp.ones(self.n_actions) + self.eps
+        probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
         greedy_idx = self.greedy_act(state, network_params)
         probs = index_add(probs, greedy_idx, 1 - self.eps)
 
@@ -133,7 +133,7 @@ class LearningAgent(Agent):
                           next_action: np.ndarray,
                           ) -> Tuple[float, hk.Params, hk.State]:
         loss, grad = jax.value_and_grad(self._loss)(network_params, state, action, next_state, gamma, reward, next_action)
-        updates, optimizer_state = self.optimizer.update(grad, optimizer_state)
+        updates, optimizer_state = self.optimizer.update(grad, optimizer_state, network_params)
         network_params = optax.apply_updates(network_params, updates)
 
         return loss, network_params, optimizer_state
