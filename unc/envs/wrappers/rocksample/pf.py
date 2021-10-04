@@ -2,7 +2,7 @@ import numpy as np
 from typing import Union, Tuple
 
 from unc.envs.rocksample import RockSample
-from unc.particle_filter import step, resample
+from unc.particle_filter import batch_step, resample
 from .wrapper import RockSampleWrapper
 
 
@@ -76,9 +76,9 @@ class RocksParticleFilterWrapper(RockSampleWrapper):
 
         # Update our particles and weights after doing a transition
         particle_states = self.obs2state(particles)
-        new_weights, new_particle_states = step(weights, particle_states, obs,
-                                                 self.transition, self.emit_prob, action=action,
-                                                 update_weights=True)
+        new_weights, new_particle_states = batch_step(weights, particle_states, obs,
+                                                      self.batch_transition, self.emit_prob, action=action,
+                                                      update_weights=True)
         new_particles = new_particle_states[:, -self.rocks:]
 
         if weights is None:

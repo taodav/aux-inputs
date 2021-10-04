@@ -4,7 +4,7 @@ import jax
 import numpy as np
 import jax.numpy as jnp
 from functools import partial
-from jax import jit, random
+from jax import jit, random, vmap
 from jax.ops import index_update
 from typing import Tuple
 from itertools import product
@@ -189,7 +189,39 @@ class RockSample(Environment):
         return np.concatenate([position, rock_morality, sampled_rocks, current_rocks_obs])
 
     def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
-        raise NotImplementedError()
+        action = actions[0]
+        bs = states.shape[0]
+        positions = states[:, :2]
+        rock_moralities = states[:, 2:2 + self.k]
+        sampled_rockses = states[:, 2 + self.k:2 + 2 * self.k]
+        current_rocks_obses = states[:, 2 + 2 * self.k:]
+
+        rock_positionses = np.repeat(np.expand_dims(self.rock_positions, 0), bs, axis=0)
+        direction_mappings = np.repeat(np.expand_dims(self.direction_mapping, 0), bs, axis=0)
+        position_maxes = np.repeat(np.expand_dims(self.position_max, 0), bs, axis=0)
+        position_mins = np.repeat(np.expand_dims(self.position_min, 0), bs, axis=0)
+        # TODO: THIS IS A TERRIBLE IDEA
+        rand_keys = np.repeat(np.expand_dims(self.rand_key, 0), bs, axis=0)
+
+        if action > 4:
+            # CHECK
+            new_rocks_obses, rand_keys = vmap(self._check_transition)(current_rocks_obses, positions, rock_positionses,
+                                                                          rock_moralities, rand_keys, actions)
+            current_rocks_obses = new_rocks_obses
+        elif action == 4:
+            # SAMPLING
+            new_sampled_rockses, new_rocks_obses, new_rock_moralities = vmap(self._sample_transition)(
+                positions, sampled_rockses, current_rocks_obses, rock_moralities, rock_positionses
+            )
+            sampled_rockses, current_rocks_obses, rock_moralities = new_sampled_rockses, new_rocks_obses, new_rock_moralities
+
+            # If we sample a space with no rocks, nothing happens for transition.
+        else:
+            # MOVING
+            positions = vmap(self._move_transition)(positions, direction_mappings,
+                                                    position_maxes, position_mins,
+                                                    actions)
+        return np.concatenate([positions, rock_moralities, sampled_rockses, current_rocks_obses], axis=1)
 
     @partial(jit, static_argnums=0)
     def _check_transition(self, current_rocks_obs: np.ndarray,
@@ -260,6 +292,54 @@ class RockSample(Environment):
                                              action)
 
         return self.pack_state(position, rock_morality, sampled_rocks, current_rocks_obs)
+
+    # def transition(self, state: np.ndarray, action: int) -> np.ndarray:
+    #     position, rock_morality, sampled_rocks, current_rocks_obs = self.unpack_state(state)
+    #
+    #     if action > 4:
+    #         # CHECK
+    #         new_rocks_obs = current_rocks_obs.copy()
+    #         rock_idx = action - 5
+    #         dist = euclidian_dist(position, self.rock_positions[rock_idx])
+    #         prob = half_dist_prob(dist, self.half_efficiency_distance)
+    #
+    #         # w.p. prob we return correct rock observation.
+    #         rock_obs = rock_morality[rock_idx]
+    #         if self.rng.random() > prob:
+    #             rock_obs = 1 - rock_obs
+    #
+    #         new_rocks_obs[rock_idx] = rock_obs
+    #         current_rocks_obs = new_rocks_obs
+    #     elif action == 4:
+    #         # SAMPLING
+    #         ele = (self.rock_positions == position)
+    #         idx = np.nonzero(ele[:, 0] & ele[:, 1])[0]
+    #
+    #         if idx.shape[0] > 0:
+    #             # If we're on a rock
+    #             idx = idx[0]
+    #             new_sampled_rocks = sampled_rocks.copy()
+    #             new_rocks_obs = current_rocks_obs.copy()
+    #             new_rock_morality = rock_morality.copy()
+    #
+    #             new_sampled_rocks[idx] = 1
+    #
+    #             # If this rock was actually good, we sampled it now it turns bad.
+    #             # Elif this rock is bad, we sample a bad rock and return 0
+    #             new_rocks_obs[idx] = 0
+    #             new_rock_morality[idx] = 0
+    #
+    #             sampled_rocks = new_sampled_rocks
+    #             current_rocks_obs = new_rocks_obs
+    #             rock_morality = new_rock_morality
+    #
+    #         # If we sample a space with no rocks, nothing happens for transition.
+    #     else:
+    #         # MOVING
+    #         new_pos = position + self.direction_mapping[action]
+    #         position = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
+    #
+    #     return self.pack_state(position, rock_morality, sampled_rocks, current_rocks_obs)
 
     def emit_prob(self, states: np.ndarray, obs: np.ndarray) -> np.ndarray:
         """
