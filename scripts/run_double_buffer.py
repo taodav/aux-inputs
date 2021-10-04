@@ -1,14 +1,15 @@
-import torch
 import numpy as np
+import optax
+from jax import random
 
 from unc.envs import get_env
 from unc.args import Args, get_results_fname
 from unc.trainers import DoubleBufferTrainer
-from unc.models import QNetwork
-from unc.agents import get_agent
+from unc.agents import LearningAgent
 from unc.utils import save_info, save_video
 from unc.sampler import Sampler
 from unc.eval import test_episodes
+from unc.models import build_network
 
 from definitions import ROOT_DIR
 from pathlib import Path
@@ -25,8 +26,7 @@ if __name__ == "__main__":
 
     # Seeding
     np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    rng = np.random.RandomState(args.seed)
+    rand_key = random.PRNGKey(args.seed)
 
     replay_dict = Sampler.load(buffer_path)
 
@@ -48,11 +48,11 @@ if __name__ == "__main__":
     train_env.rock_positions = rock_positions
 
     # Initialize model, optimizer and agent
-    model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.step_size)
-    agent_class = get_agent(args.algo)
-    agent = agent_class(model, optimizer, train_env.action_space.n, rng,
-                        args)
+    network = build_network(train_env.observation_space.shape[0], args.n_hidden)
+    optimizer = optax.adam(args.step_size)
+
+    agent = LearningAgent(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rand_key,
+                          args)
 
     # Initialize our trainer
     trainer = DoubleBufferTrainer(args, agent, train_env, prefilled_buffer)

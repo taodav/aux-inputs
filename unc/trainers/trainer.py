@@ -2,11 +2,11 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
-import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from unc.args import Args
 from unc.agents import Agent
+from unc.utils.data import Batch
 
 # FOR DEBUGGING
 from unc.utils.viz import plot_current_state
@@ -80,12 +80,11 @@ class Trainer:
             # pf_episode_means = []
             # pf_episode_vars = []
 
-            obs = np.array([self.env.reset()])
+            obs = np.expand_dims(self.env.reset(), 0)
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
-                with torch.no_grad():
-                    action = self.agent.act(obs).item()
+                action = self.agent.act(obs).item()
 
                 # Log particle means and variances
                 # if use_pf:
@@ -104,7 +103,7 @@ class Trainer:
 
                 gamma = (1 - done) * self.discounting
 
-                loss = self.agent.update(obs, action, next_obs, gamma, reward)
+                loss = self.agent.update(Batch(obs, action, next_obs, gamma, reward))
 
                 # Logging
                 episode_loss += loss
@@ -112,7 +111,7 @@ class Trainer:
                 self.info['loss'].append(loss)
                 self.num_steps += 1
 
-                if done:
+                if done.item():
                     # if use_pf:
                     #     state_info = obs[0][:6]
                     #     means = state_info[::2]

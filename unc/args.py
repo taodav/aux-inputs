@@ -65,8 +65,6 @@ class Args(Tap):
     buffer_size: int = 20000  # [DOUBLE BUFFER] How large is our "online" buffer?
 
     def process_args(self) -> None:
-        # Set our device
-        self.device = torch.device(self.device) if torch.cuda.is_available() else torch.device('cpu')
 
         # Create our log and results directories if it doesn't exist
         # We also save the different environments in different folders

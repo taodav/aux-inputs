@@ -1,6 +1,17 @@
 import numpy as np
 from pathlib import Path
 from PIL import Image
+from dataclasses import dataclass
+
+@dataclass
+class Batch:
+    state: np.ndarray
+    action: np.ndarray
+    next_state: np.ndarray
+    gamma: np.ndarray
+    reward: np.ndarray
+    next_action: np.ndarray = None
+
 
 
 def euclidian_dist(arr1: np.ndarray, arr2: np.ndarray):

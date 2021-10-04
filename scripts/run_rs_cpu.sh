@@ -7,8 +7,8 @@
 #SBATCH --output=/home/taodav/scratch/log/slurm-%j-%n-%a.out
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=1G
-#SBATCH --time=0-6:00
-#SBATCH --array=1-360
+#SBATCH --time=1-0:00
+#SBATCH --array=58
 
 cd ../  # Go to main project folder
 source venv/bin/activate

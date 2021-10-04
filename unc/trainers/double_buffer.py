@@ -8,6 +8,7 @@ from unc.envs import RockSample
 from unc.envs.wrappers.rocksample import RockSampleWrapper
 from unc.agents import Agent
 from unc.utils import ReplayBuffer
+from unc.utils.data import Batch
 from unc.utils.viz import generate_greedy_action_array
 
 from .trainer import Trainer
@@ -171,8 +172,8 @@ class DoubleBufferTrainer(Trainer):
 
                 batch_gamma = (1 - batch_done) * self.discounting
 
-                loss = self.agent.update(batch_obs, batch_action, batch_next_obs, batch_gamma, batch_reward,
-                                         next_action=batch_next_action)
+                loss = self.agent.update(Batch(batch_obs, batch_action, batch_next_obs, batch_gamma, batch_reward,
+                                         batch_next_action))
 
                 # Logging
                 episode_loss += loss

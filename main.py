@@ -1,11 +1,12 @@
-import torch
 import numpy as np
+import optax
+from jax import random
 
 from unc.envs import get_env
 from unc.args import Args, get_results_fname
 from unc.trainers.trainer import Trainer
-from unc.models import QNetwork
-from unc.agents import get_agent
+from unc.models import build_network
+from unc.agents import LearningAgent
 from unc.utils import save_info, save_video
 from unc.eval import test_episodes
 
@@ -20,8 +21,7 @@ if __name__ == "__main__":
 
     # Seeding
     np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    rng = np.random.RandomState(args.seed)
+    rand_key = random.PRNGKey(args.seed)
 
     # Initializing our environment
     train_env = get_env(args.seed,
@@ -35,12 +35,11 @@ if __name__ == "__main__":
                         update_weight_interval=args.update_weight_interval)
 
     # Initialize model, optimizer and agent
-    model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.step_size)
+    network = build_network(args.n_hidden, train_env.action_space.n)
+    optimizer = optax.adam(args.step_size)
 
-    agent_class = get_agent(args.algo)
-    agent = agent_class(model, optimizer, train_env.action_space.n, rng,
-                        args)
+    agent = LearningAgent(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rand_key,
+                          args)
 
     # Initialize our trainer
     trainer = Trainer(args, agent, train_env)
