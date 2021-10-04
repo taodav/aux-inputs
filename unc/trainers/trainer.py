@@ -161,5 +161,5 @@ class Trainer:
 
     @staticmethod
     def _print(msg):
-        logging.info(msg)
+        print(msg)
 
