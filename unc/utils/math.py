@@ -1,5 +1,6 @@
 import jax.lax
 import jax.numpy as jnp
+from jax.ops import index_add
 
 
 def relu(x: jnp.ndarray):
@@ -19,11 +20,11 @@ def sarsa_loss(q: jnp.ndarray, a: int, r: jnp.ndarray, g: jnp.ndarray, q1: jnp.n
     return q[a] - target
 
 
-def expected_sarsa_loss(q: jnp.ndarray, a: int, r: jnp.ndarray, g: jnp.ndarray, q1: jnp.ndarray, *args,
+def expected_sarsa_loss(q: jnp.ndarray, a: int, r: jnp.ndarray, g: jnp.ndarray, q1: jnp.ndarray, next_a: int,
                         eps: float = 0.1):
     next_greedy_action = q1.argmax()
     pi = jnp.ones_like(q1) * (eps / q1.shape[-1])
-    pi[next_greedy_action] += (1 - eps)
+    pi = index_add(pi, next_greedy_action, (1 - eps))
     e_q1 = (pi * q1).sum(axis=-1)
     target = r + g * e_q1
     target = jax.lax.stop_gradient(target)

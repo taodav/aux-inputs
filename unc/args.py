@@ -1,5 +1,5 @@
-import torch
 import hashlib
+from jaxlib.xla_extension import Device
 from time import time, ctime
 from typing import Union
 from tap import Tap
@@ -51,7 +51,7 @@ class Args(Tap):
     random_start: bool = True  # Do we have a random initial state distribution?
 
     seed: int = 2020  # Random seed
-    device: Union[str, torch.device] = "cuda"  # What device do we use? (cpu | cuda)
+    device: Union[str, Device] = "cpu"  # What device do we use? (cpu | gpu)
 
     test_eps: float = 0.0  # What's our test epsilon?
     log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?

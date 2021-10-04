@@ -35,7 +35,8 @@ if __name__ == "__main__":
     prefilled_buffer = replay_dict['buffer']
 
     # Initializing our environment
-    train_env = get_env(args.seed,
+    train_env = get_env(rng,
+                        rand_key,
                         env_str=args.env,
                         blur_prob=args.blur_prob,
                         random_start=args.random_start,

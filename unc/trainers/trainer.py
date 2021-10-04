@@ -2,7 +2,6 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
 
 from unc.args import Args
 from unc.agents import Agent
@@ -31,7 +30,6 @@ class Trainer:
         self.episode_num = 0
         self.num_steps = 0
 
-        self._writer = SummaryWriter(args.log_dir)
         self.info = None
 
         logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')

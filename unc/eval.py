@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 import gym
 from typing import Union, Tuple
 
@@ -15,11 +14,9 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
     all_rews = []
     for ep in range(n_episodes):
         rews = []
-        done = False
 
         obs = np.array([env.reset()])
-        with torch.no_grad():
-            action = agent.act(obs).item()
+        action = agent.act(obs).item()
         if render:
             imgs.append(env.render(mode='rgb_array',
                                    show_obs=show_obs,
@@ -30,8 +27,7 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
 
         for t in range(max_episode_steps):
 
-            with torch.no_grad():
-                action = agent.act(obs).item()
+            action = agent.act(obs).item()
 
             next_obs, reward, done, info = env.step(action)
 
@@ -44,7 +40,6 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
 
             if done:
                 break
-
 
             obs, reward, done, info, action = Trainer.preprocess_step(next_obs, reward, done, info, action)
 
