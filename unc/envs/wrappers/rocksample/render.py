@@ -37,8 +37,6 @@ class RockRenderWrapper(RockSampleWrapper):
                show_weights: bool = False, **kwargs) -> np.ndarray:
         assert mode == 'rgb_array'
 
-        # TODO: Do greedy_actions
-
         arr = self.env.generate_array()
 
         background_weights = None

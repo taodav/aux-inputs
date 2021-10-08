@@ -2,11 +2,10 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
-import torch
-from torch.utils.tensorboard import SummaryWriter
 
 from unc.args import Args
 from unc.agents import Agent
+from unc.utils.data import Batch
 
 # FOR DEBUGGING
 from unc.utils.viz import plot_current_state
@@ -31,7 +30,6 @@ class Trainer:
         self.episode_num = 0
         self.num_steps = 0
 
-        self._writer = SummaryWriter(args.log_dir)
         self.info = None
 
         logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
@@ -80,12 +78,11 @@ class Trainer:
             # pf_episode_means = []
             # pf_episode_vars = []
 
-            obs = np.array([self.env.reset()])
+            obs = np.expand_dims(self.env.reset(), 0)
+            action = self.agent.act(obs)
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
-                with torch.no_grad():
-                    action = self.agent.act(obs).item()
 
                 # Log particle means and variances
                 # if use_pf:
@@ -95,7 +92,7 @@ class Trainer:
                 #     pf_episode_means.append(means)
                 #     pf_episode_vars.append(vars)
 
-                next_obs, reward, done, info = self.env.step(action)
+                next_obs, reward, done, info = self.env.step(action.item())
 
                 self.info['reward'].append(reward)
 
@@ -104,7 +101,8 @@ class Trainer:
 
                 gamma = (1 - done) * self.discounting
 
-                loss = self.agent.update(obs, action, next_obs, gamma, reward)
+                next_action = self.agent.act(next_obs)
+                loss = self.agent.update(Batch(obs, action, next_obs, gamma, reward, next_action))
 
                 # Logging
                 episode_loss += loss
@@ -112,7 +110,7 @@ class Trainer:
                 self.info['loss'].append(loss)
                 self.num_steps += 1
 
-                if done:
+                if done.item():
                     # if use_pf:
                     #     state_info = obs[0][:6]
                     #     means = state_info[::2]
@@ -122,6 +120,7 @@ class Trainer:
                     break
 
                 obs = next_obs
+                action = next_action
 
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)
@@ -135,6 +134,7 @@ class Trainer:
             self._print(f"Episode {self.episode_num}, steps: {t + 1}, "
                         f"total steps: {self.num_steps}, "
                         f"moving avg steps: {sum(self.info['episode_length'][-avg_over:]) / avg_over:.3f}, "
+                        f"moving avg returns: {sum(self.info['episode_reward'][-avg_over:]) / avg_over:.3f}, "
                         f"rewards: {episode_reward:.2f}, "
                         f"avg episode loss: {episode_loss / (t + 1):.4f}")
 
@@ -162,5 +162,5 @@ class Trainer:
 
     @staticmethod
     def _print(msg):
-        logging.info(msg)
+        print(msg)
 

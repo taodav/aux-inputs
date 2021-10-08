@@ -4,26 +4,13 @@ from itertools import product
 from definitions import ROOT_DIR
 
 
-def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt', main_fname: str = 'main.py') -> List[str]:
+def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', main_fname: str = 'main.py') -> List[str]:
     """
     :param runs_dir: Directory to put the runs
     :param runs_fname: What do we call our run file?
     :param main_fname: what is our python entry script?
     :return:
     """
-    # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
-    run_dict = {
-        'algo': ['sarsa', 'esarsa'],
-        'env': ['rpg', 'rsg', 'r'],
-        'n_particles': [100],
-        'seed': [(i + 2020) for i in range(10)],
-        'batch_size': [64],
-        'discounting': [0.99],
-        'p_prefilled': [0.0],
-        'step_size': [2e-12, 2e-13, 2e-14],
-        'buffer_size': [25000, int(1e5)],
-        'total_steps': [int(1e6)]
-    }
 
     runs_path = runs_dir / runs_fname
 
@@ -72,9 +59,36 @@ def generate_runs(runs_dir: Path, runs_fname: str = 'runs.txt', main_fname: str 
 if __name__ == "__main__":
     runs_dir = Path(ROOT_DIR, 'scripts', 'runs')
 
+    # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
+    # FOR no-prefilled buffer
+    run_dict = {
+        'algo': ['sarsa', 'esarsa', 'qlearning'],
+        'env': ['rg', 'rpg', 'rxg', 'rsg'],
+        'n_particles': [100],
+        'seed': [(i + 2020) for i in range(10)],
+        'batch_size': [64],
+        'discounting': [0.99],
+        'p_prefilled': [0.0],
+        'step_size': [0.001, 0.0001, 0.00001],
+        'buffer_size': [10000, 20000, 100000],
+        'total_steps': [int(1e6)]
+    }
+
+    # run_dict = {
+    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
+    #     'env': ['rg', 'rpg', 'rxg', 'rsg'],
+    #     'n_particles': [100],
+    #     'seed': [(i + 2020) for i in range(10)],
+    #     'batch_size': [64],
+    #     'discounting': [0.99],
+    #     'p_prefilled': [0.25],
+    #     'buffer_size': [10000, 20000, 100000],
+    #     'total_steps': [int(5e5)]
+    # }
+
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(runs_dir, runs_fname='runs_rs.txt', main_fname='scripts/run_double_buffer.py')
+    generate_runs(run_dict, runs_dir, runs_fname='runs_rs_prefilled.txt', main_fname='scripts/run_double_buffer.py')
 
 

@@ -1,7 +1,8 @@
-import torch
+import numpy as np
 from pathlib import Path
+from jax import random
 
-from unc.agents import SarsaAgent
+from unc.agents import DQNAgent
 from unc.eval import test_episodes
 from unc.envs import get_env
 from unc.utils import save_video, save_gif
@@ -9,19 +10,23 @@ from unc.utils import save_video, save_gif
 from definitions import ROOT_DIR
 
 if __name__ == "__main__":
-    device = torch.device('cpu')
     model_path = Path('/home/taodav/Documents/uncertainty/results/fipg/9/ffaf1cbafa262a7421ec092ac2b8e6a2_Tue Sep  7 12:14:12 2021.pth')
-    agent = SarsaAgent.load(model_path, device)
-
+    agent = DQNAgent.load(model_path)
+    seed = 2000
     args = agent.args
-    test_env = get_env(2000,
-                       env_str=args.env,
-                       blur_prob=args.blur_prob,
-                       random_start=args.random_start,
-                       slip_prob=args.slip_prob,
-                       update_weight_interval=args.update_weight_interval,
-                       size=args.size,
-                       render=True)
+    rng = np.random.RandomState(seed)
+    rand_key = random.PRNGKey(seed)
+    test_env = get_env(rng,
+                        rand_key,
+                        env_str=args.env,
+                        blur_prob=args.blur_prob,
+                        random_start=args.random_start,
+                        slip_prob=args.slip_prob,
+                        slip_turn=args.slip_turn,
+                        size=args.size,
+                        n_particles=args.n_particles,
+                        update_weight_interval=args.update_weight_interval,
+                        render=True)
 
     imgs, rews = test_episodes(agent, test_env,
                                n_episodes=5, render=True,

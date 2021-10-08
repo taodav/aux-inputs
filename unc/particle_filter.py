@@ -32,7 +32,7 @@ def batch_step(weights: np.ndarray, particles: np.ndarray, next_obs: np.ndarray,
 
     # First we propagate the particles
     if action is not None:
-        batch_actions = np.ones(particles.shape[0]) * action
+        batch_actions = np.zeros(particles.shape[0], dtype=int) + action
         updated_particles = batch_transition_fn(particles, batch_actions)
         # for i, p in enumerate(particles):
         #     # Some small optimization: If particle weights are 0, we don't apply the

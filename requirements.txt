@@ -1,4 +1,3 @@
-torch
 gym
 numpy
 typed-argument-parser
@@ -7,4 +6,7 @@ pillow
 matplotlib
 opencv-python
 dill
+jax[cpu]
+optax
+dm-haiku
 -e .

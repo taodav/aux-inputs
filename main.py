@@ -1,13 +1,17 @@
-import torch
 import numpy as np
+import optax
+from jax import random
+from pathlib import Path
 
 from unc.envs import get_env
 from unc.args import Args, get_results_fname
-from unc.trainers.trainer import Trainer
-from unc.models import QNetwork
-from unc.agents import get_agent
+from unc.trainers import Trainer, BufferTrainer
+from unc.models import build_network
+from unc.sampler import Sampler
+from unc.agents import DQNAgent, NoisyNetAgent
 from unc.utils import save_info, save_video
 from unc.eval import test_episodes
+from definitions import ROOT_DIR
 
 
 if __name__ == "__main__":
@@ -20,11 +24,13 @@ if __name__ == "__main__":
 
     # Seeding
     np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
     rng = np.random.RandomState(args.seed)
+    rand_key = random.PRNGKey(args.seed)
+
 
     # Initializing our environment
-    train_env = get_env(args.seed,
+    train_env = get_env(rng,
+                        rand_key,
                         env_str=args.env,
                         blur_prob=args.blur_prob,
                         random_start=args.random_start,
@@ -32,18 +38,33 @@ if __name__ == "__main__":
                         slip_turn=args.slip_turn,
                         size=args.size,
                         n_particles=args.n_particles,
-                        update_weight_interval=args.update_weight_interval)
+                        update_weight_interval=args.update_weight_interval,
+                        rock_obs_init=args.rock_obs_init)
+
+    prefilled_buffer = None
+    if args.replay and args.p_prefilled > 0:
+        buffer_path = Path(ROOT_DIR, 'data', f'buffer_{args.env}_{args.seed}.pkl')
+        replay_dict = Sampler.load(buffer_path)
+        prefilled_buffer = replay_dict['buffer']
+        rock_positions = replay_dict['rock_positions']
+        train_env.rock_positions = rock_positions
 
     # Initialize model, optimizer and agent
-    model = QNetwork(train_env.observation_space.shape[0], args.n_hidden, train_env.action_space.n).to(args.device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.step_size)
+    network = build_network(args.n_hidden, train_env.action_space.n, model_str='nn' if not args.exploration == 'noisy' else 'noisy')
+    optimizer = optax.adam(args.step_size)
 
-    agent_class = get_agent(args.algo)
-    agent = agent_class(model, optimizer, train_env.action_space.n, rng,
+    agent_class = DQNAgent
+    if args.exploration == 'noisy':
+        agent_class = NoisyNetAgent
+
+    agent = agent_class(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rng, rand_key,
                         args)
 
     # Initialize our trainer
-    trainer = Trainer(args, agent, train_env)
+    if args.replay:
+        trainer = BufferTrainer(args, agent, train_env, prefilled_buffer=prefilled_buffer)
+    else:
+        trainer = Trainer(args, agent, train_env)
     trainer.reset()
 
     # Train!

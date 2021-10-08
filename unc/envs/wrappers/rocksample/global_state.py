@@ -36,7 +36,7 @@ class GlobalStateObservationWrapper(RockSampleWrapper):
     def get_obs(self, state: np.ndarray, particles: np.ndarray = None, weights: np.ndarray = None) -> np.ndarray:
         position, rock_morality, _, current_rocks_obs = self.unwrapped.unpack_state(state)
         position_obs = np.zeros((self.size, self.size))
-        position_obs[position[0], position[1]] = 1
+        position_obs[int(position[0]), int(position[1])] = 1
         position_obs = np.concatenate(position_obs)
 
         rock_obs = rock_morality.copy()
@@ -52,6 +52,7 @@ class GlobalStateObservationWrapper(RockSampleWrapper):
                     rock_obs += p * w
             else:
                 rock_obs = current_rocks_obs
+
 
         return np.concatenate([position_obs, rock_obs])
 

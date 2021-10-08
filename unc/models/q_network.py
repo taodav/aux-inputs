@@ -1,30 +1,47 @@
-import torch
-from torch import nn
-import torch.nn.functional as F
+import jax.numpy as jnp
+import numpy as np
+import haiku as hk
+import jax
+from typing import List
 
 
-class QNetwork(nn.Module):
-    def __init__(self, n_features: int, n_hidden: int, n_actions: int):
-        super(QNetwork, self).__init__()
+def nn(layers: List[int], actions: int, x: np.ndarray):
+    init = hk.initializers.VarianceScaling(np.sqrt(2), 'fan_avg', 'uniform')
+    b_init = hk.initializers.Constant(0)
 
-        self.n_features = n_features
+    hidden = []
+    for layer in layers:
+        hidden.append(hk.Linear(layer, w_init=init, b_init=b_init))
+        hidden.append(jax.nn.relu)
+
+    hidden = hk.Sequential(hidden)
+
+    values = hk.Sequential([
+        hk.Linear(actions, w_init=init, b_init=b_init)
+    ])
+
+    h = hidden(x)
+    return values(h)
+
+
+class QNetwork(hk.Module):
+    def __init__(self, n_hidden: int, n_actions: int, name=None):
+        super(QNetwork, self).__init__(name=name)
         self.n_hidden = n_hidden
         self.n_actions = n_actions
 
-        if self.n_hidden == 0:
-            self.l2 = nn.Linear(self.n_features, self.n_actions)
-            for w in self.parameters():
-                w.data.fill_(0.)
-        else:
-            self.l1 = nn.Linear(self.n_features, self.n_hidden)
-            self.l2 = nn.Linear(self.n_hidden, self.n_actions)
+    def __call__(self, x: jnp.ndarray):
+        input_size = x.shape[-1]
+        w_init = hk.initializers.VarianceScaling(jnp.sqrt(2), 'fan_avg', 'uniform')
+        b_init = hk.initializers.Constant(0)
+        w1 = hk.get_parameter("w1", shape=[input_size, self.n_hidden], dtype=x.dtype, init=w_init)
+        b1 = hk.get_parameter("b1", shape=[self.n_hidden], dtype=x.dtype, init=b_init)
 
-    def forward(self, x: torch.Tensor):
-        if self.n_hidden > 0:
-            out = F.relu(self.l1(x))
-        else:
-            out = x
-        out = self.l2(out)
-        return out
+        w2 = hk.get_parameter("w2", shape=[self.n_hidden, self.n_actions], dtype=x.dtype, init=w_init)
+        b2 = hk.get_parameter("b2", shape=[self.n_actions], dtype=x.dtype, init=b_init)
 
+        o1 = jnp.dot(x, w1) + b1
+        a1 = jax.nn.relu(o1)
 
+        o2 = jnp.dot(a1, w2) + b2
+        return o2

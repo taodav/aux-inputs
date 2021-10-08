@@ -1,10 +1,22 @@
 import numpy as np
+import jax.numpy as jnp
 from pathlib import Path
 from PIL import Image
+from dataclasses import dataclass
+
+@dataclass
+class Batch:
+    state: np.ndarray
+    action: np.ndarray
+    next_state: np.ndarray
+    gamma: np.ndarray
+    reward: np.ndarray
+    next_action: np.ndarray = None
+
 
 
 def euclidian_dist(arr1: np.ndarray, arr2: np.ndarray):
-    return np.linalg.norm(arr1 - arr2, 2)
+    return jnp.linalg.norm(arr1 - arr2, 2)
 
 
 def manhattan_dist(arr1: np.ndarray, arr2: np.ndarray):
@@ -12,7 +24,7 @@ def manhattan_dist(arr1: np.ndarray, arr2: np.ndarray):
 
 
 def half_dist_prob(dist: float, max_dist: float):
-    prob = (1 + np.power(2.0, -dist / max_dist)) * 0.5
+    prob = (1 + jnp.power(2.0, -dist / max_dist)) * 0.5
     return prob
 
 

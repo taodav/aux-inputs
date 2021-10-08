@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 from typing import Union, List
 from time import time, ctime
@@ -8,7 +7,7 @@ from unc.envs import RockSample
 from unc.envs.wrappers.rocksample import RockSampleWrapper
 from unc.agents import Agent
 from unc.utils import ReplayBuffer
-from unc.utils.viz import generate_greedy_action_array
+from unc.utils.data import Batch
 
 from .trainer import Trainer
 
@@ -18,9 +17,9 @@ from unc.utils.viz import plot_current_state, stringify_actions_q_vals
 
 
 
-class DoubleBufferTrainer(Trainer):
+class BufferTrainer(Trainer):
     def __init__(self, args: Args, agent: Agent, env: Union[RockSample, RockSampleWrapper],
-                 prefilled_buffer: ReplayBuffer, p_prefilled: float = 0.0, buffer_size: int = 20000):
+                 prefilled_buffer: ReplayBuffer = None):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
 
@@ -33,11 +32,10 @@ class DoubleBufferTrainer(Trainer):
         :param env: environment to train on (currently only supports rocksample)
         :param prefilled_buffer: buffer pre-filled from a certain policy
         """
-        super(DoubleBufferTrainer, self).__init__(args, agent, env)
+        super(BufferTrainer, self).__init__(args, agent, env)
 
         self.batch_size = args.batch_size
 
-        # self.buffer = ReplayBuffer(args.total_steps, self.env.rng, self.env.observation_space.shape)
         self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape)
         self.prefilled_buffer = prefilled_buffer
 
@@ -51,26 +49,25 @@ class DoubleBufferTrainer(Trainer):
         new_state = state.copy()
         new_state[:2] = self.env.rock_positions[rock_idx].copy()
         new_obs = np.array([self.env.get_obs(new_state)])
-        q_val = self.agent.Qs(new_obs)
+        q_val = self.agent.Qs(new_obs, self.agent.network_params)
         return q_val, new_state
 
 
     def all_unchecked_rock_q_vals(self, checked: List[bool]):
         unchecked_rocks_info = {}
-        with torch.no_grad():
-            for i, check in enumerate(checked):
-                if not check:
-                    action = 5 + i
-                    before_check_qvals, teleported_state = self.teleported_rock_q_vals(i)
-                    checked_state, new_particles, new_weights = self.env.transition(teleported_state, action, self.env.particles, self.env.weights)
-                    checked_obs = np.array([self.env.get_obs(checked_state, particles=new_particles, weights=new_weights)])
-                    after_check_qvals = self.agent.Qs(checked_obs)
+        for i, check in enumerate(checked):
+            if not check:
+                action = 5 + i
+                before_check_qvals, teleported_state = self.teleported_rock_q_vals(i)
+                checked_state, new_particles, new_weights = self.env.transition(teleported_state, action, self.env.particles, self.env.weights)
+                checked_obs = np.array([self.env.get_obs(checked_state, particles=new_particles, weights=new_weights)])
+                after_check_qvals = self.agent.Qs(checked_obs, self.agent.network_params)
 
-                    unchecked_rocks_info[tuple(self.env.rock_positions[i])] = {
-                        'before': before_check_qvals.squeeze(0).numpy(),
-                        'after': after_check_qvals.squeeze(0).numpy(),
-                        'morality': self.env.rock_morality[i]
-                    }
+                unchecked_rocks_info[tuple(self.env.rock_positions[i])] = {
+                    'before': np.array(before_check_qvals[0]),
+                    'after': np.array(after_check_qvals[0]),
+                    'morality': self.env.rock_morality[i]
+                }
         return unchecked_rocks_info
 
     def summarize_checks(self, unchecked: dict):
@@ -125,7 +122,8 @@ class DoubleBufferTrainer(Trainer):
         while self.num_steps < self.total_steps:
             episode_reward = 0
             episode_loss = 0
-            obs = np.array([self.env.reset()])
+            obs = np.expand_dims(self.env.reset(), 0)
+            action = self.agent.act(obs).item()
 
             # DEBUGGING
             checked_rocks_info = {}
@@ -140,17 +138,13 @@ class DoubleBufferTrainer(Trainer):
             #     bad_diffs.append(all_bad_diff)
             #     time_to_check = False
 
-            with torch.no_grad():
-                action = self.agent.act(obs).item()
-
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
 
                 next_obs, reward, done, info = self.env.step(action)
                 next_obs = np.array([next_obs])
 
-                with torch.no_grad():
-                    next_action = self.agent.act(next_obs).item()
+                next_action = self.agent.act(next_obs).item()
 
                 self.buffer.push({
                     'obs': obs, 'reward': reward, 'done': done, 'action': action, 'next_obs': next_obs,
@@ -160,25 +154,30 @@ class DoubleBufferTrainer(Trainer):
                 self.info['reward'].append(reward)
 
                 prefilled_bs = int(self.batch_size * self.p_prefilled)
-                prefilled_sample = self.prefilled_buffer.sample(prefilled_bs)
-                sample = self.buffer.sample(self.batch_size - prefilled_bs)
+                online_bs = self.batch_size - prefilled_bs
+                if online_bs < len(self.buffer):
+                    sample = self.buffer.sample(online_bs)
+                    if self.p_prefilled == 0 or self.prefilled_buffer is None:
+                        prefilled_sample = {k: np.zeros((0, *v.shape[1:])) for k, v in sample.items()}
+                    else:
+                        prefilled_sample = self.prefilled_buffer.sample(prefilled_bs)
 
-                batch_obs = np.concatenate([prefilled_sample['obs'], sample['obs']])
-                batch_reward = np.concatenate([prefilled_sample['reward'], sample['reward']])
-                batch_action = np.concatenate([prefilled_sample['action'], sample['action']])
-                batch_next_obs = np.concatenate([prefilled_sample['next_obs'], sample['next_obs']])
-                batch_done = np.concatenate([prefilled_sample['done'], sample['done']])
-                batch_next_action = np.concatenate([prefilled_sample['next_action'], sample['next_action']])
+                    batch_obs = np.concatenate([prefilled_sample['obs'], sample['obs']])
+                    batch_reward = np.concatenate([prefilled_sample['reward'], sample['reward']])
+                    batch_action = np.concatenate([prefilled_sample['action'], sample['action']])
+                    batch_next_obs = np.concatenate([prefilled_sample['next_obs'], sample['next_obs']])
+                    batch_done = np.concatenate([prefilled_sample['done'], sample['done']])
+                    batch_next_action = np.concatenate([prefilled_sample['next_action'], sample['next_action']])
 
-                batch_gamma = (1 - batch_done) * self.discounting
+                    batch_gamma = (1 - batch_done) * self.discounting
 
-                loss = self.agent.update(batch_obs, batch_action, batch_next_obs, batch_gamma, batch_reward,
-                                         next_action=batch_next_action)
+                    loss = self.agent.update(Batch(batch_obs, batch_action, batch_next_obs, batch_gamma, batch_reward,
+                                             batch_next_action))
 
-                # Logging
-                episode_loss += loss
+                    # Logging
+                    episode_loss += loss
+                    self.info['loss'].append(loss)
                 episode_reward += reward
-                self.info['loss'].append(loss)
                 self.num_steps += 1
 
                 if self.num_steps % log_interval == 0:

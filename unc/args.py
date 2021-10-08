@@ -1,5 +1,5 @@
-import torch
 import hashlib
+from jaxlib.xla_extension import Device
 from time import time, ctime
 from typing import Union
 from tap import Tap
@@ -25,14 +25,18 @@ class Args(Tap):
         If m or v is in string without p, nothing happens.
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
     g = global-state observations + color observation. This encodes all particles/states in a single array.
+    x = [ROCKSAMPLE] Perfect sensor (X marks the spot) for the RockSample agent.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
+    exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 8  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     slip_turn: bool = False  # If we're in the slip setting, do we slip on turns as well?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
+
+    rock_obs_init: float = 0.  # [ROCKSAMPLE] What value do we initialize our rock observations to?
 
     update_weight_interval: int = 1  # How often do we update our particle weights?
     resample_interval: int = 1  # [STOCHASTICITY] How often do we resample our particles?
@@ -51,7 +55,7 @@ class Args(Tap):
     random_start: bool = True  # Do we have a random initial state distribution?
 
     seed: int = 2020  # Random seed
-    device: Union[str, torch.device] = "cuda"  # What device do we use? (cpu | cuda)
+    device: Union[str, Device] = "cpu"  # What device do we use? (cpu | gpu)
 
     test_eps: float = 0.0  # What's our test epsilon?
     log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
@@ -60,13 +64,12 @@ class Args(Tap):
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     save_model: bool = False  # Do we save our model after finishing training?
 
-    batch_size: int = 64  # [DOUBLE BUFFER] Batch size for buffer training
-    p_prefilled: float = 0.  # [DOUBLE BUFFER] What percentage of each batch is sampled from our prefilled buffer?
-    buffer_size: int = 20000  # [DOUBLE BUFFER] How large is our "online" buffer?
+    replay: bool = True  # Do we use a replay buffer to learn?
+    batch_size: int = 64  # Batch size for buffer training
+    p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
+    buffer_size: int = 20000  # How large is our "online" buffer?
 
     def process_args(self) -> None:
-        # Set our device
-        self.device = torch.device(self.device) if torch.cuda.is_available() else torch.device('cpu')
 
         # Create our log and results directories if it doesn't exist
         # We also save the different environments in different folders
@@ -76,6 +79,9 @@ class Args(Tap):
         self.results_dir /= self.env
         # self.results_dir /= str(self.size)
         self.results_dir.mkdir(parents=True, exist_ok=True)
+
+        if self.exploration == 'noisy':
+            self.epsilon = 0.
 
 
 def md5(args: Args) -> str:
