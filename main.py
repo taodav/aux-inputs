@@ -27,7 +27,6 @@ if __name__ == "__main__":
     rng = np.random.RandomState(args.seed)
     rand_key = random.PRNGKey(args.seed)
 
-
     # Initializing our environment
     train_env = get_env(rng,
                         rand_key,
@@ -43,6 +42,7 @@ if __name__ == "__main__":
 
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:
+        # Getting our pre-filled replay buffer if we need it.
         buffer_path = Path(ROOT_DIR, 'data', f'buffer_{args.env}_{args.seed}.pkl')
         replay_dict = Sampler.load(buffer_path)
         prefilled_buffer = replay_dict['buffer']

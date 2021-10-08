@@ -2,6 +2,7 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
+from typing import List, Any
 
 from unc.args import Args
 from unc.agents import Agent
@@ -43,7 +44,7 @@ class Trainer:
             'episode_reward': [],
             'episode_length': [],
             'reward': [],
-            'loss': [],
+            'avg_episode_loss': [],
             'args': self.args.as_dict()
         }
         if 'p' in self.args.env:
@@ -107,7 +108,6 @@ class Trainer:
                 # Logging
                 episode_loss += loss
                 episode_reward += reward[0]
-                self.info['loss'].append(loss)
                 self.num_steps += 1
 
                 if done.item():
@@ -125,6 +125,7 @@ class Trainer:
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)
             self.info['episode_length'].append(t + 1)
+            self.info['avg_episode_loss'].append(episode_loss / (t + 1))
 
             # if use_pf:
             #     self.info['pf_episodic_mean'].append(pf_episode_means)
@@ -153,10 +154,29 @@ class Trainer:
         action = np.array([action])
         return obs, reward, done, info, action
 
+    def _maybe_convert_rewards(self, rewards: List[Any]):
+        """
+        We do this in order to reduced the size of our saved array, as we
+        take many many steps and save reward at each step.
+        :param rewards: list of rewards over all steps.
+        :return:
+        """
+        if hasattr(self.env, 'unique_rewards'):
+            max_unique, min_unique = max(self.env.unique_rewards), min(self.env.unique_rewards)
+            if max_unique <= 127 and min_unique >= -128:
+                return np.array(rewards, dtype=np.int8)
+            elif max_unique <= 32767 and min_unique >= -32768:
+                return np.array(rewards, dtype=np.int16)
+
+            return np.array(rewards, dtype=np.int32)
+
     def get_info(self):
         return_info = {}
         for k, v in self.info.items():
-            return_info[k] = np.array(self.info[k])
+            if k == 'reward':
+                return_info[k] = self._maybe_convert_rewards(self.info[k])
+            else:
+                return_info[k] = np.array(self.info[k])
 
         return return_info
 

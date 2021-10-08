@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Tuple
-from collections import deque, namedtuple
+from collections import deque
 
 
 class ReplayBuffer:

@@ -17,6 +17,7 @@ class CompassWorld(Environment):
         super(CompassWorld, self).__init__()
         self.observation_space = gym.spaces.MultiBinary(5)
         self.action_space = gym.spaces.Discrete(3)
+        self.unique_rewards = [0, 1]
         self.size = size
         self.random_start = random_start
         self.rng = rng

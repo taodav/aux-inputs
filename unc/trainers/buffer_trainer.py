@@ -176,7 +176,6 @@ class BufferTrainer(Trainer):
 
                     # Logging
                     episode_loss += loss
-                    self.info['loss'].append(loss)
                 episode_reward += reward
                 self.num_steps += 1
 
@@ -200,11 +199,13 @@ class BufferTrainer(Trainer):
             self.episode_num += 1
             self.info['episode_reward'].append(episode_reward)
             self.info['episode_length'].append(t + 1)
+            self.info['avg_episode_loss'].append(episode_loss / (t + 1))
 
             avg_over = min(self.episode_num, 30)
             self._print(f"Episode {self.episode_num}, steps: {t + 1}, "
                         f"total steps: {self.num_steps}, "
                         f"moving avg steps: {sum(self.info['episode_length'][-avg_over:]) / avg_over:.3f}, "
+                        f"moving avg returns: {sum(self.info['episode_reward'][-avg_over:]) / avg_over:.3f}, "
                         f"rewards: {episode_reward:.2f}, "
                         f"avg episode loss: {episode_loss / (t + 1):.4f}")
 

@@ -65,13 +65,14 @@ if __name__ == "__main__":
         'algo': ['sarsa', 'esarsa', 'qlearning'],
         'env': ['rg', 'rpg', 'rxg', 'rsg'],
         'n_particles': [100],
-        'seed': [(i + 2020) for i in range(10)],
         'batch_size': [64],
         'discounting': [0.99],
         'p_prefilled': [0.0],
+        'replay': [True],
         'step_size': [0.001, 0.0001, 0.00001],
         'buffer_size': [10000, 20000, 100000],
-        'total_steps': [int(1e6)]
+        'total_steps': [1500000],
+        'seed': [(i + 2020) for i in range(10)]
     }
 
     # run_dict = {
@@ -89,6 +90,6 @@ if __name__ == "__main__":
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(run_dict, runs_dir, runs_fname='runs_rs_prefilled.txt', main_fname='scripts/run_double_buffer.py')
+    generate_runs(run_dict, runs_dir, runs_fname='runs_rs.txt', main_fname='main.py')
 
 

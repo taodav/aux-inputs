@@ -42,6 +42,14 @@ class RockSample(Environment):
         self.observation_space = gym.spaces.MultiBinary(self.k + 2)
         self.state_space = gym.spaces.MultiBinary(2 + 3 * self.k)
         self.action_space = gym.spaces.Discrete(self.k + 5)
+
+        # This helps with saving
+        self.unique_rewards = {0}
+        self.unique_rewards.add(self.good_rock_reward)
+        self.unique_rewards.add(self.bad_rock_reward)
+        self.unique_rewards.add(self.exit_reward)
+        self.unique_rewards = list(self.unique_rewards)
+
         self.rng = rng
         self.rand_key = rand_key
         self.rock_obs_init = rock_obs_init
@@ -180,7 +188,7 @@ class RockSample(Environment):
         return self.get_obs(self.state)
 
     def unpack_state(self, state: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        position = state[:2]
+        position = state[:2].astype(int)
         rock_morality = state[2:2 + self.k]
         sampled_rocks = state[2 + self.k:2 + 2 * self.k]
         current_rocks_obs = state[2 + 2 * self.k:]
@@ -337,7 +345,7 @@ class RockSample(Environment):
 
         viz_array[self.rock_positions[:, 0], self.rock_positions[:, 1]] = 2
 
-        viz_array[self.agent_position[0], self.agent_position[1]] += 1
+        viz_array[int(self.agent_position[0]), int(self.agent_position[1])] += 1
 
         viz_array[:, self.size - 1] = 4
         return viz_array
