@@ -3,3 +3,4 @@ from .pf import RocksParticleFilterWrapper
 from .render import RockRenderWrapper
 from .wrapper import RockSampleWrapper
 from .local_state import LocalStateObservationWrapper
+from .perf_sensor import PerfectSensorWrapper

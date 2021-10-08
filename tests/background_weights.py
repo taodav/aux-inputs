@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from jax import random
 
-from unc.agents import LearningAgent
+from unc.agents import DQNAgent
 from unc.eval import test_episodes
 from unc.envs import get_env
 from unc.utils import save_video, save_gif
@@ -11,7 +11,7 @@ from definitions import ROOT_DIR
 
 if __name__ == "__main__":
     model_path = Path('/home/taodav/Documents/uncertainty/results/fipg/9/ffaf1cbafa262a7421ec092ac2b8e6a2_Tue Sep  7 12:14:12 2021.pth')
-    agent = LearningAgent.load(model_path)
+    agent = DQNAgent.load(model_path)
     seed = 2000
     args = agent.args
     rng = np.random.RandomState(seed)

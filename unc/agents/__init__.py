@@ -1,3 +1,4 @@
 from .base import Agent
-from .learning import LearningAgent
+from .dqn import DQNAgent
+from .noisy import NoisyNetAgent
 from .rock_sampler import RockSamplerAgent

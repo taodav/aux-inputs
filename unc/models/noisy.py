@@ -4,7 +4,7 @@ import numpy as np
 
 import haiku as hk
 
-from .q_network import QNetwork
+from typing import List
 
 
 # Factorised NoisyLinear layer with bias
@@ -51,14 +51,16 @@ def noisy_linear(num_outputs: int,
   return net_fn
 
 
-class NoisyQNetwork(QNetwork):
-    def __init__(self, n_features: int, n_hidden: int, n_actions: int, noisy_std: float = 0.1):
-        super(NoisyQNetwork, self).__init__(n_features, n_hidden, n_actions)
-        self.noisy_std = noisy_std
+def noisy_network(layers: List[int], actions: int, x: np.ndarray, noisy_std_init: float = 0.5):
+    hidden = []
+    for layer in layers:
+        hidden.append(noisy_linear(layer, noisy_std_init))
+        hidden.append(jax.nn.relu)
 
-        self.l1 = NoisyLinear(self.n_features, self.n_hidden, std_init=self.noisy_std)
-        self.l2 = NoisyLinear(self.n_hidden, self.n_actions, std_init=self.noisy_std)
+    hidden = hk.Sequential(hidden)
 
-    def reset_noise(self):
-        self.l1.reset_noise()
-        self.l2.reset_noise()
+    values = hk.Sequential([
+        noisy_linear(actions, noisy_std_init)
+    ])
+    h = hidden(x)
+    return values(h)

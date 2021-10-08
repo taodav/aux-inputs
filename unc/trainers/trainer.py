@@ -134,6 +134,7 @@ class Trainer:
             self._print(f"Episode {self.episode_num}, steps: {t + 1}, "
                         f"total steps: {self.num_steps}, "
                         f"moving avg steps: {sum(self.info['episode_length'][-avg_over:]) / avg_over:.3f}, "
+                        f"moving avg returns: {sum(self.info['episode_reward'][-avg_over:]) / avg_over:.3f}, "
                         f"rewards: {episode_reward:.2f}, "
                         f"avg episode loss: {episode_loss / (t + 1):.4f}")
 

@@ -36,7 +36,7 @@ class ReplayBuffer:
     def reset(self):
         if self.state_size is not None:
             self.s = np.zeros((self.capacity, *self.state_size))
-        self.obs = np.zeros((self.capacity, *self.obs_size), dtype=np.int16)
+        self.obs = np.zeros((self.capacity, *self.obs_size))
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
         self.r = np.zeros(self.capacity, dtype=np.float)

@@ -19,7 +19,7 @@ from unc.utils.data import Batch
 from .base import Agent
 
 
-class LearningAgent(Agent):
+class DQNAgent(Agent):
     def __init__(self, network: hk.Transformed,
                  optimizer: GradientTransformation,
                  n_features: int,
@@ -31,8 +31,9 @@ class LearningAgent(Agent):
         self.n_hidden = args.n_hidden
         self.n_actions = n_actions
 
+        self._rand_key, network_rand_key = random.split(rand_key)
         self.network = network
-        self.network_params = self.network.init(rng=rand_key, x=jnp.zeros((1, self.n_features)))
+        self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, self.n_features)))
         self.optimizer = optimizer
         self.optimizer_state = self.optimizer.init(self.network_params)
         self.eps = args.epsilon
@@ -47,7 +48,6 @@ class LearningAgent(Agent):
         elif args.algo == 'qlearning':
             self.loss_fn = qlearning_loss
 
-        self._rand_key = rand_key
         self._rng = rng
 
     def set_eps(self, eps: float):
@@ -87,7 +87,7 @@ class LearningAgent(Agent):
         qs = self.Qs(state, network_params=network_params)
         return jnp.argmax(qs, axis=1)
 
-    def Qs(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
+    def Qs(self, state: np.ndarray, network_params: hk.Params, *args) -> jnp.ndarray:
         """
         Get all Q-values given a state.
         :param state: (b x *state.shape) State to find action-values
@@ -176,7 +176,7 @@ class LearningAgent(Agent):
         network = QNetwork(loaded['n_hidden'], loaded['n_actions'])
         optimizer = optax.adam(args.step_size)
 
-        agent = LearningAgent(network, optimizer, loaded['n_features'], loaded['n_actions'], loaded['rng'], args)
+        agent = DQNAgent(network, optimizer, loaded['n_features'], loaded['n_actions'], loaded['rng'], args)
         agent.network_params = loaded['network_params']
         agent.optimizer_state = loaded['optimizer_state']
 
