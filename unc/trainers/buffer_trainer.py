@@ -158,7 +158,7 @@ class BufferTrainer(Trainer):
                 if online_bs < len(self.buffer):
                     sample = self.buffer.sample(online_bs)
                     if self.p_prefilled == 0 or self.prefilled_buffer is None:
-                        prefilled_sample = {k: np.zeros((0, *v.shape[1:])) for k, v in sample.items()}
+                        prefilled_sample = {k: np.zeros((0, *v.shape[1:]), dtype=v.dtype) for k, v in sample.items()}
                     else:
                         prefilled_sample = self.prefilled_buffer.sample(prefilled_bs)
 

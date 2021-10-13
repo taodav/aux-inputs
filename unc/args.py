@@ -64,7 +64,7 @@ class Args(Tap):
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     save_model: bool = False  # Do we save our model after finishing training?
 
-    replay: bool = True  # Do we use a replay buffer to learn?
+    replay: bool = False  # Do we use a replay buffer to learn?
     batch_size: int = 64  # Batch size for buffer training
     p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
     buffer_size: int = 20000  # How large is our "online" buffer?

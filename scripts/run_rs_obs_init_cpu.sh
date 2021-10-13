@@ -7,13 +7,13 @@
 #SBATCH --output=/home/taodav/scratch/log/slurm-%j-%n-%a.out
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=3G
-#SBATCH --time=0-14:00
-#SBATCH --array=597-600,595,593,580,576,112
+#SBATCH --time=0-12:00
+#SBATCH --array=1-720
 
 cd ../  # Go to main project folder
 source venv/bin/activate
 
-TO_RUN=$(sed -n "${SLURM_ARRAY_TASK_ID}p" scripts/runs/runs_rs.txt)
+TO_RUN=$(sed -n "${SLURM_ARRAY_TASK_ID}p" scripts/runs/runs_rs_obs_init.txt)
 eval $TO_RUN
 
 # The -u means ungrouped - output is ungrouped and printed.

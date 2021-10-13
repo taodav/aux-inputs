@@ -61,35 +61,38 @@ if __name__ == "__main__":
 
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
     # FOR no-prefilled buffer
+    # run_dict = {
+    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
+    #     'env': ['rg', 'rpg', 'rxg', 'rsg'],
+    #     'n_particles': [100],
+    #     'batch_size': [64],
+    #     'discounting': [0.99],
+    #     'p_prefilled': [0.0],
+    #     'replay': [True],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [1500000],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
+
     run_dict = {
         'algo': ['sarsa', 'esarsa', 'qlearning'],
-        'env': ['rg', 'rpg', 'rxg', 'rsg'],
+        'env': ['rg', 'rxg'],
         'n_particles': [100],
         'batch_size': [64],
         'discounting': [0.99],
         'p_prefilled': [0.0],
         'replay': [True],
         'step_size': [0.001, 0.0001, 0.00001],
-        'buffer_size': [10000, 20000, 100000],
+        'buffer_size': [10000, 100000],
         'total_steps': [1500000],
+        'rock_obs_init': [0.5, 1.],
         'seed': [(i + 2020) for i in range(10)]
     }
-
-    # run_dict = {
-    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
-    #     'env': ['rg', 'rpg', 'rxg', 'rsg'],
-    #     'n_particles': [100],
-    #     'seed': [(i + 2020) for i in range(10)],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.25],
-    #     'buffer_size': [10000, 20000, 100000],
-    #     'total_steps': [int(5e5)]
-    # }
 
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(run_dict, runs_dir, runs_fname='runs_rs.txt', main_fname='main.py')
+    generate_runs(run_dict, runs_dir, runs_fname='runs_rs_obs_init.txt', main_fname='main.py')
 
 
