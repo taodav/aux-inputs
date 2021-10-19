@@ -6,14 +6,14 @@ import haiku as hk
 import optax
 from functools import partial
 from jax import random, jit, vmap
-from jax.ops import index_add, index_update
+from jax.ops import index_add
 from optax import GradientTransformation
 from pathlib import Path
 from typing import Tuple
 
 from unc.args import Args
 from unc.models import QNetwork
-from unc.utils.math import sarsa_loss, expected_sarsa_loss, qlearning_loss, mse
+from unc.utils.math import sarsa_error, expected_sarsa_error, qlearning_error, mse
 from unc.utils.data import Batch
 
 from .base import Agent
@@ -24,7 +24,6 @@ class DQNAgent(Agent):
                  optimizer: GradientTransformation,
                  n_features: int,
                  n_actions: int,
-                 rng: np.random.RandomState,
                  rand_key: random.PRNGKey,
                  args: Args):
         self.n_features = n_features
@@ -40,15 +39,13 @@ class DQNAgent(Agent):
         self.device = args.device
         self.args = args
 
-        self.loss_fn = None
+        self.error_fn = None
         if args.algo == 'sarsa':
-            self.loss_fn = sarsa_loss
+            self.error_fn = sarsa_error
         elif args.algo == 'esarsa':
-            self.loss_fn = expected_sarsa_loss
+            self.error_fn = expected_sarsa_error
         elif args.algo == 'qlearning':
-            self.loss_fn = qlearning_loss
-
-        self._rng = rng
+            self.error_fn = qlearning_error
 
     def set_eps(self, eps: float):
         self.eps = eps
@@ -117,7 +114,7 @@ class DQNAgent(Agent):
         q = self.network.apply(network_params, state)
         q1 = self.network.apply(network_params, next_state)
 
-        batch_loss = vmap(self.loss_fn)
+        batch_loss = vmap(self.error_fn)
         td_err = batch_loss(q, action, reward, gamma, q1, next_action)
         return mse(td_err)
 
@@ -146,7 +143,7 @@ class DQNAgent(Agent):
         """
 
         loss, self.network_params, self.optimizer_state = \
-            self.functional_update(self.network_params, self.optimizer_state, b.state, b.action, b.next_state, b.gamma, b.reward, b.next_action)
+            self.functional_update(self.network_params, self.optimizer_state, b.obs, b.action, b.next_obs, b.gamma, b.reward, b.next_action)
         return loss
 
     def save(self, path: Path):

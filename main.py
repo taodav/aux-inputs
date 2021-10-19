@@ -8,7 +8,7 @@ from unc.args import Args, get_results_fname
 from unc.trainers import Trainer, BufferTrainer
 from unc.models import build_network
 from unc.sampler import Sampler
-from unc.agents import DQNAgent, NoisyNetAgent
+from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent
 from unc.utils import save_info, save_video
 from unc.eval import test_episodes
 from definitions import ROOT_DIR
@@ -50,15 +50,21 @@ if __name__ == "__main__":
         train_env.rock_positions = rock_positions
 
     # Initialize model, optimizer and agent
-    network = build_network(args.n_hidden, train_env.action_space.n, model_str='nn' if not args.exploration == 'noisy' else 'noisy')
+    model_str = args.arch
+    if model_str == 'nn' and args.exploration == 'noisy':
+        model_str = args.exploration
+    network = build_network(args.n_hidden, train_env.action_space.n, model_str=model_str)
     optimizer = optax.adam(args.step_size)
 
-    agent_class = DQNAgent
-    if args.exploration == 'noisy':
-        agent_class = NoisyNetAgent
-
-    agent = agent_class(network, optimizer, train_env.observation_space.shape[0], train_env.action_space.n, rng, rand_key,
-                        args)
+    if args.arch == 'lstm':
+        agent = LSTMAgent(network, optimizer, train_env.observation_space.shape[0],
+                          train_env.action_space.n, rand_key, args)
+    elif args.arch == 'nn' and args.exploration == 'noisy':
+        agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape[0],
+                              train_env.action_space.n, rand_key, args)
+    else:
+        agent = DQNAgent(network, optimizer, train_env.observation_space.shape[0],
+                         train_env.action_space.n, rand_key, args)
 
     # Initialize our trainer
     if args.replay:

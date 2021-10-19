@@ -10,7 +10,7 @@ from typing import Union
 from pathlib import Path
 
 from unc.agents import RockSamplerAgent
-from unc.utils import ReplayBuffer, save_video
+from unc.utils import ReplayBuffer, save_video, Batch
 from unc.envs import RockSample
 from unc.envs.wrappers.rocksample import RockSampleWrapper
 
@@ -87,7 +87,7 @@ class Sampler:
                 episode_rews += rew
                 self.collected += 1
 
-                batch = {
+                sample = Batch(**{
                     'state': state,
                     'action': action,
                     'obs': obs,
@@ -96,8 +96,8 @@ class Sampler:
                     'reward': rew,
                     'next_action': next_action,
                     'done': done
-                }
-                self.buffer.push(batch)
+                })
+                self.buffer.push(sample)
 
                 if self.render:
                     self.imgs.append(self.env.render(show_weights=True, action=action))

@@ -28,6 +28,7 @@ class Args(Tap):
     x = [ROCKSAMPLE] Perfect sensor (X marks the spot) for the RockSample agent.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
+    arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm)
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 8  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
@@ -44,6 +45,8 @@ class Args(Tap):
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100
+
+    trunc: int = 10  # [RNN] truncation size
     """
     How many nodes in our hidden layer of our neural network?
     0 for linear function approximation.

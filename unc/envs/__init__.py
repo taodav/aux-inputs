@@ -9,6 +9,8 @@ from .compass import CompassWorld
 from .fixed import FixedCompassWorld
 from .rocksample import RockSample
 from .base import Environment
+from .simple_chain import SimpleChain
+from .dynamic_chain import DynamicChain
 from definitions import ROOT_DIR
 
 
@@ -81,16 +83,17 @@ def get_rocksample_env(rng: np.random.RandomState,
     return env
 
 
-def get_compass_env(rng: np.random.RandomState, env_str: str = "s",
-            random_start: bool = True,
-            blur_prob: float = 0.1,
-            slip_prob: float = 0.1,
-            slip_turn: bool = True,
-            update_weight_interval: int = 1,
-            size: int = 8,
-            resample_interval: int = None,
-            n_particles: int = -1,
-            render: bool = True):
+def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
+                    random_start: bool = True,
+                    blur_prob: float = 0.1,
+                    slip_prob: float = 0.1,
+                    slip_turn: bool = True,
+                    update_weight_interval: int = 1,
+                    size: int = 8,
+                    resample_interval: int = None,
+                    n_particles: int = -1,
+                    render: bool = True,
+                    **kwargs):
 
     ground_truth = False
     if "g" in env_str and "s" in env_str:

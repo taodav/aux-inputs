@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-from typing import Any
+from typing import Any, Tuple
 
 
 class Environment(gym.Env):
@@ -22,8 +22,8 @@ class Environment(gym.Env):
     def get_terminal(self) -> bool:
         raise NotImplementedError()
     
-    def reset(self):
-        super(Environment, self).reset()
+    def reset(self) -> np.ndarray:
+        return super(Environment, self).reset()
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         raise NotImplementedError()
@@ -31,6 +31,6 @@ class Environment(gym.Env):
     def emit_prob(self, state: Any, obs: np.ndarray) -> float:
         pass
     
-    def step(self, action: int):
-        super(Environment, self).step(action)
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
+        return super(Environment, self).step(action)
 

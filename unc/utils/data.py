@@ -4,15 +4,29 @@ from pathlib import Path
 from PIL import Image
 from dataclasses import dataclass
 
+
 @dataclass
 class Batch:
-    state: np.ndarray
+    obs: np.ndarray
     action: np.ndarray
-    next_state: np.ndarray
-    gamma: np.ndarray
+    next_obs: np.ndarray
     reward: np.ndarray
+    done: np.ndarray = None
+    gamma: np.ndarray = None
     next_action: np.ndarray = None
+    state: np.ndarray = None
+    next_state: np.ndarray = None
+    zero_mask: np.ndarray = None
+    end: np.ndarray = None  # End is done or max_steps == timesteps
 
+
+def zip_batches(b1: Batch, b2: Batch):
+    zipped = {}
+    for k, v1 in b1.__dict__.items():
+        if v1 is not None:
+            v2 = b2.__dict__[k]
+            zipped[k] = np.concatenate([v1, v2])
+    return Batch(**zipped)
 
 
 def euclidian_dist(arr1: np.ndarray, arr2: np.ndarray):

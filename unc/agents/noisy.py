@@ -67,7 +67,7 @@ class NoisyNetAgent(DQNAgent):
         q = self.network.apply(network_params, rand_keys[0], state)
         q1 = self.network.apply(network_params, rand_keys[1],  next_state)
 
-        batch_loss = vmap(self.loss_fn)
+        batch_loss = vmap(self.error_fn)
         td_err = batch_loss(q, action, reward, gamma, q1, next_action)
         return mse(td_err)
 
