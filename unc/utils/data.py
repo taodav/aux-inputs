@@ -3,21 +3,22 @@ import jax.numpy as jnp
 from pathlib import Path
 from PIL import Image
 from dataclasses import dataclass
+from typing import Union, Iterable
 
 
 @dataclass
 class Batch:
-    obs: np.ndarray
-    action: np.ndarray
-    next_obs: np.ndarray
-    reward: np.ndarray
-    done: np.ndarray = None
-    gamma: np.ndarray = None
-    next_action: np.ndarray = None
-    state: np.ndarray = None
-    next_state: np.ndarray = None
-    zero_mask: np.ndarray = None
-    end: np.ndarray = None  # End is done or max_steps == timesteps
+    obs: Union[np.ndarray, Iterable]
+    action: Union[np.ndarray, Iterable]
+    next_obs: Union[np.ndarray, Iterable]
+    reward: Union[np.ndarray, Iterable]
+    done: Union[np.ndarray, Iterable] = None
+    gamma: Union[np.ndarray, Iterable] = None
+    next_action: Union[np.ndarray, Iterable] = None
+    state: Union[np.ndarray, Iterable] = None
+    next_state: Union[np.ndarray, Iterable] = None
+    zero_mask: Union[np.ndarray, Iterable] = None
+    end: Union[np.ndarray, Iterable] = None  # End is done or max_steps == timesteps
 
 
 def zip_batches(b1: Batch, b2: Batch):

@@ -75,24 +75,71 @@ if __name__ == "__main__":
     #     'seed': [(i + 2020) for i in range(10)]
     # }
 
+    # run_dict = {
+    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
+    #     'env': ['rg', 'rxg'],
+    #     'n_particles': [100],
+    #     'batch_size': [64],
+    #     'discounting': [0.99],
+    #     'p_prefilled': [0.0],
+    #     'replay': [True],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [1500000],
+    #     'rock_obs_init': [0.5, 1.],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
+
+    # Fixed compass world LSTM runs
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['lstm'],
+    #     'env': ['f'],
+    #     'batch_size': [64],
+    #     'replay': [True],
+    #     'trunc': [10],
+    #     'size': [9],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [150000],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
+
+    # RockSample LSTM runs
     run_dict = {
-        'algo': ['sarsa', 'esarsa', 'qlearning'],
-        'env': ['rg', 'rxg'],
-        'n_particles': [100],
+        'algo': ['sarsa'],
+        'arch': ['lstm'],
+        'env': ['rg'],
+        # 'n_particles': [100],
         'batch_size': [64],
         'discounting': [0.99],
         'p_prefilled': [0.0],
         'replay': [True],
         'step_size': [0.001, 0.0001, 0.00001],
-        'buffer_size': [10000, 100000],
+        'trunc': [5, 10, 20],
+        'buffer_size': [100000],
         'total_steps': [1500000],
-        'rock_obs_init': [0.5, 1.],
         'seed': [(i + 2020) for i in range(10)]
     }
+
+    # Fixed compass world runs
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['nn'],
+    #     'env': ['f', 'fsg', 'fpg'],
+    #     'batch_size': [64],
+    #     'replay': [False],
+    #     'size': [9],
+    #     # 'trunc': [5, 10, 20],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     # 'buffer_size': [10000, 100000],
+    #     'total_steps': [150000],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
 
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(run_dict, runs_dir, runs_fname='runs_rs_obs_init.txt', main_fname='main.py')
+    generate_runs(run_dict, runs_dir, runs_fname='runs_rs_lstm.txt', main_fname='main.py')
 
 

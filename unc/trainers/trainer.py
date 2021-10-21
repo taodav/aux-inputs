@@ -2,7 +2,8 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
-from typing import List, Any
+from typing import List, Any, Tuple
+from collections import deque
 
 from unc.args import Args
 from unc.agents import Agent
@@ -32,6 +33,7 @@ class Trainer:
         self.num_steps = 0
 
         self.info = None
+        self.trunc = args.trunc if args.arch in ['lstm', 'gru'] else 0
 
         logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
 
@@ -64,6 +66,23 @@ class Trainer:
 
         return epsilon
 
+    def collect_rnn_batch(self, b: Batch, hs: np.ndarray, next_hs: np.ndarray, trunc_batch: Batch) -> Tuple[Batch, Batch]:
+        trunc_batch.obs.append(b.obs), trunc_batch.action.append(b.action), trunc_batch.next_obs.append(b.next_obs)
+        trunc_batch.gamma.append(b.gamma), trunc_batch.reward.append(b.reward), trunc_batch.next_action.append(b.next_action)
+        trunc_batch.state.append(hs), trunc_batch.next_state.append(next_hs)
+
+        gammas = np.concatenate(trunc_batch.gamma)[None, :]
+        batch = Batch(obs=np.concatenate(trunc_batch.obs)[None, :],
+                      action=np.concatenate(trunc_batch.action)[None, :],
+                      next_obs=np.concatenate(trunc_batch.next_obs)[None, :],
+                      gamma=gammas,
+                      reward=np.concatenate(trunc_batch.reward)[None, :],
+                      next_action=np.concatenate(trunc_batch.next_action)[None, :],
+                      state=np.concatenate(trunc_batch.state)[None, :],
+                      next_state=np.concatenate(trunc_batch.next_state)[None, :],
+                      zero_mask=np.ones_like(gammas))
+        return batch, trunc_batch
+
     def train(self) -> None:
         assert self.info is not None, "Reset the trainer before training"
         time_start = time()
@@ -75,12 +94,26 @@ class Trainer:
             episode_reward = 0
             episode_loss = 0
 
+            # For RNN training
+            trunc_batch = None
+            if self.trunc > 0:
+                trunc_batch = Batch(obs=deque(maxlen=self.trunc), action=deque(maxlen=self.trunc),
+                                    next_obs=deque(maxlen=self.trunc), gamma=deque(maxlen=self.trunc),
+                                    reward=deque(maxlen=self.trunc), next_action=deque(maxlen=self.trunc),
+                                    state=deque(maxlen=self.trunc), next_state=deque(maxlen=self.trunc))
+
             # For logging particle filter statistics
             # pf_episode_means = []
             # pf_episode_vars = []
 
             obs = np.expand_dims(self.env.reset(), 0)
             self.agent.reset()
+
+            # Hidden state for RNN training
+            hs, next_hs = None, None
+            if self.trunc > 0:
+                hs = self.agent.state[None, :]
+
             action = self.agent.act(obs)
 
             for t in range(self.max_episode_steps):
@@ -94,18 +127,27 @@ class Trainer:
                 #     pf_episode_means.append(means)
                 #     pf_episode_vars.append(vars)
 
+                if self.trunc > 0:
+                    next_hs = self.agent.state[None, :]
+
                 next_obs, reward, done, info = self.env.step(action.item())
 
                 self.info['reward'].append(reward)
 
                 # Preprocess everything for updating
-                next_obs, reward, done, info, action = self.preprocess_step(next_obs, reward, done, info, action)
+                next_obs, reward, done, info, action = self.preprocess_step(next_obs, reward, done, info, action.item())
 
                 gamma = (1 - done) * self.discounting
 
                 next_action = self.agent.act(next_obs)
+
                 batch = Batch(obs=obs, action=action, next_obs=next_obs,
                               gamma=gamma, reward=reward, next_action=next_action)
+
+                # This is for real-time RNN training
+                if self.trunc > 0:
+                    batch, trunc_batch = self.collect_rnn_batch(batch, hs, next_hs, trunc_batch)
+
                 loss = self.agent.update(batch)
 
                 # Logging
@@ -124,6 +166,7 @@ class Trainer:
 
                 obs = next_obs
                 action = next_action
+                hs = next_hs
 
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t)

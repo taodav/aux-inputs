@@ -11,7 +11,7 @@ from definitions import ROOT_DIR
 
 if __name__ == "__main__":
     model_path = Path('/home/taodav/Documents/uncertainty/results/fipg/9/ffaf1cbafa262a7421ec092ac2b8e6a2_Tue Sep  7 12:14:12 2021.pth')
-    agent = DQNAgent.load(model_path)
+    agent = DQNAgent.load(model_path, agent_class=DQNAgent)
     seed = 2000
     args = agent.args
     rng = np.random.RandomState(seed)

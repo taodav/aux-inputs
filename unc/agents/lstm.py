@@ -172,3 +172,4 @@ class LSTMAgent(DQNAgent):
                                    lstm_next_state, b.next_obs, b.gamma, b.reward,
                                    b.next_action, b.zero_mask)
         return loss
+

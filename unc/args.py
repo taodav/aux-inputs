@@ -30,7 +30,7 @@ class Args(Tap):
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm)
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
-    size: int = 8  # How large do we want each dimension of our gridworld to be?
+    size: int = 9  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     slip_turn: bool = False  # If we're in the slip setting, do we slip on turns as well?
     total_steps: int = 60000  # Total number of steps to take
@@ -76,10 +76,10 @@ class Args(Tap):
 
         # Create our log and results directories if it doesn't exist
         # We also save the different environments in different folders
-        self.log_dir /= self.env
+        self.log_dir /= f"{self.env}_{self.arch}"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-        self.results_dir /= self.env
+        self.results_dir /= f"{self.env}_{self.arch}"
         # self.results_dir /= str(self.size)
         self.results_dir.mkdir(parents=True, exist_ok=True)
 

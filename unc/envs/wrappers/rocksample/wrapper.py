@@ -49,6 +49,10 @@ class RockSampleWrapper(gym.Wrapper):
         self.env.rock_positions = positions
 
     @property
+    def current_rock_obs(self):
+        return self.env.current_rock_obs
+
+    @property
     def rock_morality(self):
         return self.env.rock_morality
 

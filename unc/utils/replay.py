@@ -212,6 +212,7 @@ class EpisodeBuffer(ReplayBuffer):
         super(EpisodeBuffer, self).push(batch)
 
     def sample(self, batch_size: int, seq_len: int = 1) -> Batch:
+        # TODO: Fix bug where last seq_len experiences don't have correct "ends"
         if len(self.eligible_idxes) < batch_size:
             batch_size = len(self.eligible_idxes)
 

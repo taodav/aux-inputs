@@ -9,10 +9,10 @@ from jax import random, jit, vmap
 from jax.ops import index_add
 from optax import GradientTransformation
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Callable
 
 from unc.args import Args
-from unc.models import QNetwork
+from unc.models import build_network
 from unc.utils.math import sarsa_error, expected_sarsa_error, qlearning_error, mse
 from unc.utils.data import Batch
 
@@ -164,16 +164,19 @@ class DQNAgent(Agent):
             dill.dump(to_save, f)
 
     @staticmethod
-    def load(path: Path) -> Agent:
+    def load(path: Path, agent_class: Callable) -> Agent:
         with open(path, "rb") as f:
             loaded = dill.load(f)
         args = Args()
         args.from_dict(loaded['args'])
 
-        network = QNetwork(loaded['n_hidden'], loaded['n_actions'])
+        model_str = args.arch
+        if model_str == 'nn' and args.exploration == 'noisy':
+            model_str = args.exploration
+        network = build_network(args.n_hidden, loaded['n_actions'], model_str=model_str)
         optimizer = optax.adam(args.step_size)
 
-        agent = DQNAgent(network, optimizer, loaded['n_features'], loaded['n_actions'], loaded['rng'], args)
+        agent = agent_class(network, optimizer, loaded['n_features'], loaded['n_actions'], loaded['rand_key'], args)
         agent.network_params = loaded['network_params']
         agent.optimizer_state = loaded['optimizer_state']
 

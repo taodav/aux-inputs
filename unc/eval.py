@@ -16,6 +16,7 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
         rews = []
 
         obs = np.array([env.reset()])
+        agent.reset()
         action = agent.act(obs).item()
         if render:
             imgs.append(env.render(mode='rgb_array',

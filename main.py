@@ -26,6 +26,7 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     rng = np.random.RandomState(args.seed)
     rand_key = random.PRNGKey(args.seed)
+    # TODO: when we do GPU jobs, make sure JAX CuDNN backend has determinism and seeding done
 
     # Initializing our environment
     train_env = get_env(rng,
