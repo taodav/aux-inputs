@@ -28,11 +28,9 @@ class ReplayBuffer:
         self.d = np.zeros(self.capacity, dtype=bool)
 
         self._cursor = 0
-        self._age = 0
         self._filled = False
 
-        # We do this b/c cursor + 1, cursor + 2, ..., cursor + stack - 1
-        # cannot be sampled.
+        # We have the -1 here b/c we write next_obs as well.
         self.eligible_idxes = deque(maxlen=self.capacity - 1)
 
     def reset(self):
@@ -45,7 +43,6 @@ class ReplayBuffer:
         self.d = np.zeros(self.capacity, dtype=bool)
 
         self._cursor = 0
-        self._age = 0
         self._filled = False
 
     def push(self, batch: Batch):
@@ -96,99 +93,6 @@ class ReplayBuffer:
         return Batch(**batch)
 
 
-class Episode:
-    def __init__(self, rng: np.random.RandomState):
-        self.obs = []
-        self.action = []
-        self.next_action = []
-        self.done = []
-        self.reward = []
-        self.current_obs = None
-        self.rng = rng
-
-    def push(self, batch: Batch):
-        self.obs.append(batch.obs)
-        self.action.append(batch.action)
-        if batch.next_action is not None:
-            self.next_action.append(batch.next_action)
-        self.done.append(batch.done)
-        self.reward.append(batch.reward)
-        self.current_obs = batch.next_obs
-
-    def __len__(self):
-        return len(self.obs)
-
-    def sample(self, seq_len: int) -> Batch:
-        """
-        Sample a sequence of experience of length seq_len
-        :param seq_len: Length to sample. If the sequence we sample can't be this long,
-        we do zero-padding.
-        :return:
-        """
-        start = self.rng.choice(np.arange(len(self)))
-        end = min(start + seq_len, len(self) - 1)
-
-        obs = np.stack(self.obs[start:end])
-        action = np.stack(self.action[start:end])
-
-        next_action, next_action_pad = None, None
-        if len(self.next_action) > 0:
-            next_action = np.stack(self.next_action[start:end])
-            next_action_pad = np.zeros((seq_len, *next_action.shape[1:]))
-
-        done = np.stack(self.done[start:end])
-        reward = np.stack(self.reward[start:end])
-
-        batch = Batch(
-            obs=np.zeros((seq_len, *obs.shape[1:])),
-            action=np.zeros((seq_len, *action.shape[1:])),
-            next_obs=np.zeros((seq_len, *obs.shape[1:])),
-            next_action=next_action_pad,
-            done=np.zeros((seq_len, *done.shape[1:])),
-            reward=np.zeros((seq_len, *reward.shape[1:])),
-        )
-
-        batch.obs[:obs.shape[0]] = obs
-        batch.action[:action.shape[0]] = action
-        if next_action_pad is not None:
-            batch.next_action[:next_action.shape[0]] = next_action
-
-        batch.next_obs[:action.shape[0]] = action
-        batch.done[:done.shape[0]] = done
-        batch.reward[:reward.shape[0]] = reward
-
-        return batch
-
-
-# class EpisodeReplayBuffer(ReplayBuffer):
-#     def __init__(self, capacity: int, rng: np.random.RandomState,
-#                  obs_size: Tuple, state_size: Tuple = None):
-#         self.capacity = capacity
-#         self.rng = rng
-#         self.state_size = state_size
-#         self.obs_size = obs_size
-# 
-#         self.curr_episode = Episode(self.rng)
-#         self.episodes = [self.curr_episode]
-# 
-#     def __len__(self):
-#         return sum(len(ep) for ep in self.episodes)
-# 
-#     def reset(self):
-#         self.curr_episode = Episode(self.rng)
-#         self.episodes = [self.curr_episode]
-# 
-#     def push(self, batch: Batch):
-#         self.curr_episode.push(batch)
-# 
-#         if batch.done.item():
-#             self.curr_episode = Episode(self.rng)
-#             self.episodes.append(self.curr_episode)
-# 
-#     def sample(self, batch_size: int, seq_len: int) -> Batch:
-#
-
-
 class EpisodeBuffer(ReplayBuffer):
     """
     For episode buffer, we return zero-padded batches back.
@@ -204,9 +108,6 @@ class EpisodeBuffer(ReplayBuffer):
         super(EpisodeBuffer, self).__init__(capacity, rng, obs_size, state_size=state_size)
         self.end = np.zeros_like(self.d, dtype=bool)
 
-    # def get_current_episode(self):
-
-
     def push(self, batch: Batch):
         self.end[self._cursor] = batch.end
         super(EpisodeBuffer, self).push(batch)
@@ -217,7 +118,7 @@ class EpisodeBuffer(ReplayBuffer):
             batch_size = len(self.eligible_idxes)
 
         sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
-        sample_idx = np.minimum(sample_idx + np.arange(seq_len)[:, None], self.eligible_idxes[-1]).T
+        sample_idx = (sample_idx + np.arange(seq_len)[:, None]).T % self.capacity
 
         batch = {}
         if self.state_size is not None:
@@ -232,9 +133,16 @@ class EpisodeBuffer(ReplayBuffer):
         ends = self.end[sample_idx]
 
         # Zero mask is essentially mask where we only learn if we're still within an episode.
-        # To do this, we set everything AFTER done == True as 0.
+        # To do this, we set everything AFTER done == True as 0, and any episode that ends
+        # after max steps. The array ends accomplishes this.
         zero_mask = np.ones_like(ends)
-        ys, xs = ends.nonzero()
+        ys_ends, xs_ends = ends.nonzero()
+
+        # Also, we don't want any experience beyond our current cursor.
+        ys_cursor, xs_cursor = np.nonzero(sample_idx == self.eligible_idxes[-1])
+
+        ys, xs = np.concatenate([ys_cursor, ys_ends]), np.concatenate([xs_cursor, xs_ends])
+
         if ys.shape[0] > 0:
             for y, x in zip(ys, xs):
                 zero_mask[y, x + 1:] = 0

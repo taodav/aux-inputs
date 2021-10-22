@@ -57,9 +57,6 @@ class BufferTrainer(Trainer):
 
         # DEBUGGING
         time_to_check = False
-        good_diffs = []
-        bad_diffs = []
-        moralities = []
 
         # Timing stuff
         prev_time = time_start
@@ -84,10 +81,8 @@ class BufferTrainer(Trainer):
 
             action = self.agent.act(obs).item()
 
-            # DEBUGGING
-            checked_rocks_info = {}
-
             # DEBUGGING: if we check a rock that's never been sampled before
+            # checked_rocks_info = {}
             # if time_to_check and 'p' in self.args.env:
             #     unchecked_q_vals = all_unchecked_rock_q_vals(self.env, self.agent, self.env.checked_rocks)
             #     checked_rocks_info[self.num_steps] = unchecked_q_vals
@@ -117,7 +112,7 @@ class BufferTrainer(Trainer):
                 prefilled_bs = int(self.batch_size * self.p_prefilled)
                 online_bs = self.batch_size - prefilled_bs
 
-                if online_bs < len(self.buffer):
+                if online_bs <= len(self.buffer):
                     trunc = 0 if not hasattr(self.agent, 'trunc') else self.agent.trunc
                     sample = self.buffer.sample(online_bs, seq_len=trunc)
 
@@ -158,11 +153,6 @@ class BufferTrainer(Trainer):
 
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t)
-
-        # DEBUGGING
-        self.info['moralities'] = moralities
-        self.info['good_diffs'] = good_diffs
-        self.info['bad_diffs'] = bad_diffs
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
