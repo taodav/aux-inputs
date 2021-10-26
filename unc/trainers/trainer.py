@@ -148,7 +148,7 @@ class Trainer:
                 if self.trunc > 0:
                     batch, trunc_batch = self.collect_rnn_batch(batch, hs, next_hs, trunc_batch)
 
-                loss = self.agent.update(batch)
+                loss, other_info = self.agent.update(batch)
 
                 # Logging
                 episode_loss += loss

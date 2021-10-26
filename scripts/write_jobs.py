@@ -102,6 +102,8 @@ if __name__ == "__main__":
     # }
 
     # RockSample LSTM runs
+    # run_fname = "runs_rs_lstm.txt"
+    # run_fname = "runs_rs_lstm_hidden_update.txt"
     # run_dict = {
     #     'algo': ['sarsa'],
     #     'arch': ['lstm'],
@@ -115,10 +117,13 @@ if __name__ == "__main__":
     #     'trunc': [10, 20],
     #     'buffer_size': [10000, 100000],
     #     'total_steps': [1500000],
+    #     # 'er_hidden_update': ['grad'],
+    #     'er_hidden_update': ['update'],
     #     'seed': [(i + 2020) for i in range(10)]
     # }
 
     # Fixed compass world runs
+    # run_fname = "run_compass_redo.sh"
     # run_dict = {
     #     'algo': ['sarsa'],
     #     'arch': ['nn'],
@@ -129,44 +134,50 @@ if __name__ == "__main__":
     #     'trunc': [0],
     #     'step_size': [0.001, 0.0001, 0.00001],
     #     'buffer_size': [10000],
-    #     'total_steps': [300000],
+    #     'total_steps': [1000000],
     #     'seed': [(i + 2020) for i in range(10)]
     #     # 'seed': [2020]
     # }
 
     # Fixed compass world LSTM runs
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['f'],
-    #     'batch_size': [64],
-    #     'replay': [True],
-    #     'trunc': [10, 20],
-    #     'size': [9],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [300000],
-    #     'seed': [(i + 2020) for i in range(10)]
-    #  }
-
-    # Fixed compass world buffer sweep
+    # run_fname = "runs_compass_lstm.txt"
+    run_fname = "runs_compass_lstm_hidden_update.txt"
     run_dict = {
         'algo': ['sarsa'],
         'arch': ['lstm'],
         'env': ['f'],
         'batch_size': [64],
         'replay': [True],
-        'trunc': [10],
+        'trunc': [10, 20],
         'size': [9],
-        'step_size': [0.0001],
-        'buffer_size': [100, 1000, 5000, 10000, 50000, 100000],
-        'total_steps': [300000],
+        'step_size': [0.001, 0.0001, 0.00001],
+        'buffer_size': [10000, 100000],
+        'total_steps': [1000000],
+        # 'er_hidden_update': ['grad'],
+        'er_hidden_update': ['update'],
         'seed': [(i + 2020) for i in range(10)]
-    }
+     }
+
+    # Fixed compass world buffer sweep
+    # run_fname = "runs_compass_lstm_buffer_sweep.txt"
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['lstm'],
+    #     'env': ['f'],
+    #     'batch_size': [64],
+    #     'replay': [True],
+    #     'n_hidden': [12],
+    #     'trunc': [10],
+    #     'size': [9],
+    #     'step_size': [0.0001],
+    #     'buffer_size': [100, 1000, 5000, 10000, 50000, 100000],
+    #     'total_steps': [300000],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
 
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(run_dict, runs_dir, runs_fname='runs_compass_lstm.txt', main_fname='main.py')
+    generate_runs(run_dict, runs_dir, runs_fname=run_fname, main_fname='main.py')
 
 

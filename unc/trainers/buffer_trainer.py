@@ -34,8 +34,9 @@ class BufferTrainer(Trainer):
         super(BufferTrainer, self).__init__(args, agent, env)
 
         self.batch_size = args.batch_size
+        self.arch = args.arch
 
-        if args.arch == 'lstm' and isinstance(self.agent, LSTMAgent):
+        if self.arch == 'lstm' and isinstance(self.agent, LSTMAgent):
             # We save state for an LSTM agent
             self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape,
                                         state_size=self.agent.state_shape)
@@ -48,6 +49,35 @@ class BufferTrainer(Trainer):
         # Do we save our agent hidden state?
         self.save_hidden = args.arch == 'lstm' and hasattr(self.agent, 'hidden_state')
 
+    def update_buffer_hidden(self, sample_idxs: np.ndarray, other_info: dict,
+                             update_mask: np.ndarray = None):
+        """
+        [RNNS] update our buffer hidden states.
+        :param sample_idxs: sample indices, of shape [batch x seq_len x *hidden_state_shape]
+        :param other_info: this is populated with updated hidden states, depending on what kind of er updates we make.
+        :return:
+        """
+        er_hidden_update = self.agent.er_hidden_update
+        if er_hidden_update == "grad":
+            # For grad, we only update the initial hidden state.
+            first_hs = other_info['first_hidden_state']  # hk.LSTMState, cell and hidden both batch_size x n_hidden
+            idxs_to_update = sample_idxs[:, 0]
+            self.buffer.s[idxs_to_update] = np.stack([first_hs.hidden, first_hs.cell], axis=1)
+        elif er_hidden_update == "update":
+            """
+            TODO: For this update, the hidden states we get is for the next state.
+            BE SURE to get the proper indices for all next states,
+            and also be sure to mask correctly with update_mask
+            """
+            next_hidden_states = other_info['next_hidden_states']
+            body_to_update = sample_idxs[:, 1:]
+            tail_to_update = (sample_idxs[:, -1] + 1) % self.buffer.capacity
+            idxs_to_update = np.concatenate([body_to_update, tail_to_update[:, None]], axis=1)
+
+            body_mask = update_mask[:, 1:]
+            tail_mask = update_mask[:, -1][:, None]  # Assume that the ends continue
+            next_mask = np.concatenate([body_mask, tail_mask], axis=1)
+            self.buffer.s[idxs_to_update][next_mask.astype(bool)][:, 0] = next_hidden_states[next_mask.astype(bool)]
 
     def train(self) -> None:
         assert self.info is not None, "Reset the trainer before training"
@@ -122,7 +152,10 @@ class BufferTrainer(Trainer):
 
                     sample.gamma = (1 - sample.done) * self.discounting
 
-                    loss = self.agent.update(sample)
+                    loss, other_info = self.agent.update(sample)
+
+                    if self.save_hidden:
+                        self.update_buffer_hidden(sample.indices, other_info, update_mask=sample.zero_mask)
 
                     # Logging
                     episode_loss += loss

@@ -135,7 +135,7 @@ class DQNAgent(Agent):
 
         return loss, network_params, optimizer_state
 
-    def update(self, b: Batch) -> float:
+    def update(self, b: Batch) -> Tuple[float, dict]:
         """
         Update given a batch of data
         :param batch: Batch of data
@@ -144,7 +144,7 @@ class DQNAgent(Agent):
 
         loss, self.network_params, self.optimizer_state = \
             self.functional_update(self.network_params, self.optimizer_state, b.obs, b.action, b.next_obs, b.gamma, b.reward, b.next_action)
-        return loss
+        return loss, {}
 
     def save(self, path: Path):
         """

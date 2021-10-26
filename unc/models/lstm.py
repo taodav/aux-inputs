@@ -21,7 +21,7 @@ def lstm(hidden_size: int, actions: int, x: np.ndarray, h: np.ndarray):
     linear = hk.Linear(actions, w_init=init, b_init=b_init)
     outs = hk.BatchApply(linear)(jnp.transpose(hiddens, (1, 0, 2)))
 
-    return outs, final_hidden
+    return outs, hiddens, final_hidden
 
 
 

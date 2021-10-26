@@ -45,11 +45,18 @@ class Args(Tap):
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100
-
-    trunc: int = 10  # [RNN] truncation size
     """
     How many nodes in our hidden layer of our neural network?
     0 for linear function approximation.
+    """
+
+    trunc: int = 10  # [RNN] truncation size
+    # action_cond: str = None  # [RNN] Action conditioning (None | cat)
+    er_hidden_update: str = None
+    """
+    [RNN] Do we update the hidden states in the replay? if we do how? (None | grad | update)
+    None: Don't update. | grad: Update hidden state w.r.t. loss. | 
+    update: Update hidden state based on the calculated batch and update.
     """
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability

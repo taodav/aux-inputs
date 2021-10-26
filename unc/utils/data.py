@@ -19,6 +19,7 @@ class Batch:
     next_state: Union[np.ndarray, Iterable] = None
     zero_mask: Union[np.ndarray, Iterable] = None
     end: Union[np.ndarray, Iterable] = None  # End is done or max_steps == timesteps
+    indices: Union[np.ndarray, Iterable] = None  # Indices that were sampled
 
 
 def zip_batches(b1: Batch, b2: Batch):
