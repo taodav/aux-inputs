@@ -103,24 +103,23 @@ if __name__ == "__main__":
 
     # RockSample LSTM runs
     # run_fname = "runs_rs_lstm.txt"
-    # run_fname = "runs_rs_lstm_hidden_update.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['rg'],
-    #     # 'n_particles': [100],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.0],
-    #     'replay': [True],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'trunc': [10, 20],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1500000],
-    #     # 'er_hidden_update': ['grad'],
-    #     'er_hidden_update': ['update'],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
+    run_fname = "runs_rs_lstm_action_cat.txt"
+    run_dict = {
+        'algo': ['sarsa'],
+        'arch': ['lstm'],
+        'env': ['rg'],
+        # 'n_particles': [100],
+        'batch_size': [64],
+        'discounting': [0.99],
+        'p_prefilled': [0.0],
+        'replay': [True],
+        'step_size': [0.001, 0.0001, 0.00001],
+        'trunc': [10, 20],
+        'buffer_size': [10000, 100000],
+        'total_steps': [1500000],
+        'action_cond': ['cat'],
+        'seed': [(i + 2020) for i in range(10)]
+    }
 
     # Fixed compass world runs
     # run_fname = "run_compass_redo.sh"
@@ -141,22 +140,21 @@ if __name__ == "__main__":
 
     # Fixed compass world LSTM runs
     # run_fname = "runs_compass_lstm.txt"
-    run_fname = "runs_compass_lstm_hidden_update.txt"
-    run_dict = {
-        'algo': ['sarsa'],
-        'arch': ['lstm'],
-        'env': ['f'],
-        'batch_size': [64],
-        'replay': [True],
-        'trunc': [10, 20],
-        'size': [9],
-        'step_size': [0.001, 0.0001, 0.00001],
-        'buffer_size': [10000, 100000],
-        'total_steps': [1000000],
-        # 'er_hidden_update': ['grad'],
-        'er_hidden_update': ['update'],
-        'seed': [(i + 2020) for i in range(10)]
-     }
+    # run_fname = "runs_compass_lstm_action_cat.txt"
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['lstm'],
+    #     'env': ['f'],
+    #     'batch_size': [64],
+    #     'replay': [True],
+    #     'trunc': [10, 20],
+    #     'size': [9],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [1000000],
+    #     'action_cond': ['cat'],
+    #     'seed': [(i + 2020) for i in range(10)]
+    #  }
 
     # Fixed compass world buffer sweep
     # run_fname = "runs_compass_lstm_buffer_sweep.txt"

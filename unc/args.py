@@ -51,7 +51,7 @@ class Args(Tap):
     """
 
     trunc: int = 10  # [RNN] truncation size
-    # action_cond: str = None  # [RNN] Action conditioning (None | cat)
+    action_cond: str = None  # [RNN] Action conditioning (None | cat)
     er_hidden_update: str = None
     """
     [RNN] Do we update the hidden states in the replay? if we do how? (None | grad | update)

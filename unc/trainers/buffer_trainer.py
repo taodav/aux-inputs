@@ -35,10 +35,15 @@ class BufferTrainer(Trainer):
 
         self.batch_size = args.batch_size
         self.arch = args.arch
+        self.action_cond = args.action_cond
+        self.n_actions = self.env.action_space.n
 
         if self.arch == 'lstm' and isinstance(self.agent, LSTMAgent):
             # We save state for an LSTM agent
-            self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape,
+            obs_shape = self.env.observation_space.shape
+            if self.action_cond == 'cat':
+                obs_shape = (obs_shape[0] + self.n_actions,)
+            self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, obs_shape,
                                         state_size=self.agent.state_shape)
         else:
             self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape)
@@ -103,8 +108,13 @@ class BufferTrainer(Trainer):
             # LSTM hidden state
             hs = None
             next_hs = None
+            obs = self.env.reset()
 
-            obs = np.expand_dims(self.env.reset(), 0)
+            # Action conditioning
+            if self.action_cond == 'cat':
+                obs = np.concatenate([obs, np.zeros(self.n_actions)])
+
+            obs = np.expand_dims(obs, 0)
             self.agent.reset()
             if self.save_hidden:
                 hs = self.agent.state
@@ -129,6 +139,13 @@ class BufferTrainer(Trainer):
                     next_hs = self.agent.state
 
                 next_obs, reward, done, info = self.env.step(action)
+
+                # Action conditioning
+                if self.action_cond == 'cat':
+                    one_hot_action = np.zeros(self.n_actions)
+                    one_hot_action[action] = 1
+                    next_obs = np.concatenate([next_obs, one_hot_action])
+
                 next_obs = np.array([next_obs])
 
                 next_action = self.agent.act(next_obs).item()

@@ -58,8 +58,14 @@ if __name__ == "__main__":
     optimizer = optax.adam(args.step_size)
 
     if args.arch == 'lstm':
-        agent = LSTMAgent(network, optimizer, train_env.observation_space.shape[0],
-                          train_env.action_space.n, rand_key, args)
+        n_features = train_env.observation_space.shape[0]
+        n_actions = train_env.action_space.n
+
+        # Currently we only do action conditioning with the LSTM agent.
+        if args.action_cond == 'cat':
+            n_features += n_actions
+        agent = LSTMAgent(network, optimizer, n_features,
+                          n_actions, rand_key, args)
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape[0],
                               train_env.action_space.n, rand_key, args)
