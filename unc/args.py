@@ -38,6 +38,7 @@ class Args(Tap):
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
 
     rock_obs_init: float = 0.  # [ROCKSAMPLE] What value do we initialize our rock observations to?
+    half_efficiency_distance: float = 20.  # [ROCKSAMPLE] Half efficiency distance for checking rocks
 
     update_weight_interval: int = 1  # How often do we update our particle weights?
     resample_interval: int = 1  # [STOCHASTICITY] How often do we resample our particles?

@@ -49,6 +49,7 @@ def get_rocksample_env(rng: np.random.RandomState,
                        config_path: Path = Path(ROOT_DIR, "unc", "envs", "configs", "rock_sample_config.json"),
                        *args,
                        update_weight_interval: int = 1,
+                       half_efficiency_distance: float = 20.,
                        rock_obs_init: float = 0.,
                        resample_interval: int = None,
                        n_particles: int = 100,
@@ -64,7 +65,7 @@ def get_rocksample_env(rng: np.random.RandomState,
 
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
 
-    env = RockSample(config_path, rng, rand_key, rock_obs_init=rock_obs_init)
+    env = RockSample(config_path, rng, rand_key, rock_obs_init=rock_obs_init, half_efficiency_distance=half_efficiency_distance)
     for w in ordered_wrapper_list:
         if w == rw.RocksParticleFilterWrapper:
             env = w(env, update_weight_interval=update_weight_interval,

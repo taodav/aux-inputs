@@ -39,7 +39,8 @@ if __name__ == "__main__":
                         size=args.size,
                         n_particles=args.n_particles,
                         update_weight_interval=args.update_weight_interval,
-                        rock_obs_init=args.rock_obs_init)
+                        rock_obs_init=args.rock_obs_init,
+                        half_efficiency_distance=args.half_efficiency_distance)
 
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:

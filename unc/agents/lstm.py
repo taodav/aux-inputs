@@ -158,7 +158,7 @@ class LSTMAgent(DQNAgent):
         updates, optimizer_state = self.optimizer.update(grad, optimizer_state, network_params)
         network_params = optax.apply_updates(network_params, updates)
 
-        return loss, network_params, optimizer_state, jnp.transpose(all_hidden_states, axes=(1, 0, 2))
+        return loss, network_params, optimizer_state, jnp.transpose(all_hidden_states, axes=(2, 0, 1, 3))
 
     @partial(jit, static_argnums=0)
     def functional_update_hidden(self,

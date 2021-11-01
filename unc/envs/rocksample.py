@@ -18,7 +18,7 @@ class RockSample(Environment):
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
     def __init__(self, config_file: Path, rng: np.random.RandomState, rand_key: jax.random.PRNGKey,
-                 rock_obs_init: float = 0.):
+                 rock_obs_init: float = 0., half_efficiency_distance: float = 20.):
         """
         RockSample environment.
         Observations: position (2) and rock goodness/badness
@@ -34,7 +34,7 @@ class RockSample(Environment):
             config = json.load(f)
         self.size = config['size']
         self.k = config['rocks']
-        self.half_efficiency_distance = config['half_efficiency_distance']
+        self.half_efficiency_distance = half_efficiency_distance
         self.bad_rock_reward = config['bad_rock_reward']
         self.good_rock_reward = config['good_rock_reward']
         self.exit_reward = config['exit_reward']

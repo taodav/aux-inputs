@@ -82,7 +82,7 @@ class BufferTrainer(Trainer):
             body_mask = update_mask[:, 1:]
             tail_mask = update_mask[:, -1][:, None]  # Assume that the ends continue
             next_mask = np.concatenate([body_mask, tail_mask], axis=1)
-            self.buffer.s[idxs_to_update][next_mask.astype(bool)][:, 0] = next_hidden_states[next_mask.astype(bool)]
+            self.buffer.s[idxs_to_update][next_mask.astype(bool)] = next_hidden_states[next_mask.astype(bool)]
 
     def train(self) -> None:
         assert self.info is not None, "Reset the trainer before training"

@@ -31,22 +31,19 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', 
         if 'p' in arg['env'] and 'update_weight_interval' in arg and arg['update_weight_interval'] > 1:
             continue
 
-        if arg['arch'] == 'nn':
+        # if arg['arch'] == 'nn':
+        #
+        #     # We don't use the replay buffer here.
+        #     if arg['replay'] or arg['buffer_size'] > run_dict['buffer_size'][0]:
+        #         continue
+        #
+        #     # Don't include anything that has false for replay buffer and has buffer size larger than first.
+        #     if not arg['replay'] and arg['buffer_size'] > run_dict['buffer_size'][0]:
+        #         continue
+        #
+        #     if arg['trunc'] > run_dict['trunc'][0]:
+        #         continue
 
-            # We don't use the replay buffer here.
-            if arg['replay'] or arg['buffer_size'] > run_dict['buffer_size'][0]:
-                continue
-
-            # Don't include anything that has false for replay buffer and has buffer size larger than first.
-            if not arg['replay'] and arg['buffer_size'] > run_dict['buffer_size'][0]:
-                continue
-
-            if arg['trunc'] > run_dict['trunc'][0]:
-                continue
-
-        elif arg['arch'] == 'lstm':
-            if arg['env'] not in ['rg', 'f']:
-                continue
 
         run_string = f"python {main_fname}"
 
@@ -54,7 +51,7 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', 
 
             if v is True:
                 run_string += f" --{k}"
-            elif v is False:
+            elif v is False or v is None:
                 continue
             else:
                 run_string += f" --{k} {v}"
@@ -72,8 +69,10 @@ if __name__ == "__main__":
 
     # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
     # FOR no-prefilled buffer
+    # run_fname = "runs_rs_nn_hed_5.txt"
     # run_dict = {
-    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
+    #     'algo': ['sarsa'],
+    #     'arch': ['nn'],
     #     'env': ['rg', 'rpg', 'rxg', 'rsg'],
     #     'n_particles': [100],
     #     'batch_size': [64],
@@ -83,6 +82,7 @@ if __name__ == "__main__":
     #     'step_size': [0.001, 0.0001, 0.00001],
     #     'buffer_size': [10000, 100000],
     #     'total_steps': [1500000],
+    #     'half_efficiency_distance': [5.],
     #     'seed': [(i + 2020) for i in range(10)]
     # }
 
@@ -102,13 +102,13 @@ if __name__ == "__main__":
     # }
 
     # RockSample LSTM runs
-    # run_fname = "runs_rs_lstm.txt"
-    run_fname = "runs_rs_lstm_action_cat.txt"
+    # run_fname = "runs_rs_lstm_hed_5.txt"
+    run_fname = "runs_rs_lstm_pf.txt"
     run_dict = {
         'algo': ['sarsa'],
         'arch': ['lstm'],
-        'env': ['rg'],
-        # 'n_particles': [100],
+        'env': ['rpg'],
+        'n_particles': [100],
         'batch_size': [64],
         'discounting': [0.99],
         'p_prefilled': [0.0],
@@ -117,7 +117,8 @@ if __name__ == "__main__":
         'trunc': [10, 20],
         'buffer_size': [10000, 100000],
         'total_steps': [1500000],
-        'action_cond': ['cat'],
+        'half_efficiency_distance': [5.],
+        # 'action_cond': [None, 'cat'],
         'seed': [(i + 2020) for i in range(10)]
     }
 
@@ -139,12 +140,12 @@ if __name__ == "__main__":
     # }
 
     # Fixed compass world LSTM runs
-    # run_fname = "runs_compass_lstm.txt"
-    # run_fname = "runs_compass_lstm_action_cat.txt"
+    # run_fname = "runs_compass_lstm_pf.txt"
+    # # run_fname = "runs_compass_lstm_action_cat.txt"
     # run_dict = {
     #     'algo': ['sarsa'],
     #     'arch': ['lstm'],
-    #     'env': ['f'],
+    #     'env': ['fpg'],
     #     'batch_size': [64],
     #     'replay': [True],
     #     'trunc': [10, 20],
@@ -152,7 +153,7 @@ if __name__ == "__main__":
     #     'step_size': [0.001, 0.0001, 0.00001],
     #     'buffer_size': [10000, 100000],
     #     'total_steps': [1000000],
-    #     'action_cond': ['cat'],
+    #     # 'action_cond': ['cat'],
     #     'seed': [(i + 2020) for i in range(10)]
     #  }
 
