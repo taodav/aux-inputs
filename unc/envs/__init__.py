@@ -1,5 +1,4 @@
 import numpy as np
-import jax.numpy as jnp
 import jax
 from pathlib import Path
 import unc.envs.wrappers.compass as cw
@@ -11,6 +10,7 @@ from .rocksample import RockSample
 from .base import Environment
 from .simple_chain import SimpleChain
 from .dynamic_chain import DynamicChain
+from .directional_tmaze import DirectionalTMaze
 from definitions import ROOT_DIR
 
 
@@ -37,9 +37,9 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: s
     if "r" in env_str:
         env_str = env_str.replace('r', '')
         env = get_rocksample_env(rng, rand_key, env_str, *args, **kwargs)
+    elif "t" in env_str:
+        env = get_directional_tmaze_env(rng)
     else:
-        if "c" in env_str:
-            env_str = env_str.replace('c', '')
         env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
     return env
 
@@ -137,4 +137,13 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
     if render:
         env = cw.CompassRenderWrapper(env)
 
+    return env
+
+def get_directional_tmaze_env(rng: np.random.RandomState) -> DirectionalTMaze:
+    """
+    TODO: incorporate size into this.
+    :param rng: numpy random state for random number generation
+    :return: A directional t-maze environment.
+    """
+    env = DirectionalTMaze(rng)
     return env

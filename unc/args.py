@@ -13,6 +13,7 @@ class Args(Tap):
     What environment do we use? 
     r = RockSample
     c (or nothing) = compass world
+    t = directional t-maze
     
     Combine the following keys in any order for additional add-ons for COMPASS WORLD:
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))

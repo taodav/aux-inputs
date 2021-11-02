@@ -11,7 +11,7 @@ class DirectionalTMaze(Environment):
     def __init__(self, rng: np.random.RandomState, size: int = 10):
         self.size = size
 
-        self.observation_space = gym.spaces.MultiBinary(2)
+        self.observation_space = gym.spaces.MultiBinary(3)
         self.action_space = gym.spaces.Discrete(3)
 
         self.rng = rng
@@ -31,7 +31,7 @@ class DirectionalTMaze(Environment):
         return np.array([self.position[0], self.position[1],
                          self.pose,
                          self.goal[0], self.goal[1],
-                         int(self.first_step)], dtype=np.uint8)
+                         int(self.first_step)], dtype=np.int16)
 
     @state.setter
     def state(self, state: np.ndarray):
@@ -51,14 +51,16 @@ class DirectionalTMaze(Environment):
 
         goal_obs = goal if first_step else np.zeros_like(goal)
 
-        in_front = position + self.direction_mapping[pose] + 1
-        see_wall = 1 - self.map[in_front[0], in_front[1]]
+        in_front = position + self.direction_mapping[pose]
+        in_front[0] += 2
+        in_front[1] += 1
+        see_wall = self.map[in_front[0], in_front[1]]
 
         return np.array([int(see_wall), *goal_obs], dtype=np.int16)
 
     def get_reward(self, prev_state: np.ndarray = None, action: int = None) -> float:
         if self.get_terminal():
-            if (self.goal == 1 and self.position[0] == 1) or (self.goal == 2 and self.position[0] == -1):
+            if (self.goal[0] == 1 and self.position[0] == -1) or (self.goal[1] == 1 and self.position[0] == 1):
                 return 4.
             return -1.
 
@@ -68,7 +70,7 @@ class DirectionalTMaze(Environment):
         goal_idx = self.rng.choice([0, 1])
         self.goal = np.zeros(2)
         self.goal[goal_idx] = 1
-        self.position = np.array([0, 0], dtype=np.uint8)
+        self.position = np.array([0, 0], dtype=np.int16)
         self.pose = self.rng.choice(np.arange(4))
         self.first_step = True
 
@@ -78,8 +80,7 @@ class DirectionalTMaze(Environment):
         next_state = state.copy()
         if action == 0:
             new_pos = state[:2] + self.direction_mapping[state[2]]
-            new_pos_shifted = new_pos + 1
-            if self.map[new_pos_shifted[0], new_pos_shifted[1]] == 0:
+            if self.map[new_pos[0] + 2, new_pos[1] + 1] == 0:
                 next_state[:2] = new_pos
         elif action == 1:
             next_state[2] = (next_state[2] + 1) % 4

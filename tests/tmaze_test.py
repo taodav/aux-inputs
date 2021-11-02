@@ -32,6 +32,15 @@ if __name__ == "__main__":
     obs, rew, done, _ = env.step(0)
     assert obs[0] == 1 and rew == 4 and done
 
+    env.reset()
+
+    env.state = np.array([0, 9, 1, 1, 0, 1])
+
+    env.step(1)
+    obs, rew, done, _ = env.step(0)
+
+    assert obs[0] == 1 and rew == -1 and done
+
     print("Finished t-maze tests")
 
 
