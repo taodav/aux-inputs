@@ -21,6 +21,8 @@ compass_wrapper_map = {
     'p': cw.CompassParticleFilterWrapper,
     'g': cw.GlobalStateObservationWrapper,
     'l': cw.LocalStateObservationWrapper,
+    'c': cw.StateCountObservationWrapper,
+    'o': cw.ObsCountObservationWrapper,
     'm': None,
     'v': None,
     'f': None
@@ -30,7 +32,9 @@ rocksample_wrapper_map = {
     'g': rw.GlobalStateObservationWrapper,
     'l': rw.LocalStateObservationWrapper,
     'p': rw.RocksParticleFilterWrapper,
-    'x': rw.PerfectSensorWrapper
+    'x': rw.PerfectSensorWrapper,
+    'c': rw.StateCountObservationWrapper,
+    'o': rw.ObsCountObservationWrapper
 }
 
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
@@ -52,6 +56,8 @@ def get_rocksample_env(rng: np.random.RandomState,
                        half_efficiency_distance: float = 20.,
                        rock_obs_init: float = 0.,
                        resample_interval: int = None,
+                       count_decay: float = 1.,
+                       unnormalized_counts: bool = False,
                        n_particles: int = 100,
                        render: bool = True,
                        **kwargs):
@@ -75,6 +81,8 @@ def get_rocksample_env(rng: np.random.RandomState,
             env = w(env, ground_truth=ground_truth)
         elif w == rw.LocalStateObservationWrapper:
             env = w(env, ground_truth=ground_truth)
+        elif w == rw.StateCountObservationWrapper or w == rw.ObsCountObservationWrapper:
+            env = w(env, decay=count_decay, normalize=not unnormalized_counts)
         else:
             env = w(env)
 
@@ -93,6 +101,8 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
                     size: int = 8,
                     resample_interval: int = None,
                     n_particles: int = -1,
+                    count_decay: float = 1.,
+                    unnormalized_counts: bool = False,
                     render: bool = True,
                     **kwargs):
 
@@ -131,6 +141,8 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
         elif w == cw.GlobalStateObservationWrapper:
             assert "m" not in env_str and "v" not in env_str, "'m' or 'v' doesn't make sense with 'w'"
             env = w(env, ground_truth=ground_truth)
+        elif w == cw.StateCountObservationWrapper or w == cw.ObsCountObservationWrapper:
+            env = w(env, decay=count_decay, normalize=not unnormalized_counts)
         else:
             env = w(env)
 
@@ -138,6 +150,7 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
         env = cw.CompassRenderWrapper(env)
 
     return env
+
 
 def get_directional_tmaze_env(rng: np.random.RandomState) -> DirectionalTMaze:
     """

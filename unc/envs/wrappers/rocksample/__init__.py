@@ -4,3 +4,6 @@ from .render import RockRenderWrapper
 from .wrapper import RockSampleWrapper
 from .local_state import LocalStateObservationWrapper
 from .perf_sensor import PerfectSensorWrapper
+from .obs_count import ObsCountObservationWrapper
+from .state_count import StateCountObservationWrapper
+

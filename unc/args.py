@@ -12,8 +12,8 @@ class Args(Tap):
     """
     What environment do we use? 
     r = RockSample
-    c (or nothing) = compass world
     t = directional t-maze
+    "" = (default) compass world
     
     Combine the following keys in any order for additional add-ons for COMPASS WORLD:
     (order will be dictated by priority of components (check priorities in their corresponding wrappers))
@@ -27,6 +27,8 @@ class Args(Tap):
     f = Fixed Compass World where the green terminal state is in the middle of the west wall.
     g = global-state observations + color observation. This encodes all particles/states in a single array.
     x = [ROCKSAMPLE] Perfect sensor (X marks the spot) for the RockSample agent.
+    c = State count-based uncertainty estimation.
+    o = Observation count-based uncertainty estimation.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm)
@@ -44,6 +46,9 @@ class Args(Tap):
     update_weight_interval: int = 1  # How often do we update our particle weights?
     resample_interval: int = 1  # [STOCHASTICITY] How often do we resample our particles?
     n_particles: int = -1  # How many particles do we sample? If -1, assign one particle per state.
+
+    count_decay: float = 1.  # If we use count observations, do we decay our counts? If so by what rate?
+    unnormalized_counts: bool = False  # Do we normalize our count-based observations?
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100

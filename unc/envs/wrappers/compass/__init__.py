@@ -6,3 +6,5 @@ from .render import CompassRenderWrapper
 from .slip import SlipWrapper
 from .state_observation import StateObservationWrapper
 from .wrapper import CompassWorldWrapper
+from .state_count import StateCountObservationWrapper
+from .obs_count import ObsCountObservationWrapper
