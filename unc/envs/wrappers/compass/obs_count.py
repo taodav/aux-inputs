@@ -20,9 +20,15 @@ class ObsCountObservationWrapper(CompassWorldWrapper):
                  normalize: bool = True, count_init: float = 10.):
         super(ObsCountObservationWrapper, self).__init__(env)
 
+        # self.observation_space = gym.spaces.Box(
+        #     low=np.zeros(5),
+        #     high=np.ones(5) * 1000
+        # )
+        lows = np.zeros(5 * 2)
+        highs = np.ones(5 * 2)
         self.observation_space = gym.spaces.Box(
-            low=np.zeros(5),
-            high=np.ones(5) * 1000
+            low=lows,
+            high=highs * 1000
         )
         self.decay = decay
         self.normalize = normalize
@@ -32,14 +38,15 @@ class ObsCountObservationWrapper(CompassWorldWrapper):
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         if self.normalize:
-            return 1 / (self.counts.flatten() + 1)
-        return self.counts.flatten()
+            return np.concatenate([1 / (self.counts.flatten() + 1), self.env.get_obs(self.state)])
+        # return self.counts.flatten()
+        return np.concatenate([self.counts.flatten(), self.env.get_obs(self.state)])
 
     def _update_counts(self):
         if self.decay < 1.:
             self.counts *= self.decay
-        # self.counts += self.env.get_obs(self.state)
-        self.counts += (1 - self.decay) * self.env.get_obs(self.state)
+        self.counts += self.env.get_obs(self.state)
+        # self.counts += (1 - self.decay) * self.env.get_obs(self.state)
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)

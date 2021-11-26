@@ -43,17 +43,19 @@ class ObsCountObservationWrapper(RockSampleWrapper):
         position_obs = np.concatenate(position_obs)
 
         count_obs = self.counts
+        obs = self.env.get_obs(state)
 
         if self.normalize:
             count_obs = 1 / (np.sqrt(self.counts) + 1)
-        return np.concatenate([position_obs, count_obs])
+        # return np.concatenate([position_obs, count_obs])
+        return np.concatenate([position_obs, count_obs, obs])
 
     def _update_counts(self):
         if self.decay < 1.:
             self.counts *= self.decay
         obs = self.env.get_obs(self.state)
-        # self.counts += obs[-self.rocks:]
-        self.counts += (1 - self.decay) * obs[-self.rocks:]
+        self.counts += obs[-self.rocks:]
+        # self.counts += (1 - self.decay) * obs[-self.rocks:]
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
