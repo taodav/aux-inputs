@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union
 from collections import deque
 
 from unc.utils import Batch
@@ -113,18 +113,13 @@ class EpisodeBuffer(ReplayBuffer):
         self.end[self._cursor] = batch.end
         super(EpisodeBuffer, self).push(batch)
 
-    def sample(self, batch_size: int, seq_len: int = 1) -> Batch:
-        # TODO: Fix bug where last seq_len experiences don't have correct "ends"
-        if len(self.eligible_idxes) < batch_size:
-            batch_size = len(self.eligible_idxes)
-
+    def sample(self, batch_size: int, seq_len: int = 1, as_dict: bool = False) -> Union[Batch, dict]:
         sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
         sample_idx = (sample_idx + np.arange(seq_len)[:, None]).T % self.capacity
 
         batch = {}
-        if self.state_size is not None:
-            batch['state'] = self.s[sample_idx]
-            batch['next_state'] = self.s[(sample_idx + 1) % self.capacity]
+        batch['state'] = self.s[sample_idx]
+        batch['next_state'] = self.s[(sample_idx + 1) % self.capacity]
         batch['obs'] = self.obs[sample_idx]
         batch['next_obs'] = self.obs[(sample_idx + 1) % self.capacity]
         batch['action'] = self.a[sample_idx]
@@ -151,5 +146,22 @@ class EpisodeBuffer(ReplayBuffer):
 
         batch['zero_mask'] = zero_mask
 
+        if as_dict:
+            return batch
+
         return Batch(**batch)
 
+    def sample_k(self, batch_size: int, seq_len: int = 1, k: int = 1):
+        batch = self.sample(batch_size * k, seq_len=seq_len, as_dict=True)
+        for key, arr in batch.items():
+            batch[key] = np.split(arr, k, axis=0)
+
+        # Now we need to split hidden states into their respective batches
+        for i in range(k):
+            batch['state'][i] = batch['state'][i][:, :, i]
+            batch['next_state'][i] = batch['next_state'][i][:, :, i]
+
+        for key, arr in batch.items():
+            batch[key] = np.stack(arr)
+
+        return Batch(**batch)

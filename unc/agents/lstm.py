@@ -30,6 +30,7 @@ class LSTMAgent(DQNAgent):
         self.n_actions = n_actions
 
         self.trunc = args.trunc
+        self.init_hidden_var = args.init_hidden_var
         self.hidden_state = None
 
         self._rand_key, network_rand_key = random.split(rand_key)
@@ -75,8 +76,14 @@ class LSTMAgent(DQNAgent):
         :return:
         """
         broadcast = lambda x: jnp.broadcast_to(x, (1,) + x.shape)
-        hs = hk.LSTMState(hidden=jnp.zeros([self.n_hidden]), cell=jnp.zeros([self.n_hidden]))
-        batch_hs = jax.tree_map(broadcast, hs)
+        hs = jnp.zeros([self.n_hidden])
+        cs = jnp.zeros([self.n_hidden])
+        if self.init_hidden_var > 0.:
+            self._rand_key, keys = random.split(self._rand_key, num=3)
+            hs = random.normal(keys[0], shape=[self.n_hidden]) * self.init_hidden_var
+            cs = random.normal(keys[1], shape=[self.n_hidden]) * self.init_hidden_var
+        lstm_state = hk.LSTMState(hidden=hs, cell=cs)
+        batch_hs = jax.tree_map(broadcast, lstm_state)
         self.hidden_state = batch_hs
 
     def act(self, obs: np.ndarray):
@@ -127,16 +134,15 @@ class LSTMAgent(DQNAgent):
               reward: np.ndarray,
               next_action: np.ndarray,
               zero_mask: np.ndarray):
-        # TODO: [POTENTIAL] update all the hidden states in this sequence.
         q, hiddens, _ = self.network.apply(network_params, state, hidden_state)
-        q1, hiddens, _ = self.network.apply(network_params, next_state, next_hidden_state)
+        q1, target_hiddens, _ = self.network.apply(network_params, next_state, next_hidden_state)
 
         batch_loss = vmap(self.error_fn)
         td_err = batch_loss(q, action, reward, gamma, q1, next_action)  # Should be batch x seq_len
 
         # Don't learn from the values past dones.
         td_err *= zero_mask
-        return mse(td_err), hiddens
+        return mse(td_err), (hiddens, target_hiddens)
 
     @partial(jit, static_argnums=0)
     def functional_update(self,
@@ -151,14 +157,19 @@ class LSTMAgent(DQNAgent):
                           reward: np.ndarray,
                           next_action: np.ndarray,
                           zero_mask: np.ndarray
-                          ) -> Tuple[float, hk.Params, hk.State, jnp.ndarray]:
+                          ) -> Tuple[float, hk.Params, hk.State, jnp.ndarray, jnp.ndarray]:
+        """
+        :return: loss, network parameters, optimizer state and all hidden states (bs x timesteps x 2 x n_hidden)
+        """
         outs, grad = jax.value_and_grad(self._loss, has_aux=True)(network_params, hidden_state, state, action, next_hidden_state,
                                                     next_state, gamma, reward, next_action, zero_mask)
-        loss, all_hidden_states = outs
+        loss, (all_hidden_states, all_target_hidden_states) = outs
         updates, optimizer_state = self.optimizer.update(grad, optimizer_state, network_params)
         network_params = optax.apply_updates(network_params, updates)
 
-        return loss, network_params, optimizer_state, jnp.transpose(all_hidden_states, axes=(2, 0, 1, 3))
+        return loss, network_params, optimizer_state, \
+               jnp.transpose(all_hidden_states, axes=(2, 0, 1, 3)), \
+               jnp.transpose(all_target_hidden_states, axes=(2, 0, 1, 3))
 
     @partial(jit, static_argnums=0)
     def functional_update_hidden(self,
@@ -181,7 +192,7 @@ class LSTMAgent(DQNAgent):
         """
         outs, grad = jax.value_and_grad(self._loss, argnums=(0, 1), has_aux=True)(network_params, hidden_state, state, action, next_hidden_state,
                                                     next_state, gamma, reward, next_action, zero_mask)
-        loss, _ = outs
+        loss, _, _ = outs
         network_grads, hs_grads = grad
         updates, optimizer_state = self.optimizer.update(network_grads, optimizer_state, network_params)
         network_params = optax.apply_updates(network_params, updates)
@@ -216,7 +227,7 @@ class LSTMAgent(DQNAgent):
                                               b.next_action, b.zero_mask)
             other_info['first_hidden_state'] = lstm_state
         elif self.er_hidden_update == 'update':
-            loss, self.network_params, self.optimizer_state, next_hidden_states = \
+            loss, self.network_params, self.optimizer_state, hidden_states, next_hidden_states = \
                 self.functional_update(self.network_params,
                                        self.optimizer_state,
                                        lstm_state, b.obs, b.action,
@@ -225,7 +236,7 @@ class LSTMAgent(DQNAgent):
             other_info['next_hidden_states'] = next_hidden_states
 
         else:
-            loss, self.network_params, self.optimizer_state, _ = \
+            loss, self.network_params, self.optimizer_state, _, _ = \
                 self.functional_update(self.network_params,
                                        self.optimizer_state,
                                        lstm_state, b.obs, b.action,

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     args.total_steps = int(1e6)
 
     rand_key = random.PRNGKey(args.seed)
-    train_env = SingleChain(n=args.trunc)
+    train_env = SimpleChain(n=args.trunc)
 
     network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
     optimizer = optax.adam(args.step_size)

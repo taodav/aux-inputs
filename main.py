@@ -8,7 +8,7 @@ from unc.args import Args, get_results_fname
 from unc.trainers import Trainer, BufferTrainer
 from unc.models import build_network
 from unc.sampler import Sampler
-from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent
+from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent, kLSTMAgent
 from unc.utils import save_info, save_video
 from unc.eval import test_episodes
 from definitions import ROOT_DIR
@@ -67,8 +67,15 @@ if __name__ == "__main__":
         # Currently we only do action conditioning with the LSTM agent.
         if args.action_cond == 'cat':
             n_features += n_actions
-        agent = LSTMAgent(network, optimizer, n_features,
-                          n_actions, rand_key, args)
+        if args.k_rnn_hs > 1:
+            # value network takes as input mean + variance of hidden states.
+            value_network = build_network(2 * args.n_hidden, train_env.action_space.n, model_str="nn")
+            value_optimizer = optax.adam(args.value_step_size)
+            agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
+                               n_features, n_actions, rand_key, args)
+        else:
+            agent = LSTMAgent(network, optimizer, n_features,
+                              n_actions, rand_key, args)
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape[0],
                               train_env.action_space.n, rand_key, args)

@@ -90,16 +90,12 @@ class BufferTrainer(Trainer):
 
         self._print(f"Begin training at {ctime(time_start)}")
 
-        # DEBUGGING
-        time_to_check = False
-
         # Timing stuff
         prev_time = time_start
         log_interval = 1000
         total_target_updates = self.total_steps // log_interval
         num_logs = 0
         avg_time_per_log = 0
-
 
         while self.num_steps < self.total_steps:
             episode_reward = 0

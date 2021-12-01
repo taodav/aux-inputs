@@ -59,12 +59,18 @@ class Args(Tap):
 
     trunc: int = 10  # [RNN] truncation size
     action_cond: str = None  # [RNN] Action conditioning (None | cat)
+    init_hidden_var: float = 0.  # [RNN] w/ what variance (of a zero mean normal) do we set initial hidden state to?
     er_hidden_update: str = None
     """
     [RNN] Do we update the hidden states in the replay? if we do how? (None | grad | update)
     None: Don't update. | grad: Update hidden state w.r.t. loss. | 
     update: Update hidden state based on the calculated batch and update.
     """
+
+    k_rnn_hs: int = 1  # [k-RNN] How many RNN hidden states do we take statistics over?
+    same_k_rnn_params: bool = False  # [k-RNN] Across our k RNNs, do we use the same parameters for each?
+    value_step_size: float = 0.00001  # [k-RNN] What is our step-size for our value network?
+
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability
     anneal_steps: int = 0  # If we do epsilon annealing, over how many steps do we anneal epsilon?
