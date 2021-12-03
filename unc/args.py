@@ -8,7 +8,7 @@ from pathlib import Path
 from definitions import ROOT_DIR
 
 class Args(Tap):
-    env: str = "s"
+    env: str = "f"
     """
     What environment do we use? 
     r = RockSample

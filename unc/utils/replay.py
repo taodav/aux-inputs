@@ -154,14 +154,6 @@ class EpisodeBuffer(ReplayBuffer):
     def sample_k(self, batch_size: int, seq_len: int = 1, k: int = 1):
         batch = self.sample(batch_size * k, seq_len=seq_len, as_dict=True)
         for key, arr in batch.items():
-            batch[key] = np.split(arr, k, axis=0)
-
-        # Now we need to split hidden states into their respective batches
-        for i in range(k):
-            batch['state'][i] = batch['state'][i][:, :, i]
-            batch['next_state'][i] = batch['next_state'][i][:, :, i]
-
-        for key, arr in batch.items():
-            batch[key] = np.stack(arr)
+            batch[key] = np.stack(np.split(arr, k, axis=0))
 
         return Batch(**batch)

@@ -2,21 +2,39 @@ import numpy as np
 import gym
 import optax
 from jax import random
-from typing import Any
+from typing import Any, Tuple
 
-from unc.envs import get_env
+from unc.envs import get_env, Environment
 from unc.args import Args
 from unc.agents import kLSTMAgent
 from unc.models import build_network
 from unc.utils import EpisodeBuffer
 from unc.utils import Batch
+from unc.particle_filter import state_stats
 
+
+def hs_stats(agent: kLSTMAgent) -> Tuple[np.ndarray, float, np.ndarray, float]:
+    """
+    Get stats of the hidden state AND cell state. Returns a tuple
+    (hidden_variance_arr, hidden_avg_variance, cell_variance_arr, cell_avg_variance)
+    """
+    lstm_state = agent.state
+
+    hs, cs = lstm_state[:, 0], lstm_state[:, 1]
+    mean_hs, mean_cs = hs.mean(axis=0), cs.mean(axis=0)
+    hs_var, cs_var = ((hs - mean_hs) ** 2).mean(axis=0), ((cs - mean_cs) ** 2).mean(axis=0)
+    return hs_var, hs_var.mean(axis=0), cs_var, cs_var.mean(axis=0)
+
+
+def pf_stats(env: Environment):
+    assert hasattr(env, "particles") and hasattr(env, "weights")
+    return state_stats(env.particles, env.weights)
 
 
 if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
-    args.n_hidden = 50
+    args.n_hidden = 10
     args.trunc = 10
     args.epsilon = 0.1
     args.seed = 2020
@@ -25,8 +43,10 @@ if __name__ == "__main__":
     args.action_cond = "cat"
 
     # Compass World variables
-    args.env = "f"
+    args.env = "fp"
     args.size = 9
+
+    args.init_hidden_var = 0.1
 
     np.random.seed(args.seed)
     rng = np.random.RandomState(args.seed)
@@ -64,8 +84,16 @@ if __name__ == "__main__":
         hs = agent.state
         obs = np.expand_dims(obs, 0)
 
-        action = train_env.action_space.sample()
-        agent_action = agent.act(obs)
+        hs_var, hs_avg_var, cs_var, cs_avg_var = hs_stats(agent)
+        pf_mean, pf_var = pf_stats(train_env)
+        print(f"Initial stats: "
+              f"hidden avg. variance {hs_avg_var.item():.6f}, "
+              f"cell avg. variance {cs_avg_var.item():.6f}, "
+              f"particle filter variance {pf_var.mean()}")
+
+        # action = train_env.action_space.sample()
+        # agent_action = agent.act(obs)
+        action = agent.act(obs)
         for t in range(args.max_episode_steps):
             next_hs = agent.state
             next_obs, reward, done, info = train_env.step(action)
@@ -78,40 +106,44 @@ if __name__ == "__main__":
 
             next_obs = np.array([next_obs])
 
-            next_action = train_env.action_space.sample()
+            # next_action = train_env.action_space.sample()
+            # next_agent_action = agent.act(next_obs).item()
+            next_action = agent.act(next_obs).item()
             sample = Batch(obs=obs, reward=reward, next_obs=next_obs, action=action, done=done,
                            next_action=next_action, state=hs, next_state=next_hs,
                            end=done or (t == args.max_episode_steps - 1))
             buffer.push(sample)
             steps += 1
 
-            next_agent_action = agent.act(next_obs).item()
             if args.batch_size <= len(buffer):
 
                 batch = buffer.sample_k(args.batch_size, seq_len=args.trunc, k=args.k_rnn_hs)
                 batch.gamma = (1 - batch.done) * args.discounting
                 loss = agent.update(batch)
 
+            if steps % 10 == 0:
+                hs_var, hs_avg_var, cs_var, cs_avg_var = hs_stats(agent)
+                pf_mean, pf_var = pf_stats(train_env)
+
+                print(f"Total steps {steps}, "
+                      f"Episode {eps}, "
+                      f"steps {t}, "
+                      f"hidden avg. variance {hs_avg_var:.6f}, "
+                      f"cell avg. variance {cs_avg_var:.6f}, "
+                      f"particle filter variance {pf_var.mean()}")
             if done:
                 break
 
             obs = next_obs
+            # action = next_action
+            # agent_action = next_agent_action
             action = next_action
-            agent_action = next_agent_action
             hs = next_hs
 
         eps += 1
+        print()
+        print("END Of EPISODE")
 
-
-        if steps % 1000 == 0:
-            lstm_state = agent._rewrap_hidden(batch.state[:, 0])
-            hist_q_vals, final_hs = agent.Qs(batch.obs, lstm_state, agent.network_params)
-            hist_q_vals = hist_q_vals[0, :, 0]
-            actual_vals = args.discounting ** np.arange(hist_q_vals.shape[0])
-            msve = np.mean(0.5 * (hist_q_vals - actual_vals) ** 2)
-            print(f"Episode {eps}, "
-                  f"Loss {loss:.6f}, "
-                  f"MSVE {msve}, "
-                  f"History Q-values: {hist_q_vals}\n")
+        print()
 
 
