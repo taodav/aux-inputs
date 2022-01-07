@@ -164,21 +164,42 @@ if __name__ == "__main__":
     # }
 
     # RockSample count-based observations
-    run_fname = "runs_rs_state_count.txt"
+    # run_fname = "runs_rs_state_count.txt"
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['nn'],
+    #     'env': ['rc'],
+    #     'n_particles': [100],
+    #     'batch_size': [64],
+    #     'discounting': [0.99],
+    #     'p_prefilled': [0.0],
+    #     'replay': [True],
+    #     'step_size': [0.001, 0.0001, 0.00001],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [1500000],
+    #     'unnormalized_counts': [True],
+    #     'count_decay': [0.75, 0.9, 1.],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
+
+    # Compass World PF
+    run_fname = "runs_compass_lstm_hs_pf.txt"
     run_dict = {
         'algo': ['sarsa'],
-        'arch': ['nn'],
-        'env': ['rc'],
-        'n_particles': [100],
+        'arch': ['lstm'],
+        'env': ['f'],
         'batch_size': [64],
-        'discounting': [0.99],
-        'p_prefilled': [0.0],
         'replay': [True],
-        'step_size': [0.001, 0.0001, 0.00001],
+        'n_hidden': [20],
+        'k_rnn_hs': [10],
+        'same_k_rnn_params': [True],
+        'trunc': [10],
+        'size': [9],
+        'step_size': [0.00001, 0.0001, 0.001],
+        'value_step_size': [0.0001, 0.00025, 0.0005, 0.001],
+        'action_cond': ['cat', None],
         'buffer_size': [10000, 100000],
-        'total_steps': [1500000],
-        'unnormalized_counts': [True],
-        'count_decay': [0.75, 0.9, 1.],
+        'total_steps': [1000000],
         'seed': [(i + 2020) for i in range(10)]
     }
 

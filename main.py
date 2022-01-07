@@ -68,8 +68,8 @@ if __name__ == "__main__":
         if args.action_cond == 'cat':
             n_features += n_actions
         if args.k_rnn_hs > 1:
-            # value network takes as input mean + variance of hidden states.
-            value_network = build_network(2 * args.n_hidden, train_env.action_space.n, model_str="nn")
+            # value network takes as input mean + variance of hidden states and cell states.
+            value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
             value_optimizer = optax.adam(args.value_step_size)
             agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
                                n_features, n_actions, rand_key, args)

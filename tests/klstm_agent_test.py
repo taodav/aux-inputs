@@ -6,7 +6,7 @@ from typing import Any
 
 from unc.envs import SimpleChain
 from unc.args import Args
-from unc.agents import LSTMAgent
+from unc.agents import kLSTMAgent
 from unc.models import build_network
 from unc.trainers import Trainer
 from unc.utils import Batch
@@ -17,9 +17,12 @@ if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
     args.n_hidden = 1
+    args.k_rnn_hs = 5
+    args.same_k_rnn_params = True
     args.trunc = 10
     args.epsilon = 0.
     args.step_size = 0.01
+    args.value_step_size = 0.025
     args.seed = 2020
     args.total_steps = int(1e6)
 
@@ -29,8 +32,13 @@ if __name__ == "__main__":
     network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
     optimizer = optax.adam(args.step_size)
 
-    agent = LSTMAgent(network, optimizer, train_env.observation_space.shape[0],
-                      train_env.action_space.n, rand_key, args)
+    n_features, n_actions = train_env.observation_space.shape[0], train_env.action_space.n
+
+    value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
+    value_optimizer = optax.adam(args.value_step_size)
+    agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
+                       n_features, n_actions, rand_key, args)
+
     agent.set_eps(args.epsilon)
 
     print("Starting test for LSTM on SingleChain environment")
@@ -47,7 +55,7 @@ if __name__ == "__main__":
         all_hidden_states.append(agent.state)
 
         for t in range(args.trunc):
-            action = agent.act(obs)
+            action = agent.act(obs).item()
             next_obs, reward, done, info = train_env.step(action)
             next_obs, reward, done, info, action = Trainer.preprocess_step(next_obs, reward, done, info, action)
             steps += 1
@@ -74,9 +82,9 @@ if __name__ == "__main__":
 
         loss, other = agent.update(batch)
 
-        if steps % 1000 == 0:
+        if steps % 100 == 0:
             lstm_state = agent._rewrap_hidden(batch.state[:, 0])
-            hist_q_vals, final_hs, new_hidden = agent.Qs(batch.obs, lstm_state, agent.network_params)
+            hist_q_vals, all_hidden, final_hs = agent.Qs(batch.obs, lstm_state, agent.rnn_network_params, agent.value_network_params)
             hist_q_vals = hist_q_vals[0, :, 0]
             actual_vals = args.discounting ** np.arange(hist_q_vals.shape[0])
             msve = np.mean(0.5 * (hist_q_vals - actual_vals) ** 2)

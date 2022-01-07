@@ -174,7 +174,8 @@ class Trainer:
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
 
-    def post_episode_print(self, episode_reward: int, episode_loss: float, t: int):
+    def post_episode_print(self, episode_reward: int, episode_loss: float, t: int,
+                           additional_info: dict):
         self.info['episode_reward'].append(episode_reward)
         self.info['episode_length'].append(t + 1)
         self.info['avg_episode_loss'].append(episode_loss / (t + 1))
@@ -184,12 +185,18 @@ class Trainer:
         #     self.info['pf_episodic_var'].append(pf_episode_vars)
 
         avg_over = min(self.episode_num, 30)
-        self._print(f"Episode {self.episode_num}, steps: {t + 1}, "
+        print_str = (f"Episode {self.episode_num}, steps: {t + 1}, "
                     f"total steps: {self.num_steps}, "
                     f"moving avg steps: {sum(self.info['episode_length'][-avg_over:]) / avg_over:.3f}, "
                     f"moving avg returns: {sum(self.info['episode_reward'][-avg_over:]) / avg_over:.3f}, "
                     f"rewards: {episode_reward:.2f}, "
                     f"avg episode loss: {episode_loss / (t + 1):.4f}")
+
+        if additional_info is not None:
+            print_str += ", "
+            for k, v in additional_info.items():
+                print_str += f"{k}: {v / (t + 1):.4f}, "
+        self._print(print_str)
 
     @staticmethod
     def preprocess_step(obs: np.ndarray,

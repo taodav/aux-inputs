@@ -100,6 +100,7 @@ class BufferTrainer(Trainer):
         while self.num_steps < self.total_steps:
             episode_reward = 0
             episode_loss = 0
+            episode_info = {}
 
             # LSTM hidden state
             hs = None
@@ -172,6 +173,13 @@ class BufferTrainer(Trainer):
 
                     # Logging
                     episode_loss += loss
+                    if other_info:
+                        for k, v in other_info.items():
+                            if k not in episode_info:
+                                episode_info[k] = v
+                            else:
+                                episode_info[k] += v
+
                 episode_reward += reward
                 self.num_steps += 1
 
@@ -195,10 +203,13 @@ class BufferTrainer(Trainer):
                 hs = next_hs
 
             # FOR DEBUGGING
+            # print()
             # print(f"Q-values at end of episode: {self.agent.curr_q}")
+            # print(f"RNN Q-values at end of episode: {self.agent.rnn_curr_q}")
 
             self.episode_num += 1
-            self.post_episode_print(episode_reward, episode_loss, t)
+            self.post_episode_print(episode_reward, episode_loss, t,
+                                    additional_info=episode_info)
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")

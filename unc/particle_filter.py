@@ -4,7 +4,7 @@ from typing import Callable, Tuple
 
 def state_stats(particles: np.ndarray, weights: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Return the mean and std dev of the three state variables
+    Return the mean and variance of the three state variables
     :param particles:
     :param weights:
     :return:

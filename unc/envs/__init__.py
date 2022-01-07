@@ -23,6 +23,7 @@ compass_wrapper_map = {
     'l': cw.LocalStateObservationWrapper,
     'c': cw.StateCountObservationWrapper,
     'o': cw.ObsCountObservationWrapper,
+    'n': cw.ObservationStatsWrapper,
     'm': None,
     'v': None,
     'f': None
@@ -111,7 +112,7 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
         ground_truth = True
         env_str = env_str.replace("s", "")
 
-    if "p" in env_str and "g" not in env_str:
+    if "p" in env_str and "g" not in env_str and "n" not in env_str:
         env_str += "l"
 
     # Don't do any resampling in deterministic environments.

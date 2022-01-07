@@ -8,3 +8,4 @@ from .state_observation import StateObservationWrapper
 from .wrapper import CompassWorldWrapper
 from .state_count import StateCountObservationWrapper
 from .obs_count import ObsCountObservationWrapper
+from .obs_stats import ObservationStatsWrapper

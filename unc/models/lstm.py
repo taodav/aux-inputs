@@ -93,5 +93,26 @@ def lstm(hidden_size: int, actions: int, x: np.ndarray, h: np.ndarray):
     return outs, hc, final_hidden
 
 
+def value(hidden_size: int, actions: int, x: np.ndarray):
+    """
+    Value network to attach to the end of t timesteps of LSTM hidden state outputs.
+    :param x: sequence of inputs, of size (batch_size x seq_len x *inp_size).
+    """
+    w_init = hk.initializers.VarianceScaling(np.sqrt(2), 'fan_avg', 'uniform')
+    b_init = hk.initializers.Constant(0)
+
+    layers = [
+        # hk.Linear(hidden_size, w_init=w_init, b_init=b_init),
+        # jax.nn.relu,
+        hk.Linear(actions, w_init=w_init, b_init=b_init)
+    ]
+
+    layers = hk.Sequential(layers)
+    # combine first two dims (batch and time) and apply the network function.
+    # then remove them again.
+    outs = hk.BatchApply(layers)(x)
+
+    return outs
+
 
 

@@ -47,6 +47,7 @@ if __name__ == "__main__":
     args.size = 9
 
     args.init_hidden_var = 0.1
+    args.same_k_rnn_params = True
 
     np.random.seed(args.seed)
     rng = np.random.RandomState(args.seed)
@@ -117,7 +118,7 @@ if __name__ == "__main__":
 
             if args.batch_size <= len(buffer):
 
-                batch = buffer.sample_k(args.batch_size, seq_len=args.trunc, k=args.k_rnn_hs)
+                batch = buffer.sample(args.batch_size, seq_len=args.trunc)
                 batch.gamma = (1 - batch.done) * args.discounting
                 loss = agent.update(batch)
 

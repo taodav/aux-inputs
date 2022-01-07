@@ -69,7 +69,7 @@ class Args(Tap):
 
     k_rnn_hs: int = 1  # [k-RNN] How many RNN hidden states do we take statistics over?
     same_k_rnn_params: bool = False  # [k-RNN] Across our k RNNs, do we use the same parameters for each?
-    value_step_size: float = 0.00001  # [k-RNN] What is our step-size for our value network?
+    value_step_size: float = 0.0001  # [k-RNN] What is our step-size for our value network?
 
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability
@@ -78,7 +78,7 @@ class Args(Tap):
     random_start: bool = True  # Do we have a random initial state distribution?
 
     seed: int = 2020  # Random seed
-    device: Union[str, Device] = "cpu"  # What device do we use? (cpu | gpu)
+    device: str = "cpu"  # What device do we use? (cpu | gpu)
 
     test_eps: float = 0.0  # What's our test epsilon?
     log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
