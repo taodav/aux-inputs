@@ -9,4 +9,5 @@ dill
 jax[cpu]
 optax
 dm-haiku
+tqdm
 -e .

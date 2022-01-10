@@ -182,24 +182,49 @@ if __name__ == "__main__":
     #     'seed': [(i + 2020) for i in range(10)]
     # }
 
-    # Compass World PF
-    run_fname = "runs_compass_lstm_hs_pf.txt"
+    # # Compass World hs uncertainty
+    # run_fname = "runs_compass_lstm_hs_pf.txt"
+    # run_dict = {
+    #     'algo': ['sarsa'],
+    #     'arch': ['lstm'],
+    #     'env': ['f'],
+    #     'batch_size': [64],
+    #     'replay': [True],
+    #     'n_hidden': [20],
+    #     'k_rnn_hs': [10],
+    #     'same_k_rnn_params': [True],
+    #     'trunc': [10],
+    #     'size': [9],
+    #     'init_hidden_var': [0.1, 0.5],
+    #     'step_size': [0.00001, 0.0001, 0.001],
+    #     'value_step_size': [0.0001, 0.00025, 0.0005],
+    #     'action_cond': ['cat', None],
+    #     'buffer_size': [10000, 100000],
+    #     'total_steps': [1000000],
+    #     'seed': [(i + 2020) for i in range(10)]
+    # }
+
+    # RockSample hs unc
+    run_fname = "runs_rs_lstm_hs_pf.txt"
     run_dict = {
         'algo': ['sarsa'],
         'arch': ['lstm'],
-        'env': ['f'],
+        'env': ['r'],
         'batch_size': [64],
+        'discounting': [0.99],
+        'p_prefilled': [0.0],
         'replay': [True],
         'n_hidden': [20],
         'k_rnn_hs': [10],
         'same_k_rnn_params': [True],
         'trunc': [10],
         'size': [9],
+        'init_hidden_var': [0.1, 0.5],
         'step_size': [0.00001, 0.0001, 0.001],
-        'value_step_size': [0.0001, 0.00025, 0.0005, 0.001],
+        'value_step_size': [0.0001, 0.00025, 0.0005],
         'action_cond': ['cat', None],
         'buffer_size': [10000, 100000],
-        'total_steps': [1000000],
+        'total_steps': [1500000],
         'seed': [(i + 2020) for i in range(10)]
     }
 
