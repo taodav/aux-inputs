@@ -209,7 +209,7 @@ if __name__ == "__main__":
     run_dict = {
         'algo': ['sarsa'],
         'arch': ['lstm'],
-        'env': ['r'],
+        'env': ['rg'],
         'batch_size': [64],
         'discounting': [0.99],
         'p_prefilled': [0.0],

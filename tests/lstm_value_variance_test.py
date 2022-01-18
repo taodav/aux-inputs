@@ -7,24 +7,11 @@ from typing import Tuple
 
 from unc.envs import get_env, Environment
 from unc.args import Args
-from unc.agents import kLSTMAgent
+from unc.agents import LSTMAgent
 from unc.models import build_network
 from unc.utils import EpisodeBuffer
 from unc.utils import Batch
 from unc.particle_filter import state_stats
-
-
-def hs_stats(agent: kLSTMAgent) -> Tuple[np.ndarray, float, np.ndarray, float]:
-    """
-    Get stats of the hidden state AND cell state. Returns a tuple
-    (hidden_variance_arr, hidden_avg_variance, cell_variance_arr, cell_avg_variance)
-    """
-    lstm_state = agent.state
-
-    hs, cs = lstm_state[0], lstm_state[1]
-    mean_hs, mean_cs = hs.mean(axis=0), cs.mean(axis=0)
-    hs_var, cs_var = ((hs - mean_hs) ** 2).mean(axis=0), ((cs - mean_cs) ** 2).mean(axis=0)
-    return hs_var, hs_var.mean(axis=0), cs_var, cs_var.mean(axis=0)
 
 
 def pf_stats(env: Environment):
@@ -37,11 +24,10 @@ if __name__ == "__main__":
     log_episode_freq = 5
     all_info = {
         'pf_vars': [],
-        'hs_vars': [],
-        'cs_vars': [],
+        'values': [],
         'ep_end_timesteps': []
     }
-    info_path = Path('klstm_variance_results.pkl')
+    info_path = Path('lstm_value_variance_results.pkl')
 
     parser = Args()
     args = parser.parse_args()
@@ -50,20 +36,13 @@ if __name__ == "__main__":
     args.epsilon = 0.1
     args.seed = 2020
     args.total_steps = int(1e6)
-    args.k_rnn_hs = 10
     args.action_cond = "cat"
-    args.same_k_rnn_params = True
     args.replay = True
     args.step_size = 0.0001
-    args.value_step_size = 0.00025
-    args.init_hidden_var = 0.5
 
     # Compass World variables
     args.env = "fp"
     args.size = 9
-
-    args.init_hidden_var = 0.1
-    args.same_k_rnn_params = True
 
     np.random.seed(args.seed)
     rng = np.random.RandomState(args.seed)
@@ -77,25 +56,20 @@ if __name__ == "__main__":
     if args.action_cond == 'cat':
         n_features += n_actions
 
-    value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
-    value_optimizer = optax.adam(args.value_step_size)
-    agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
-                       n_features, n_actions, rand_key, args)
-
+    agent = LSTMAgent(network, optimizer, n_features, n_actions, rand_key, args)
     agent.set_eps(args.epsilon)
 
     buffer = EpisodeBuffer(args.buffer_size, train_env.rng, (n_features,),
                            state_size=agent.state_shape)
 
-    print("Starting test for variance of kLSTM agent hidden states")
+    print("Starting test for variance of value from LSTM agents")
     steps = 0
 
     eps = 0
     while steps < args.total_steps:
 
         ep_pf_vars = []
-        ep_hs_vars = []
-        ep_cs_vars = []
+        ep_values = []
 
         obs = train_env.reset()
         if args.action_cond == "cat":
@@ -105,16 +79,18 @@ if __name__ == "__main__":
         hs = agent.state
         obs = np.expand_dims(obs, 0)
 
-        hs_var, hs_avg_var, cs_var, cs_avg_var = hs_stats(agent)
-        pf_mean, pf_var = pf_stats(train_env)
-        print(f"Initial stats: "
-              f"hidden avg. variance {hs_avg_var.item():.6f}, "
-              f"cell avg. variance {cs_avg_var.item():.6f}, "
-              f"particle filter variance {pf_var.mean()}")
 
         # action = train_env.action_space.sample()
         # agent_action = agent.act(obs)
         action = agent.act(obs)
+
+        pf_mean, pf_var = pf_stats(train_env)
+        curr_q = agent.curr_q
+        print(f"Initial stats: "
+              f"current Q values: {curr_q}, "
+              f"Q value variance: {curr_q[0, 0].var()}, "
+              f"particle filter variance {pf_var.mean()}")
+
         for t in range(args.max_episode_steps):
             next_hs = agent.state
             next_obs, reward, done, info = train_env.step(action)
@@ -140,22 +116,20 @@ if __name__ == "__main__":
 
                 batch = buffer.sample(args.batch_size, seq_len=args.trunc)
                 batch.gamma = (1 - batch.done) * args.discounting
-                # loss = agent.update(batch)
+                loss = agent.update(batch)
                 loss = 0
 
-            hs_var, hs_avg_var, cs_var, cs_avg_var = hs_stats(agent)
             pf_mean, pf_var = pf_stats(train_env)
+            curr_q = agent.curr_q
             ep_pf_vars.append(pf_var)
-            ep_hs_vars.append(hs_var)
-            ep_cs_vars.append(cs_var)
+            ep_values.append(curr_q)
 
             if steps % 10 == 0:
 
                 print(f"Total steps {steps}, "
                       f"Episode {eps}, "
                       f"steps {t}, "
-                      f"hidden avg. variance {hs_avg_var:.6f}, "
-                      f"cell avg. variance {cs_avg_var:.6f}, "
+                      f"value variance {curr_q[0, 0].var():.6f}, "
                       f"particle filter variance {pf_var.mean()}")
             if done:
                 break
@@ -169,8 +143,7 @@ if __name__ == "__main__":
         eps += 1
         if eps % log_episode_freq == 0:
             all_info['pf_vars'].append(ep_pf_vars)
-            all_info['hs_vars'].append(ep_hs_vars)
-            all_info['cs_vars'].append(ep_cs_vars)
+            all_info['values'].append(ep_values)
             all_info['ep_end_timesteps'].append(steps)
 
         print(f"End of episode {eps}")
