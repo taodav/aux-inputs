@@ -1,6 +1,7 @@
 import numpy as np
 import optax
 import dill
+import jax
 from jax import random
 from pathlib import Path
 from typing import Tuple
@@ -17,6 +18,13 @@ from unc.particle_filter import state_stats
 def pf_stats(env: Environment):
     assert hasattr(env, "particles") and hasattr(env, "weights")
     return state_stats(env.particles, env.weights)
+
+
+def q_val_entropy(qs: np.ndarray):
+    dist = jax.nn.softmax(qs, axis=-1)
+    ent = -np.sum(dist * np.log2(dist))
+    return ent
+
 
 
 if __name__ == "__main__":
@@ -89,6 +97,7 @@ if __name__ == "__main__":
         print(f"Initial stats: "
               f"current Q values: {curr_q}, "
               f"Q value variance: {curr_q[0, 0].var()}, "
+              f"Q value entropy: {q_val_entropy(curr_q[0, 0])}, "
               f"particle filter variance {pf_var.mean()}")
 
         for t in range(args.max_episode_steps):
@@ -130,6 +139,7 @@ if __name__ == "__main__":
                       f"Episode {eps}, "
                       f"steps {t}, "
                       f"value variance {curr_q[0, 0].var():.6f}, "
+                      f"value entropy: {q_val_entropy(curr_q[0, 0])}, "
                       f"particle filter variance {pf_var.mean()}")
             if done:
                 break
