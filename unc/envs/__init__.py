@@ -3,14 +3,15 @@ import jax
 from pathlib import Path
 import unc.envs.wrappers.compass as cw
 import unc.envs.wrappers.rocksample as rw
+import unc.envs.wrappers.tiger as tw
 
 from .compass import CompassWorld
 from .fixed import FixedCompassWorld
 from .rocksample import RockSample
+from .tiger import Tiger
 from .base import Environment
 from .simple_chain import SimpleChain
 from .dynamic_chain import DynamicChain
-from .directional_tmaze import DirectionalTMaze
 from definitions import ROOT_DIR
 
 
@@ -38,12 +39,18 @@ rocksample_wrapper_map = {
     'o': rw.ObsCountObservationWrapper
 }
 
+tiger_wrapper_map = {
+    'g': tw.BeliefStateObservationWrapper,
+    'p': tw.TigerParticleFilterWrapper
+}
+
+
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
     if "r" in env_str:
         env_str = env_str.replace('r', '')
         env = get_rocksample_env(rng, rand_key, env_str, *args, **kwargs)
     elif "t" in env_str:
-        env = get_directional_tmaze_env(rng)
+        env = get_tiger_env(rng, env_str, *args, **kwargs)
     else:
         env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
     return env
@@ -153,11 +160,35 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
     return env
 
 
-def get_directional_tmaze_env(rng: np.random.RandomState) -> DirectionalTMaze:
-    """
-    TODO: incorporate size into this.
-    :param rng: numpy random state for random number generation
-    :return: A directional t-maze environment.
-    """
-    env = DirectionalTMaze(rng)
+def get_tiger_env(rng: np.random.RandomState, *args, env_str: str = "t",
+                  update_weight_interval: int = 1,
+                  resample_interval: int = None,
+                  n_particles: int = -1,
+                  render: bool = True,
+                  **kwargs):
+
+    ground_truth = False
+    if "g" in env_str and "s" in env_str:
+        ground_truth = True
+        env_str = env_str.replace("s", "")
+
+    list_w = list(set(env_str))
+    wrapper_list = [tiger_wrapper_map[w] for w in list_w if tiger_wrapper_map[w] is not None]
+
+    ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
+
+    env = Tiger(rng)
+
+    for w in ordered_wrapper_list:
+        if w == tw.TigerParticleFilterWrapper:
+            env = w(env, update_weight_interval=update_weight_interval,
+                    resample_interval=resample_interval, n_particles=n_particles)
+        elif w == tw.BeliefStateObservationWrapper:
+            env = w(env, ground_truth=ground_truth)
+        else:
+            env = w(env)
+
+    # if render:
+    #     env = cw.CompassRenderWrapper(env)
+
     return env

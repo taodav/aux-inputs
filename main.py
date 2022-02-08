@@ -8,7 +8,7 @@ from unc.args import Args, get_results_fname
 from unc.trainers import Trainer, BufferTrainer
 from unc.models import build_network
 from unc.sampler import Sampler
-from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent, kLSTMAgent
+from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent, kLSTMAgent, DistributionalLSTMAgent
 from unc.utils import save_info, save_video
 from unc.eval import test_episodes
 from definitions import ROOT_DIR
@@ -57,7 +57,10 @@ if __name__ == "__main__":
     model_str = args.arch
     if model_str == 'nn' and args.exploration == 'noisy':
         model_str = args.exploration
-    network = build_network(args.n_hidden, train_env.action_space.n, model_str=model_str)
+    output_size = train_env.action_space.n
+    if args.distributional:
+        output_size = train_env.action_space.n * args.atoms
+    network = build_network(args.n_hidden, output_size, model_str=model_str)
     optimizer = optax.adam(args.step_size)
 
     if args.arch == 'lstm':
@@ -73,6 +76,9 @@ if __name__ == "__main__":
             value_optimizer = optax.adam(args.value_step_size)
             agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
                                n_features, n_actions, rand_key, args)
+        elif args.distributional:
+            agent = DistributionalLSTMAgent(network, optimizer, n_features,
+                                            n_actions, rand_key, args)
         else:
             agent = LSTMAgent(network, optimizer, n_features,
                               n_actions, rand_key, args)

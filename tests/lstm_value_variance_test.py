@@ -145,8 +145,6 @@ if __name__ == "__main__":
                 break
 
             obs = next_obs
-            # action = next_action
-            # agent_action = next_agent_action
             action = next_action
             hs = next_hs
 

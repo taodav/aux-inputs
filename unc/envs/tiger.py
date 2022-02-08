@@ -8,8 +8,7 @@ from .base import Environment
 class Tiger(Environment):
     def __init__(self,
                  rng: np.random.RandomState = np.random.RandomState(),
-                 noise: float = 0.15,
-                 random_non_listen_obs: bool = False
+                 noise: float = 0.15
                  ):
         super(Tiger, self).__init__()
         """
@@ -60,6 +59,12 @@ class Tiger(Environment):
 
         return new_state
 
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
+        action = actions[0]
+        new_states = states.copy()
+        new_states[:, 1] = action
+        return new_states
+
     def get_reward(self, prev_state: np.ndarray = None, action: int = None) -> float:
         if self.state[1] > 1:
             return -0.1
@@ -83,7 +88,20 @@ class Tiger(Environment):
         states: shape is batch_size x 2
         obs: shape is batch_size x 2
         """
-        return obs[states[:, 0]] * (1 - self.noise)
+        emit_probs = np.zeros(states.shape[0])
+
+        just_initialized_mask = states[:, 1] == -1
+        emit_probs[just_initialized_mask] = 0.5
+
+        listen_mask = states[:, 1] == 2
+        listening_gt = states[listen_mask][:, 0]
+        emit_probs[listen_mask] = obs[listen_mask][:, listening_gt] * (1 - self.noise)
+        emit_probs[listen_mask][emit_probs[listen_mask] == 0] = self.noise
+
+        open_mask = not (listen_mask or just_initialized_mask)
+        emit_probs[open_mask] = 1
+
+        return emit_probs
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         self.state = self.transition(self.state, action)

@@ -71,6 +71,11 @@ class Args(Tap):
     same_k_rnn_params: bool = False  # [k-RNN] Across our k RNNs, do we use the same parameters for each?
     value_step_size: float = 0.0001  # [k-RNN] What is our step-size for our value network?
 
+    distributional: bool = False  # [dist-LSTM] Does our RNN output distributional values?
+    atoms: int = 51  # [dist-LSTM] What support do we use?
+    v_max: int = 100  # [dist-LSTM] Support max
+    v_min: int = -10  # [dist-LSTM] Support min
+
     discounting: float = 0.9  # Discount factor
     epsilon: float = 0.1  # Epsilon random action sampling probability
     anneal_steps: int = 0  # If we do epsilon annealing, over how many steps do we anneal epsilon?

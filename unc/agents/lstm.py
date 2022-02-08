@@ -1,11 +1,10 @@
 import numpy as np
 import haiku as hk
-from optax import GradientTransformation
 import optax
-from jax import random, jit, vmap
 import jax
 import jax.numpy as jnp
-from jax.ops import index_add
+from optax import GradientTransformation
+from jax import random, jit, vmap
 from functools import partial
 from typing import Tuple
 
@@ -98,17 +97,17 @@ class LSTMAgent(DQNAgent):
                        rand_key: random.PRNGKey) -> Tuple[np.ndarray, random.PRNGKey, hk.LSTMState, np.ndarray]:
         probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
         greedy_idx, new_hidden_state, qs = self.greedy_act(state, hidden_state, network_params)
-        probs = index_add(probs, greedy_idx, 1 - self.eps)
+        probs = probs.at[greedy_idx].add(1 - self.eps)
 
         key, subkey = random.split(rand_key)
 
         return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key, new_hidden_state, qs
 
-    @partial(jit, static_argnums=0)
+    # @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, hidden_state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
         """
         Get greedy actions given a state
-        :param state: (b x *state.shape) State to find actions
+        :param state: (b x timesteps x *state.shape) State to find actions
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: (b) Greedy actions
         """
@@ -144,7 +143,7 @@ class LSTMAgent(DQNAgent):
         td_err *= zero_mask
         return mse(td_err), (hiddens, target_hiddens)
 
-    @partial(jit, static_argnums=0)
+    # @partial(jit, static_argnums=0)
     def functional_update(self,
                           network_params: hk.Params,
                           optimizer_state: hk.State,
