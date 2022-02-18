@@ -29,6 +29,7 @@ class Args(Tap):
     x = [ROCKSAMPLE] Perfect sensor (X marks the spot) for the RockSample agent.
     c = State count-based uncertainty estimation.
     o = Observation count-based uncertainty estimation.
+    d = [COMPASSWORLD] Noisy corridor environment.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm)
@@ -46,6 +47,8 @@ class Args(Tap):
     update_weight_interval: int = 1  # How often do we update our particle weights?
     resample_interval: int = 1  # [STOCHASTICITY] How often do we resample our particles?
     n_particles: int = -1  # How many particles do we sample? If -1, assign one particle per state.
+
+    po_degree: float = 0.  # [COMPASSWORLD] Partial observability degree, for noisy corridor observations.
 
     count_decay: float = 1.  # If we use count observations, do we decay our counts? If so by what rate?
     unnormalized_counts: bool = False  # Do we normalize our count-based observations?

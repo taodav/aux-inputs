@@ -25,6 +25,7 @@ compass_wrapper_map = {
     'c': cw.StateCountObservationWrapper,
     'o': cw.ObsCountObservationWrapper,
     'n': cw.ObservationStatsWrapper,
+    'd': cw.NoisyCorridorObservationWrapper,
     'm': None,
     'v': None,
     'f': None
@@ -110,6 +111,7 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
                     resample_interval: int = None,
                     n_particles: int = -1,
                     count_decay: float = 1.,
+                    po_degree: float = 0.,
                     unnormalized_counts: bool = False,
                     render: bool = True,
                     **kwargs):
@@ -151,6 +153,8 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
             env = w(env, ground_truth=ground_truth)
         elif w == cw.StateCountObservationWrapper or w == cw.ObsCountObservationWrapper:
             env = w(env, decay=count_decay, normalize=not unnormalized_counts)
+        elif w == cw.NoisyCorridorObservationWrapper:
+            env = w(env, po_degree=po_degree)
         else:
             env = w(env)
 

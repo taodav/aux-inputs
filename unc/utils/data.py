@@ -40,8 +40,13 @@ def manhattan_dist(arr1: np.ndarray, arr2: np.ndarray):
     return np.linalg.norm(arr1 - arr2, 1)
 
 
-def half_dist_prob(dist: float, max_dist: float):
-    prob = (1 + jnp.power(2.0, -dist / max_dist)) * 0.5
+def half_dist_prob(dist: float, max_dist: float, lb: float = 0.5):
+    prob = (1 + jnp.power(2.0, -dist / max_dist)) * lb
+    return prob
+
+
+def zero_dist_prob(dist: float, steepness: float = 1.0):
+    prob = jnp.power(2.0, -(steepness * (dist - 1)))
     return prob
 
 

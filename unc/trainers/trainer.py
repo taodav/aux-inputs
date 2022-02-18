@@ -175,7 +175,7 @@ class Trainer:
         self._print(f"Ending training at {ctime(time_end)}")
 
     def post_episode_print(self, episode_reward: int, episode_loss: float, t: int,
-                           additional_info: dict):
+                           additional_info: dict = None):
         self.info['episode_reward'].append(episode_reward)
         self.info['episode_length'].append(t + 1)
         self.info['avg_episode_loss'].append(episode_loss / (t + 1))

@@ -42,7 +42,8 @@ if __name__ == "__main__":
                         rock_obs_init=args.rock_obs_init,
                         half_efficiency_distance=args.half_efficiency_distance,
                         count_decay=args.count_decay,
-                        unnormalized_counts=args.unnormalized_counts)
+                        unnormalized_counts=args.unnormalized_counts,
+                        po_degree=args.po_degree)
 
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:

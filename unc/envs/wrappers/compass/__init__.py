@@ -9,3 +9,4 @@ from .wrapper import CompassWorldWrapper
 from .state_count import StateCountObservationWrapper
 from .obs_count import ObsCountObservationWrapper
 from .obs_stats import ObservationStatsWrapper
+from .noisy_corridor_observation import NoisyCorridorObservationWrapper
