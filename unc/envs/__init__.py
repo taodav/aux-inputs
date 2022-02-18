@@ -12,6 +12,7 @@ from .tiger import Tiger
 from .base import Environment
 from .simple_chain import SimpleChain
 from .dynamic_chain import DynamicChain
+from .four_rooms import FourRoom
 from definitions import ROOT_DIR
 
 
