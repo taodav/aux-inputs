@@ -10,6 +10,8 @@ class RocksParticleFilterWrapper(RockSampleWrapper):
     """
     Particle filter for only the rock observations.
 
+    Code: p
+
     Observations are structured like so:
     [pos_x, pos_y, rock_1_weights, rock_2_weights, ..., rock_k_weights]
 

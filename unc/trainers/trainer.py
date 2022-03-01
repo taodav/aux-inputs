@@ -28,6 +28,8 @@ class Trainer:
 
         self.agent = agent
         self.env = env
+        self.n_actions = env.action_space.n
+        self.action_cond = args.action_cond
 
         self.episode_num = 0
         self.num_steps = 0
@@ -106,7 +108,12 @@ class Trainer:
             # pf_episode_means = []
             # pf_episode_vars = []
 
-            obs = np.expand_dims(self.env.reset(), 0)
+            obs = self.env.reset()
+            # Action conditioning
+            if self.action_cond == 'cat':
+                obs = np.concatenate([obs, np.zeros(self.n_actions)])
+
+            obs = np.expand_dims(obs, 0)
             self.agent.reset()
 
             # Hidden state for RNN training
@@ -131,6 +138,12 @@ class Trainer:
                     next_hs = self.agent.state[None, :]
 
                 next_obs, reward, done, info = self.env.step(action.item())
+
+                # Action conditioning
+                if self.action_cond == 'cat':
+                    one_hot_action = np.zeros(self.n_actions)
+                    one_hot_action[action] = 1
+                    next_obs = np.concatenate([next_obs, one_hot_action])
 
                 self.info['reward'].append(reward)
 

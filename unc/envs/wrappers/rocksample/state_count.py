@@ -10,6 +10,8 @@ class StateCountObservationWrapper(RockSampleWrapper):
     """
     Observation based count observations
 
+    Code: c
+
     Terrible naming, I know.
 
     Instead of a state based count, we separate position and rock observations.

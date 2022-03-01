@@ -6,6 +6,9 @@ from .wrapper import RockSampleWrapper
 
 
 class PerfectSensorWrapper(RockSampleWrapper):
+    """
+    Code: x
+    """
 
     def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
         action = actions[0]

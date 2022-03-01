@@ -122,9 +122,7 @@ class CompassWorld(Environment):
         return 0
 
     def get_terminal(self) -> bool:
-        if (self.state == np.array([1, 1, 3])).all():
-            return True
-        return False
+        return (self.state == np.array([1, 1, 3])).all()
 
     def reset(self) -> np.ndarray:
         """

@@ -30,6 +30,7 @@ class Args(Tap):
     c = State count-based uncertainty estimation.
     o = Observation count-based uncertainty estimation.
     d = [COMPASSWORLD] Noisy corridor environment.
+    4 = [FOUR ROOM] Four room environment.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm)
@@ -49,6 +50,8 @@ class Args(Tap):
     n_particles: int = -1  # How many particles do we sample? If -1, assign one particle per state.
 
     po_degree: float = 0.  # [COMPASSWORLD] Partial observability degree, for noisy corridor observations.
+
+    trace_decay: float = 0.9   # [FOUR ROOM] for bounded trace decay obs, at what rate do we decay?
 
     count_decay: float = 1.  # If we use count observations, do we decay our counts? If so by what rate?
     unnormalized_counts: bool = False  # Do we normalize our count-based observations?

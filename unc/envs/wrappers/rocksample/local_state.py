@@ -14,6 +14,8 @@ class LocalStateObservationWrapper(RockSampleWrapper):
         """
         Misleading title. Position is still encoded globally.
 
+        Code: l
+
         In this case, we encode rock observations based on mean and variance.
         We build agent-state as follows
 

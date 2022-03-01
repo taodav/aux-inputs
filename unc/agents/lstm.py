@@ -103,7 +103,7 @@ class LSTMAgent(DQNAgent):
 
         return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key, new_hidden_state, qs
 
-    # @partial(jit, static_argnums=0)
+    @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, hidden_state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
         """
         Get greedy actions given a state
@@ -143,7 +143,7 @@ class LSTMAgent(DQNAgent):
         td_err *= zero_mask
         return mse(td_err), (hiddens, target_hiddens)
 
-    # @partial(jit, static_argnums=0)
+    @partial(jit, static_argnums=0)
     def functional_update(self,
                           network_params: hk.Params,
                           optimizer_state: hk.State,

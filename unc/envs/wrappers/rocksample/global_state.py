@@ -13,6 +13,9 @@ class GlobalStateObservationWrapper(RockSampleWrapper):
                  ground_truth: bool = False):
         """
         Do we encode position globally?
+
+        Code: g
+
         If we do, then we build agent-state as follows
 
         First env.size * env.size elements are a one-hot encoding of position
