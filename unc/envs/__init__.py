@@ -39,7 +39,8 @@ rocksample_wrapper_map = {
     'p': rw.RocksParticleFilterWrapper,
     'x': rw.PerfectSensorWrapper,
     'c': rw.StateCountObservationWrapper,
-    'o': rw.ObsCountObservationWrapper
+    'o': rw.ObsCountObservationWrapper,
+    'n': rw.RockObservationStatsWrapper,
 }
 
 tiger_wrapper_map = {

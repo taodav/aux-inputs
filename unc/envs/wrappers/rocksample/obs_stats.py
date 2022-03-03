@@ -11,6 +11,8 @@ class RockObservationStatsWrapper(RockSampleWrapper):
     """
     Rock Observation statistics wrapper.
 
+    Code: n
+
     We essentially calculate the mean and variance of each rock morality given
     past observations.
 
@@ -26,7 +28,7 @@ class RockObservationStatsWrapper(RockSampleWrapper):
 
     def __init__(self, env: Union[RockSample, RockSampleWrapper], *args,
                  mean_only: bool = False, vars_only: bool = False,
-                 stats_over_n: int = 10, **kwargs):
+                 stats_over_n: int = 20, **kwargs):
         super(RockObservationStatsWrapper, self).__init__(env, *args, **kwargs)
 
         self.mean_only = mean_only
@@ -36,8 +38,13 @@ class RockObservationStatsWrapper(RockSampleWrapper):
         # )
         # self.element_mean_range = 1
 
+        self.stats_over_n = stats_over_n
+
         # normalizing range for variance (bernoulli r.v.)
-        self.element_var_range = np.sqrt(0.25) / 2
+        # self.element_var_range = np.sqrt(0.25) / 2
+        max_var_sample = np.zeros(self.stats_over_n)
+        max_var_sample[::2] = 1
+        self.element_var_range = max_var_sample.var(ddof=1)
 
         low = np.zeros(self.size * self.size + 2 * self.rocks)
         high = np.ones_like(low)
@@ -45,17 +52,17 @@ class RockObservationStatsWrapper(RockSampleWrapper):
             low=low, high=high
         )
 
-        self.stats_over_n = stats_over_n
-        self.rock_clipped_check_counts = self.zeros(self.rocks)
-        self.buffer = np.zeros(self.rocks, self.stats_over_n)
+        # self.rock_clipped_check_counts = np.zeros(self.rocks, dtype=int)
+        # self.buffer = np.zeros((self.rocks, self.stats_over_n), dtype=int)
+        self.buffer = self.rng.choice([0, 1], size=(self.rocks, self.stats_over_n)).astype(int)
 
     def _update_buffer(self, obs: np.ndarray, action: int):
         rock_idx = action - 5
         if rock_idx > 0:
-            rock_obs = obs[2:][rock_idx]
+            rock_obs = obs[2:][rock_idx].astype(int)
             self.buffer[rock_idx][:-1] = self.buffer[rock_idx][1:]
             self.buffer[rock_idx][-1] = rock_obs
-            self.rock_clipped_check_counts[rock_idx] = min(self.stats_over_n, self.rock_clipped_check_counts[rock_idx] + 1)
+            # self.rock_clipped_check_counts[rock_idx] = min(self.stats_over_n, self.rock_clipped_check_counts[rock_idx] + 1)
 
     def get_obs(self, state: np.ndarray):
         position, rock_morality, _, current_rocks_obs = self.unwrapped.unpack_state(state)
@@ -65,14 +72,17 @@ class RockObservationStatsWrapper(RockSampleWrapper):
 
         stats = np.zeros(self.rocks * 2)
 
-        for i in range(self.rocks):
-            if self.rock_clipped_check_counts[i] > 1:
-                samples = self.buffer[i, :self.rock_clipped_check_counts[i]]
-                stats[2 * i] = samples.mean()
-                stats[2 * i + 1] = (samples.std(ddof=1) / self.rock_clipped_check_counts[i]) / self.element_var_range
-            else:
-                stats[2 * i] = self.buffer[i, self.rock_clipped_check_counts[i]]
-                stats[2 * i + 1] = 1
+        stats[::2] = self.buffer.mean(axis=-1)
+        stats[1::2] = self.buffer.var(axis=-1, ddof=1) / self.element_var_range
+
+        # for i in range(self.rocks):
+            # if self.rock_clipped_check_counts[i] > 1:
+            #     samples = self.buffer[i, -self.rock_clipped_check_counts[i]:]
+            #     stats[2 * i] = samples.mean()
+            #     stats[2 * i + 1] = (samples.std(ddof=1) / self.rock_clipped_check_counts[i]) / self.element_var_range
+            # else:
+            #     stats[2 * i] = self.buffer[i, -self.rock_clipped_check_counts[i]]
+            #     stats[2 * i + 1] = 1
 
         return np.concatenate([position_obs, stats])
 
