@@ -39,7 +39,14 @@ class RockSample(Environment):
         self.good_rock_reward = config['good_rock_reward']
         self.exit_reward = config['exit_reward']
 
-        self.observation_space = gym.spaces.MultiBinary(self.k + 2)
+        low = np.zeros(2 + self.k)
+        high = np.zeros_like(low)
+        high[:2] = self.size - 1
+        high[2:] = 1
+        self.observation_space = gym.spaces.Box(
+            low=low, high=high
+        )
+
         self.state_space = gym.spaces.MultiBinary(2 + 3 * self.k)
         self.action_space = gym.spaces.Discrete(self.k + 5)
 
