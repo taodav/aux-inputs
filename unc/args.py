@@ -13,6 +13,8 @@ class Args(Tap):
     What environment do we use? 
     r = RockSample
     t = directional t-maze
+    4 = Four room
+    2 = two room (lobster fishing)
     "" = (default) compass world
     
     Combine the following keys in any order for additional add-ons for COMPASS WORLD:

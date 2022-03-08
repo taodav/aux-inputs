@@ -14,6 +14,7 @@ from .base import Environment
 from .simple_chain import SimpleChain
 from .dynamic_chain import DynamicChain
 from .four_room import FourRoom
+from .lobster import LobsterFishing
 from definitions import ROOT_DIR
 
 
@@ -62,6 +63,8 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: s
     elif "4" in env_str:
         env_str = env_str.replace('4', '')
         env = get_four_room_env(rng, env_str, *args, **kwargs)
+    elif "2" in env_str:
+        env = LobsterFishing(rng)
     else:
         env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
     return env

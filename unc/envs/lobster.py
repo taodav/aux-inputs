@@ -21,6 +21,7 @@ class LobsterFishing(Environment):
         self.observation_space = gym.spaces.Box(
             low=np.zeros(9), high=np.ones(9)
         )
+        # actions are go right, go left, collect
         self.action_space = gym.spaces.Discrete(3)
 
         self.traverse_prob = traverse_prob
@@ -59,28 +60,28 @@ class LobsterFishing(Environment):
         obs = np.zeros(9)
 
         # set position
-        obs[state[0]] = 1
+        obs[state[0].astype(int)] = 1
 
         # first set all rewards to unobservable
         obs[5] = 1
         obs[8] = 1
 
         if state[0] == 1:
-            # reward in state 2 is unobservable
+            # reward in state 1 is observable
             obs[5] = 0
 
-            obs[3:6][state[1]] = 1
+            obs[3:6][state[1].astype(int)] = 1
 
         elif state[0] == 2:
             # reward in state 1 is unobservable
             obs[8] = 0
 
-            obs[6:][state[2]] = 1
+            obs[6:][state[2].astype(int)] = 1
 
         return obs
 
     def get_reward(self, prev_state: np.ndarray) -> int:
-        collected_reward = (self.state[1:] - prev_state[1:]) == 1
+        collected_reward = (prev_state[1:] - self.state[1:]) == 1
         if np.any(collected_reward):
             return 1
         return 0
@@ -92,27 +93,49 @@ class LobsterFishing(Environment):
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         new_state = state.copy()
+        pos = int(state[0])
 
-        # if we're at home and we traverse successfully
-        if state[0] == 0 and action < 2:
-            if self.rng.random() < self.traverse_prob:
-                new_state[0] += (action + 1)
+        left_staying = (pos == 1 and action == 0)
+        right_staying = (pos == 2 and action == 1)
 
-        pos = state[0]
-        if state[pos] == 1:
-            # if cage is full
-            new_state[1] = 0
-        else:
-            # if the cage was previously empty, w.p. self.pmfs_1[0] lobsters fill the cage again
-            if self.rng.random() < self.pmfs_1[0]:
-                new_state[1] = 1
-        elif state[0] == 2:
-            if state[2] == 1:
-                # if the cage is full
-                new_state[2] = 0
-            else:
-                if self.rng.random() < self.pmfs_1[1]:
-                    new_state[2] = 1
+        # See if we MOVE or not
+        if action < 2:
+            make_it = self.rng.random() < self.traverse_prob
+            if not left_staying and not right_staying and make_it:
+                if pos == 0:
+                    new_state[0] += (action + 1)
+
+                else:
+                    # since we're here, this means we are going home
+                    new_state[0] = 0
+
+        # We clear reward if we collect in either states 1 or 2.
+        # Since reward is calculated based on diff of prev state and current state,
+        # rewards are given if prev state cage was full, but current state cage is empty.
+
+        if state[0] != 0 and action == 2:
+            # we need to deal with resetting rewards if there are any
+            new_pos = int(new_state[0])
+            new_state[new_pos] = 0
+
+        # we tick all the rewards that have been collected
+        to_tick = new_state[1:] == 0
+        reset_mask = self.rng.binomial(1, p=self.pmfs_1)
+
+        new_state[1:][to_tick] = reset_mask[to_tick]
+
+        return new_state
+
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
+        prev_state = self.state
+
+        self.state = self.transition(self.state, action)
+
+        return self.get_obs(self.state), self.get_reward(prev_state), self.get_terminal(), {}
+
+
+
+
 
 
 
