@@ -5,6 +5,7 @@ import unc.envs.wrappers.compass as cw
 import unc.envs.wrappers.rocksample as rw
 import unc.envs.wrappers.tiger as tw
 import unc.envs.wrappers.four_room as fr
+import unc.envs.wrappers.lobster as lf
 
 from .compass import CompassWorld
 from .fixed import FixedCompassWorld
@@ -53,6 +54,10 @@ four_room_wrapper_map = {
     'o': fr.BoundedDecayingTraceObservationWrapper
 }
 
+lobster_wrapper_map = {
+    'o': lf.BoundedDecayingTraceObservationWrapper
+}
+
 
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
     if "r" in env_str:
@@ -64,9 +69,31 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: s
         env_str = env_str.replace('4', '')
         env = get_four_room_env(rng, env_str, *args, **kwargs)
     elif "2" in env_str:
-        env = LobsterFishing(rng)
+        env_str = env_str.replace('2', '')
+        env = get_lobster_env(rng, env_str, *args, **kwargs)
     else:
         env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
+    return env
+
+
+def get_lobster_env(rng: np.random.RandomState,
+                    env_str: str,
+                    *args,
+                    traverse_prob: float = 0.8,
+                    render: bool = True,
+                    trace_decay: float = 0.8,
+                    **kwargs):
+
+    env = LobsterFishing(rng, traverse_prob=traverse_prob)
+    list_w = list(set(env_str))
+    wrapper_list = [lobster_wrapper_map[w] for w in list_w if lobster_wrapper_map[w] is not None]
+
+    ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
+    for w in ordered_wrapper_list:
+        if w == lf.BoundedDecayingTraceObservationWrapper:
+            env = w(env, decay=trace_decay)
+        else:
+            env = w(env)
     return env
 
 

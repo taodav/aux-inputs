@@ -5,7 +5,7 @@ import jax
 from typing import List
 
 
-def nn(layers: List[int], actions: int, x: np.ndarray):
+def nn(layers: List[int], actions: int, x: np.ndarray, with_bias: bool = True):
     init = hk.initializers.VarianceScaling(np.sqrt(2), 'fan_avg', 'uniform')
     b_init = hk.initializers.Constant(0)
 

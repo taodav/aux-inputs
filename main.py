@@ -65,6 +65,7 @@ if __name__ == "__main__":
     network = build_network(args.n_hidden, output_size, model_str=model_str)
     optimizer = optax.adam(args.step_size)
 
+
     if args.arch == 'lstm':
         n_features = train_env.observation_space.shape[0]
         n_actions = train_env.action_space.n

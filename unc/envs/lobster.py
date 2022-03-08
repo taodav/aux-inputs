@@ -7,6 +7,7 @@ from .base import Environment
 
 class LobsterFishing(Environment):
     """
+    Also known as "Two Room"
     See env spec sheet for a description of this environment:
     https://docs.google.com/document/d/16srtrtyKE40GXQNTx7VCR_leesarrukrg03vqr9MO8k/edit
 
