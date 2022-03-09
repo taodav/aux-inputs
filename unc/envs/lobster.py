@@ -51,6 +51,10 @@ class LobsterFishing(Environment):
         self.position = state[0]
         self.cages_full = state[1:]
 
+    def all_states(self):
+        positions = [0, 1, 2]
+        cages = []
+
     def get_terminal(self) -> bool:
         """
         Currently no terminal... is this an issue?

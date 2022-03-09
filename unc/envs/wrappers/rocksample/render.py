@@ -1,5 +1,6 @@
 import numpy as np
-from unc.utils import rocksample_arr_to_viz, append_text
+from unc.utils.viz.rocksample import rocksample_arr_to_viz
+from unc.utils.viz.compass import append_text
 from .wrapper import RockSampleWrapper
 
 
