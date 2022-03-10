@@ -9,9 +9,6 @@ from unc.args import Args
 from unc.agents import Agent
 from unc.utils.data import Batch
 
-# FOR DEBUGGING
-from unc.utils.viz import plot_current_state
-
 
 class Trainer:
     def __init__(self, args: Args, agent: Agent, env: gym.Env):

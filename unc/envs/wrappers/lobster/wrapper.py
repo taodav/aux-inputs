@@ -11,7 +11,6 @@ class LobsterFishingWrapper(gym.Wrapper):
 
     def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper]):
         super(LobsterFishingWrapper, self).__init__(env)
-        self.random_start = env.random_start
         self.rng = env.rng
 
         if isinstance(self.env, LobsterFishingWrapper):

@@ -8,7 +8,6 @@ from unc.envs.lobster import LobsterFishing
 
 class BoundedDecayingTraceObservationWrapper(LobsterFishingWrapper):
     """
-    TODO: CHANGE THIS FOR LOBSTER OBS
     A bounded decaying trace for the reward observation.
 
     Code: o
@@ -29,28 +28,39 @@ class BoundedDecayingTraceObservationWrapper(LobsterFishingWrapper):
 
         self.trace = None
 
-    def _update_obs(self, rew_obs: np.ndarray):
+    def _update_trace(self, obs: np.ndarray):
         self.trace *= self.decay
-        self.trace = np.minimum(self.trace + rew_obs, 1)
+
+        # if we can see either reward
+        if obs[5] == 0:
+            self.trace[0] = obs[3]
+        else:
+            self.trace[0] += obs[3]
+
+        if obs[8] == 0:
+            self.trace[1] = obs[6]
+        else:
+            self.trace[1] += obs[6]
+
 
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
-        original_obs = self.env.get_obs(state)
-        pos, rew_obs = original_obs[:2], original_obs[2:]
+        obs = self.env.get_obs(state).copy()
+        obs[3] = self.trace[0]
+        obs[6] = self.trace[1]
 
-        return np.concatenate((pos, self.trace))
+        return obs
 
     def reset(self, **kwargs) -> np.ndarray:
-        original_obs = self.env.reset(**kwargs)
-        rew_obs = original_obs[2:]
+        obs = self.env.reset(**kwargs)
 
-        self.trace = np.zeros(self.n_rewards)
-        self._update_obs(rew_obs)
+        self.trace = np.zeros(2)
+        self._update_trace(obs)
         return self.get_obs(self.state)
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         obs, reward, done, info = self.env.step(action)
-        rew_obs = obs[2:]
-        self._update_obs(rew_obs)
+        self._update_trace(obs)
+
         return self.get_obs(self.state), reward, done, info
 
 

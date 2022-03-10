@@ -1,5 +1,6 @@
 import numpy as np
-from unc.utils.viz.compass import compass_arr_to_viz, append_text
+from unc.utils.viz.compass import compass_arr_to_viz
+from unc.utils.viz import append_text
 from .wrapper import CompassWorldWrapper
 
 

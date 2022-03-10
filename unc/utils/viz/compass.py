@@ -1,11 +1,9 @@
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-from typing import Tuple, List
-
-
 # ==========================================================
 #                      COMPASS WORLD
 # ==========================================================
+
+import numpy as np
+
 
 def east_triangle(size: int) -> np.ndarray:
     grid = np.ones((size, size))
@@ -74,9 +72,6 @@ def east_facing_agent(size: int, width: int = 5) -> np.ndarray:
 def south_facing_agent(size: int, width: int = 5) -> np.ndarray:
     return np.flip(north_facing_agent(size, width=width), axis=0)
 
-
-def plot_arr(arr: np.ndarray):
-    Image.fromarray(np.uint8(arr)).show()
 
 
 def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, background_weights: np.ndarray = None):
@@ -184,80 +179,5 @@ def compass_arr_to_viz(arr: np.ndarray, scale: int = 10, grid_lines: bool = True
                 x * scale:(x + 1) * scale] = to_fill
 
     return final_viz_array
-
-
-def create_blank(viz_array: np.ndarray):
-    """
-    Create a blank slate below the image, of size viz_array.shape[0] // 2, viz_array.shape[1]
-    :param viz_array:
-    :return:
-    """
-    h, w, _ = viz_array.shape
-    blank_image = Image.new('RGB', (w, h // 2), (255, 255, 255))
-    return blank_image
-
-
-def write_on_image(canvas: Image, text_cols: List[str], start_pos: Tuple[int, int] = (0, 0)):
-    """
-    Write multiple columns of text onto the given image.
-    :param canvas: PIL image to write on
-    :param text_cols: list of strings, one for each column
-    :param start_pos: starting position
-    :return:
-    """
-    w, h = canvas.size
-    font = ImageFont.truetype("FreeMono.ttf", 24)
-
-    next_position_to_add = start_pos
-    d_actual = ImageDraw.Draw(canvas)
-    for text in text_cols:
-        img_to_guide = Image.new('RGB', (w, h), (255, 255, 255))
-
-        d = ImageDraw.Draw(img_to_guide)
-        d.text((0, 0), text, (0, 0, 0), font=font)
-
-        text_w, text_h = d.textsize(text, font)
-        offset_x, offset_y = font.getoffset(text)
-        text_w += offset_x
-        text_h += offset_y
-
-        d_actual.text(next_position_to_add, text, fill=(0, 0, 0), font=font)
-        next_position_to_add = (next_position_to_add[0] + text_w + 20, next_position_to_add[1])
-
-    return canvas
-
-
-def append_text(viz_array: np.ndarray, to_append: List[str]) -> np.ndarray:
-    img_to_append = create_blank(viz_array)
-    img_to_append = write_on_image(img_to_append, to_append, start_pos=(10, 10))
-    arr_to_append = np.array(img_to_append)
-
-    final_image = np.concatenate((viz_array, arr_to_append), axis=0)
-
-    return final_image
-
-
-# FOR DEBUGGING
-def plot_current_state(env, agent):
-    obs = np.array([env.get_obs(env.state)])
-    qs = agent.Qs(obs, agent.network_params)
-    action = np.argmax(qs, axis=1)
-    qs = qs[0]
-
-    greedy_action_arr = generate_greedy_action_array(env, agent)
-
-    render = env.render(action=action, q_vals=qs, show_weights=True, show_rock_info=True,
-                        greedy_actions=greedy_action_arr)
-    plot_arr(render)
-
-
-def stringify_actions_q_vals(action_map: List, q_vals: np.ndarray) -> str:
-    assert len(action_map) == q_vals.shape[0]
-    str = ""
-    for a, q in zip(action_map, q_vals):
-        str += f"{a}: {q:.3f}\n"
-    return str
-
-
 
 

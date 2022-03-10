@@ -1,10 +1,10 @@
-import numpy as np
-from .rocksample import create_rocksample_agent
-from .compass import generate_agent_rgb
-
 # ==========================================================
 #                      FOUR ROOM
 # ==========================================================
+
+import numpy as np
+from .rocksample import create_rocksample_agent
+from .compass import generate_agent_rgb
 
 
 def generate_four_room_agent(size: int, agent_color: np.ndarray) -> np.ndarray:

@@ -1,6 +1,9 @@
+import argparse
+import importlib.util
 from typing import List
 from pathlib import Path
 from itertools import product
+
 from definitions import ROOT_DIR
 
 
@@ -50,187 +53,28 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', 
         print(num_runs, run_string)
 
 
+def import_module_to_hparam(hparam_path: Path) -> dict:
+    spec = importlib.util.spec_from_file_location("hparam", hparam_path)
+    hparam_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hparam_module)
+    hparams = hparam_module.hparams
+    return hparams
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--hparam', default='', type=str)
+    args = parser.parse_args()
+
     runs_dir = Path(ROOT_DIR, 'scripts', 'runs')
 
-    # run_dict is a dictionary with keys as Args keys, and values as lists of parameters you want to run.
-    # FOR no-prefilled buffer
-    # run_fname = "runs_rs_nn_hed_5.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['nn'],
-    #     'env': ['rg'],
-    #     'n_particles': [100],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.0],
-    #     'replay': [True],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000, 100000],
-    #     'rock_obs_init': [0.5],
-    #     'total_steps': [1500000],
-    #     'half_efficiency_distance': [5.],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
+    hparam_path = Path(ROOT_DIR, 'scripts', 'hparams', args.hparam + ".py")
 
-    # run_dict = {
-    #     'algo': ['sarsa', 'esarsa', 'qlearning'],
-    #     'env': ['rg', 'rxg'],
-    #     'n_particles': [100],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.0],
-    #     'replay': [True],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1500000],
-    #     'rock_obs_init': [0.5, 1.],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
-
-    # RockSample LSTM runs
-    # run_fname = "runs_rs_lstm_hed_5.txt"
-    # run_fname = "runs_rs_lstm_pf.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['rpg'],
-    #     'n_particles': [100],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.0],
-    #     'replay': [True],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'trunc': [10, 20],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1500000],
-    #     # 'half_efficiency_distance': [5.],
-    #     # 'action_cond': [None, 'cat'],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
-
-    # Fixed compass world runs, with state count obs
-    # run_fname = "runs_compass_state_count.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['nn'],
-    #     # 'env': ['f', 'fsg', 'fpg'],
-    #     'env': ['fc'],
-    #     'batch_size': [64],
-    #     'replay': [False],
-    #     'size': [9],
-    #     'trunc': [0],
-    #     'count_decay': [0.75, 0.9, 1.],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000],
-    #     'total_steps': [1000000],
-    #     'seed': [(i + 2020) for i in range(10)]
-    #     # 'seed': [2020]
-    # }
-
-    # Fixed compass world LSTM runs
-    # run_fname = "runs_compass_lstm_pf.txt"
-    # # run_fname = "runs_compass_lstm_action_cat.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['fpg'],
-    #     'batch_size': [64],
-    #     'replay': [True],
-    #     'trunc': [10, 20],
-    #     'size': [9],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1000000],
-    #     # 'action_cond': ['cat'],
-    #     'seed': [(i + 2020) for i in range(10)]
-    #  }
-
-    # Fixed compass world buffer sweep
-    # run_fname = "runs_compass_lstm_buffer_sweep.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['f'],
-    #     'batch_size': [64],
-    #     'replay': [True],
-    #     'n_hidden': [12],
-    #     'trunc': [10],
-    #     'size': [9],
-    #     'step_size': [0.0001],
-    #     'buffer_size': [100, 1000, 5000, 10000, 50000, 100000],
-    #     'total_steps': [300000],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
-
-    # RockSample count-based observations
-    # run_fname = "runs_rs_state_count.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['nn'],
-    #     'env': ['rc'],
-    #     'n_particles': [100],
-    #     'batch_size': [64],
-    #     'discounting': [0.99],
-    #     'p_prefilled': [0.0],
-    #     'replay': [True],
-    #     'step_size': [0.001, 0.0001, 0.00001],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1500000],
-    #     'unnormalized_counts': [True],
-    #     'count_decay': [0.75, 0.9, 1.],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
-
-    # # Compass World hs uncertainty
-    # run_fname = "runs_compass_lstm_hs_pf.txt"
-    # run_dict = {
-    #     'algo': ['sarsa'],
-    #     'arch': ['lstm'],
-    #     'env': ['f'],
-    #     'batch_size': [64],
-    #     'replay': [True],
-    #     'n_hidden': [20],
-    #     'k_rnn_hs': [10],
-    #     'same_k_rnn_params': [True],
-    #     'trunc': [10],
-    #     'size': [9],
-    #     'init_hidden_var': [0.1, 0.5],
-    #     'step_size': [0.00001, 0.0001, 0.001],
-    #     'value_step_size': [0.0001, 0.00025, 0.0005],
-    #     'action_cond': ['cat', None],
-    #     'buffer_size': [10000, 100000],
-    #     'total_steps': [1000000],
-    #     'seed': [(i + 2020) for i in range(10)]
-    # }
-
-    # RockSample hs unc
-    run_fname = "runs_rs_lstm_hs_pf.txt"
-    run_dict = {
-        'algo': ['sarsa'],
-        'arch': ['lstm'],
-        'env': ['rg'],
-        'batch_size': [64],
-        'discounting': [0.99],
-        'p_prefilled': [0.0],
-        'replay': [True],
-        'n_hidden': [20],
-        'k_rnn_hs': [10],
-        'same_k_rnn_params': [True],
-        'trunc': [10],
-        'size': [9],
-        'init_hidden_var': [0.1, 0.5],
-        'step_size': [0.00001, 0.0001, 0.001],
-        'value_step_size': [0.0001, 0.00025, 0.0005],
-        'action_cond': ['cat', None],
-        'buffer_size': [10000, 100000],
-        'total_steps': [1500000],
-        'seed': [(i + 2020) for i in range(10)]
-    }
+    hparams = import_module_to_hparam(hparam_path)
 
     # Make our runs directory if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(run_dict, runs_dir, runs_fname=run_fname, main_fname='main.py')
+    generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname='main.py')
 
 

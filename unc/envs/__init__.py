@@ -94,6 +94,10 @@ def get_lobster_env(rng: np.random.RandomState,
             env = w(env, decay=trace_decay)
         else:
             env = w(env)
+
+    if render:
+        env = lf.LobsterFishingRenderWrapper(env)
+
     return env
 
 

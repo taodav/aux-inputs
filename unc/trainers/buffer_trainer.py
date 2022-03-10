@@ -12,7 +12,6 @@ from unc.utils.data import Batch, zip_batches
 from .trainer import Trainer
 
 # DEBUGGING
-from unc.utils import plot_arr
 from unc.debug import summarize_checks, all_unchecked_rock_q_vals
 
 

@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # Potentially run a test episode
     if args.view_test_ep:
-        imgs, rews = test_episodes(agent, train_env, n_episodes=5,
+        imgs, rews = test_episodes(agent, train_env, n_episodes=1,
                                    render=True, test_eps=args.test_eps,
                                    max_episode_steps=args.max_episode_steps)
         vod_path = args.results_dir / f"{results_fname}.mp4"

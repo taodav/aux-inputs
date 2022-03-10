@@ -1,6 +1,6 @@
 import numpy as np
 
-from unc.utils.viz import four_room_arr_to_viz
+from unc.utils.viz.four_room import four_room_arr_to_viz
 from .wrapper import FourRoomWrapper
 
 

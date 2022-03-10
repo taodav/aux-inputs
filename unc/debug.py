@@ -1,8 +1,21 @@
 import numpy as np
 from typing import List
-from unc.utils.viz import stringify_actions_q_vals
+from unc.utils.viz import plot_arr, stringify_actions_q_vals
+from unc.utils.viz.rocksample import generate_greedy_action_array
 
-# FOR DEBUGGING
+# FOR DEBUGGING rocksample
+def plot_current_state(env, agent):
+    obs = np.array([env.get_obs(env.state)])
+    qs = agent.Qs(obs, agent.network_params)
+    action = np.argmax(qs, axis=1)
+    qs = qs[0]
+
+    greedy_action_arr = generate_greedy_action_array(env, agent)
+
+    render = env.render(action=action, q_vals=qs, show_weights=True, show_rock_info=True,
+                        greedy_actions=greedy_action_arr)
+    plot_arr(render)
+
 
 def teleported_rock_q_vals(env, agent, rock_idx: int):
     # Now we teleport our state
