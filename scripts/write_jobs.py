@@ -7,7 +7,10 @@ from itertools import product
 from definitions import ROOT_DIR
 
 
-def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', main_fname: str = 'main.py') -> List[str]:
+def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt',
+                  main_fname: str = 'main.py',
+                  results_dir: Path = None,
+                  log_dir: Path = None) -> List[str]:
     """
     :param runs_dir: Directory to put the runs
     :param runs_fname: What do we call our run file?
@@ -45,6 +48,11 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt', 
             else:
                 run_string += f" --{k} {v}"
 
+        if results_dir is not None:
+            run_string += f" --results_dir {results_dir}"
+
+        if log_dir is not None:
+            run_string += f" --log_dir {log_dir}"
 
         run_string += "\n"
         f.write(run_string)
@@ -69,12 +77,16 @@ if __name__ == "__main__":
     runs_dir = Path(ROOT_DIR, 'scripts', 'runs')
 
     hparam_path = Path(ROOT_DIR, 'scripts', 'hparams', args.hparam + ".py")
-
     hparams = import_module_to_hparam(hparam_path)
 
-    # Make our runs directory if it doesn't exist
+    # Here we assume we want to write to the scratch directory in CC.
+    results_dir = Path("/home/taodav/scratch/uncertainty/results")
+    log_dir = Path("/home/taodav/scratch/uncertainty/log")
+
+    # Make our directories if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname='main.py')
+    generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname='main.py',
+                  results_dir=results_dir, log_dir=log_dir)
 
 

@@ -94,8 +94,8 @@ class Args(Tap):
     device: str = "cpu"  # What device do we use? (cpu | gpu)
 
     test_eps: float = 0.0  # What's our test epsilon?
-    log_dir: Path = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
-    results_dir: Path = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
+    log_dir: Union[Path, str] = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
+    results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     save_model: bool = False  # Do we save our model after finishing training?
@@ -105,8 +105,14 @@ class Args(Tap):
     p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
     buffer_size: int = 20000  # How large is our "online" buffer?
 
-    def process_args(self) -> None:
+    def configure(self) -> None:
+        def to_path(str_path: str) -> Path:
+            return Path(str_path)
 
+        self.add_argument('--results_dir', type=to_path)
+        self.add_argument('--log_dir', type=to_path)
+
+    def process_args(self) -> None:
         # Create our log and results directories if it doesn't exist
         # We also save the different environments in different folders
         self.log_dir /= f"{self.env}_{self.arch}"
