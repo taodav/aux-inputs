@@ -46,8 +46,10 @@ class OceanNav(Environment):
         self.state_space = gym.spaces.MultiDiscrete(self.size * self.size + 2 + 2)
         self.action_space = gym.spaces.Discrete(4)
 
-        low = np.zeros((7, self.size, self.size))
-        high = np.ones((7, self.size, self.size))
+        # low = np.zeros((7, self.size, self.size))
+        # high = np.ones((7, self.size, self.size))
+        low = np.zeros((self.size, self.size, 7))
+        high = np.ones((self.size, self.size, 7))
         self.observation_space = gym.spaces.Box(
             low=low, high=high
         )
@@ -115,11 +117,12 @@ class OceanNav(Environment):
         reward map
         """
         current_map, position, reward_pos = self.unpack_state(state)
-        obstacle_map = self.obstacle_map.copy()[None, :]
-        current_map_one_hot = ind_to_one_hot(current_map, max_val=4, channels_first=True)
-        pos_map = pos_to_map(position, self.size)[None, :]
-        reward_map = pos_to_map(reward_pos, self.size)[None, :]
-        return np.concatenate((obstacle_map, current_map_one_hot, pos_map, reward_map), axis=0, dtype=float)
+        obstacle_map = np.expand_dims(self.obstacle_map.copy(), -1)
+        # current_map_one_hot = ind_to_one_hot(current_map, max_val=4, channels_first=True)
+        current_map_one_hot = ind_to_one_hot(current_map, max_val=4)
+        pos_map = np.expand_dims(pos_to_map(position, self.size), -1)
+        reward_map = np.expand_dims(pos_to_map(reward_pos, self.size), -1)
+        return np.concatenate((obstacle_map, current_map_one_hot, pos_map, reward_map), axis=-1, dtype=float)
 
     def get_terminal(self) -> bool:
         return np.all(self.position == self.reward)

@@ -11,9 +11,9 @@ def cnn(hidden_size: int, actions: int, x: np.ndarray):
     b_init = hk.initializers.Constant(0)
 
     convs = hk.Sequential([
-        Conv2D(output_channels=32, kernel_shape=3, stride=2),
+        Conv2D(output_channels=32, kernel_shape=4, stride=2, padding="VALID"),
         jax.nn.relu,
-        Conv2D(output_channels=hidden_size, kernel_shape=2, stride=2),
+        Conv2D(output_channels=hidden_size, kernel_shape=3, stride=1, padding="VALID"),
     ])
 
     values = hk.Linear(actions, w_init=init, b_init=b_init)
