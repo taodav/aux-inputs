@@ -1,22 +1,200 @@
+import gym
 import numpy as np
+from typing import Tuple
 
 
 from unc.envs.base import Environment
+from unc.utils.data import ind_to_one_hot
+
+
+def pos_to_map(pos: np.ndarray, size: int):
+    pos_map = np.zeros((size, size), dtype=np.uint8)
+    pos_map[pos[0], pos[1]] = 1
+    return pos_map
 
 
 class OceanNav(Environment):
+    """
+    Ocean navigation environment. We have quite a few more state variables to deal with here,
+    So we keep this "epistemic state" environment in group_info.
+
+    In currents, for each group of currents, we have the following key-value mapping:
+    mapping: For this group, where are the currents located?
+    refresh_rate: On average, how many timesteps until the current flips?
+    directions: Directions in which we could sample from for this group.
+
+    Note: this is currently the fully observable version of this environment.
+    For partial observability, use the pertaining wrapper
+    """
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
-    group_mapping = [[(7, 3), (7, 4), (7, 5), (8, 3), (8, 4), (8, 5)]]
 
-    def __init__(self, rng: np.random.RandomState, size: int = 9,
-                 obs_size: int = 5, half_efficiency_distance: float = 3):
+    def __init__(self, rng: np.random.RandomState, config: dict):
         super(OceanNav, self).__init__()
-        self.size = size
+        self.config = config
+        self.size = self.config['size']
         self.rng = rng
-        self.obs_size = obs_size
-        self.half_efficiency_distance = half_efficiency_distance
-        self.position = None
-        self.obstacle_map = np.array((self.size, self.size))
-        self.wind_map = np.array((self.size, self.size))
+        self.current_bump_reward = self.config['current_bump_reward']
 
+        self.position = None
+        self.reward = None
+
+        self.position_max = np.array([self.size - 1, self.size - 1], dtype=int)
+        self.position_min = np.array([0, 0], dtype=int)
+
+        # state space is flattened current map + position + reward position
+        # obstacle_map is considered as part of epistemic state.
+        self.state_space = gym.spaces.MultiDiscrete(self.size * self.size + 2 + 2)
+        self.action_space = gym.spaces.Discrete(4)
+
+        # Check configs for what this dict looks like
+        self.currents = self.config['currents']
+
+        # we get the per-timestep prob of changing
+        self.current_inverse_rates = np.array([g['change_rate'] for g in self.currents])
+        self.lambs = 1 / self.current_inverse_rates
+        self.pmfs_1 = self.lambs * np.exp(-self.lambs)
+
+        # Map of all obstacles
+        self.obstacle_map = np.array(self.config['obstacle_map'], dtype=np.uint8)
+
+        # Map of all current directions
+        self.current_map = np.zeros((self.size, self.size), dtype=np.uint8)
+
+        # Start positions to sample from
+        self.start_positions = np.array(self.config['starts'], dtype=np.uint8)
+
+        # Reward positions to sample from. Note: we can only have 1 active reward in an env currently.
+        # TODO (maybe): Extend this to multiple rewards
+        self.possible_reward_positions = np.array(self.config['rewards'], dtype=np.uint8)
+
+    def reset_currents(self):
+        self.current_map = np.zeros((self.size, self.size), dtype=np.uint8)
+        for curr_info in self.currents:
+            sampled_curr_direction = self.rng.choice(curr_info['directions'])
+            for y, x in curr_info['mapping']:
+                self.current_map[y, x] = sampled_curr_direction + 1
+
+    def reset(self) -> np.ndarray:
+        self.reset_currents()
+        self.position = self.start_positions[self.rng.choice(range(len(self.start_positions)))]
+        self.reward = self.possible_reward_positions[self.rng.choice(range(len(self.possible_reward_positions)))]
+        return self.get_obs(self.state)
+
+    @property
+    def state(self):
+        flattened_current_map = np.flatten(self.current_map)
+        return np.concatenate([flattened_current_map, self.position, self.reward])
+
+    @state.setter
+    def state(self, state: np.ndarray):
+        self.current_map, self.position, self.reward = self.unpack_state(state)
+
+    def unpack_state(self, state: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        map_size = self.size * self.size
+        flattened_current_map = state[:map_size]
+        position = state[map_size:map_size + 2]
+        reward = state[-2:]
+        return np.reshape(flattened_current_map, (self.size, self.size)), position, reward
+
+    def get_obs(self, state: np.ndarray) -> np.ndarray:
+        """
+        Observation in this case is 3D array:
+        1st dimension is channels (we have 6 currently)
+        2nd and 3rd is width x height (size x size).
+        Channels are:
+
+        (4x) current maps
+        position map
+        reward map
+        """
+        current_map, position, reward_pos = self.unpack_state(state)
+        current_map_one_hot = ind_to_one_hot(current_map, max_val=4, channels_first=True)
+        pos_map = pos_to_map(position, self.size)[None, :]
+        reward_map = pos_to_map(reward_pos, self.size)[None, :]
+        return np.concatenate((current_map_one_hot, pos_map, reward_map), axis=0)
+
+    def get_terminal(self) -> bool:
+        return np.all(self.position == self.reward)
+
+    def get_reward(self, prev_state: np.ndarray, action: int) -> float:
+        if self.position == self.reward:
+            return 1.
+
+        # Here we see if a current has pushed us into a wall
+        current_map, position, reward_pos = self.unpack_state(self.state)
+        current_direction = current_map[position[0], position[1]]
+
+        # if we're in a current
+        if current_direction > 0:
+            prev_current_map, prev_pos, reward_pos = self.unpack_state(prev_state)
+            post_move_position = self.move(prev_pos, action)
+            # if the current didn't move us, that means the current bumped us into a wall.
+            if np.all(post_move_position == position):
+                return self.current_bump_reward
+
+        return 0.
+
+    def move(self, pos: np.ndarray, action: int):
+        new_pos = pos.copy()
+
+        new_pos += self.direction_mapping[action]
+        new_pos = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
+
+        # if we bump into a wall inside the grid
+        if self.obstacle_map[new_pos[0], new_pos[1]] > 0:
+            new_pos = pos.copy()
+
+        return new_pos
+
+    def tick_currents(self, current_map: np.ndarray):
+        """
+        See if we change currents or not. If we do,
+        update current map
+        """
+        change_mask = self.rng.binomial(1, p=self.pmfs_1).astype(bool)
+        for i, change_bool in change_mask:
+            if change_bool:
+
+                group_info = self.currents[i]
+
+                # get all current directions we could sample
+                all_current_options = group_info['directions'][:]
+
+                # get our the current direction
+                sample_position = group_info['mapping'][0]
+                prev_current = current_map[sample_position[0], sample_position[1]]
+                current_options = all_current_options.remove(prev_current)
+
+                # sample a new direction
+                new_current = self.rng.choice(current_options)
+
+                # set our new direction
+                for pos in group_info['mapping']:
+                    current_map[pos[0], pos[1]] = new_current
+
+        return current_map
+
+    def transition(self, state: np.ndarray, action: int) -> np.ndarray:
+        current_map, position, reward_pos = self.unpack_state(state)
+        new_current_map = current_map.copy()
+
+        # We first move according to our action
+        new_pos = self.move(position, action)
+
+        # now we move again according to any currents
+        current_direction = current_map[new_pos[0], new_pos[1]]
+        if current_direction > 0:
+            new_pos = self.move(new_pos, current_direction - 1)
+
+        # now we tick currents
+        new_current_map = self.tick_currents(new_current_map)
+        flattened_new_current_map = np.flatten(new_current_map)
+
+        return np.concatenate((flattened_new_current_map, new_pos, reward_pos))
+
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
+        prev_state = self.state
+        self.state = self.transition(self.state, action)
+
+        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
 

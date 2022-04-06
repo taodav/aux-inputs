@@ -165,3 +165,11 @@ def count_params(all_params: hk.Params) -> int:
         for _, w in layer.items():
             total_params += np.prod(w.shape)
     return total_params
+
+
+# Helpers for one-hot encoding
+def ind_to_one_hot(arr: np.ndarray, max_val: int, channels_first: bool = False) -> np.ndarray:
+    one_hot = (np.arange(max_val) == arr[..., None] - 1).astype(np.uint8)
+    if channels_first:
+        one_hot = np.transpose(one_hot, (one_hot.shape[-1], *one_hot.shape[:-1]))
+    return one_hot
