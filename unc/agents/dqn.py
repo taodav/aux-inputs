@@ -9,7 +9,7 @@ from jax import random, jit, vmap
 from jax.ops import index_add
 from optax import GradientTransformation
 from pathlib import Path
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Iterable
 
 from unc.args import Args
 from unc.models import build_network
@@ -22,17 +22,17 @@ from .base import Agent
 class DQNAgent(Agent):
     def __init__(self, network: hk.Transformed,
                  optimizer: GradientTransformation,
-                 n_features: int,
+                 features_shape: Iterable[int],
                  n_actions: int,
                  rand_key: random.PRNGKey,
                  args: Args):
-        self.n_features = n_features
+        self.features_shape = features_shape
         self.n_hidden = args.n_hidden
         self.n_actions = n_actions
 
         self._rand_key, network_rand_key = random.split(rand_key)
         self.network = network
-        self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, self.n_features)))
+        self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, *self.features_shape)))
         self.optimizer = optimizer
         self.optimizer_state = self.optimizer.init(self.network_params)
         self.eps = args.epsilon
@@ -153,7 +153,7 @@ class DQNAgent(Agent):
         """
         to_save = {
             'network_params': self.network_params,
-            'n_features': self.n_features,
+            'features_shape': self.features_shape,
             'n_hidden': self.n_hidden,
             'n_actions': self.n_actions,
             'optimizer_state': self.optimizer_state,
@@ -176,7 +176,7 @@ class DQNAgent(Agent):
         network = build_network(args.n_hidden, loaded['n_actions'], model_str=model_str)
         optimizer = optax.adam(args.step_size)
 
-        agent = agent_class(network, optimizer, loaded['n_features'], loaded['n_actions'], loaded['rand_key'], args)
+        agent = agent_class(network, optimizer, loaded['features_shape'], loaded['n_actions'], loaded['rand_key'], args)
         agent.network_params = loaded['network_params']
         agent.optimizer_state = loaded['optimizer_state']
 

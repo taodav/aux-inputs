@@ -8,7 +8,7 @@ from unc.utils.data import ind_to_one_hot
 
 
 def pos_to_map(pos: np.ndarray, size: int):
-    pos_map = np.zeros((size, size), dtype=np.uint8)
+    pos_map = np.zeros((size, size), dtype=np.int16)
     pos_map[pos[0], pos[1]] = 1
     return pos_map
 
@@ -46,6 +46,12 @@ class OceanNav(Environment):
         self.state_space = gym.spaces.MultiDiscrete(self.size * self.size + 2 + 2)
         self.action_space = gym.spaces.Discrete(4)
 
+        low = np.zeros((7, self.size, self.size))
+        high = np.ones((7, self.size, self.size))
+        self.observation_space = gym.spaces.Box(
+            low=low, high=high
+        )
+
         # Check configs for what this dict looks like
         self.currents = self.config['currents']
 
@@ -55,20 +61,20 @@ class OceanNav(Environment):
         self.pmfs_1 = self.lambs * np.exp(-self.lambs)
 
         # Map of all obstacles
-        self.obstacle_map = np.array(self.config['obstacle_map'], dtype=np.uint8)
+        self.obstacle_map = np.array(self.config['obstacle_map'], dtype=np.int16)
 
         # Map of all current directions
-        self.current_map = np.zeros((self.size, self.size), dtype=np.uint8)
+        self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
 
         # Start positions to sample from
-        self.start_positions = np.array(self.config['starts'], dtype=np.uint8)
+        self.start_positions = np.array(self.config['starts'], dtype=np.int16)
 
         # Reward positions to sample from. Note: we can only have 1 active reward in an env currently.
         # TODO (maybe): Extend this to multiple rewards
-        self.possible_reward_positions = np.array(self.config['rewards'], dtype=np.uint8)
+        self.possible_reward_positions = np.array(self.config['rewards'], dtype=np.int16)
 
     def reset_currents(self):
-        self.current_map = np.zeros((self.size, self.size), dtype=np.uint8)
+        self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
         for curr_info in self.currents:
             sampled_curr_direction = self.rng.choice(curr_info['directions'])
             for y, x in curr_info['mapping']:
@@ -82,7 +88,7 @@ class OceanNav(Environment):
 
     @property
     def state(self):
-        flattened_current_map = np.flatten(self.current_map)
+        flattened_current_map = self.current_map.flatten()
         return np.concatenate([flattened_current_map, self.position, self.reward])
 
     @state.setter
@@ -99,25 +105,27 @@ class OceanNav(Environment):
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         """
         Observation in this case is 3D array:
-        1st dimension is channels (we have 6 currently)
+        1st dimension is channels (we have 7 currently)
         2nd and 3rd is width x height (size x size).
         Channels are:
 
+        obstacle map
         (4x) current maps
         position map
         reward map
         """
         current_map, position, reward_pos = self.unpack_state(state)
+        obstacle_map = self.obstacle_map.copy()[None, :]
         current_map_one_hot = ind_to_one_hot(current_map, max_val=4, channels_first=True)
         pos_map = pos_to_map(position, self.size)[None, :]
         reward_map = pos_to_map(reward_pos, self.size)[None, :]
-        return np.concatenate((current_map_one_hot, pos_map, reward_map), axis=0)
+        return np.concatenate((obstacle_map, current_map_one_hot, pos_map, reward_map), axis=0, dtype=float)
 
     def get_terminal(self) -> bool:
         return np.all(self.position == self.reward)
 
     def get_reward(self, prev_state: np.ndarray, action: int) -> float:
-        if self.position == self.reward:
+        if np.all(self.position == self.reward):
             return 1.
 
         # Here we see if a current has pushed us into a wall
@@ -151,8 +159,10 @@ class OceanNav(Environment):
         See if we change currents or not. If we do,
         update current map
         """
+        # sample a bool for each current group
         change_mask = self.rng.binomial(1, p=self.pmfs_1).astype(bool)
-        for i, change_bool in change_mask:
+
+        for i, change_bool in enumerate(change_mask):
             if change_bool:
 
                 group_info = self.currents[i]
@@ -162,15 +172,15 @@ class OceanNav(Environment):
 
                 # get our the current direction
                 sample_position = group_info['mapping'][0]
-                prev_current = current_map[sample_position[0], sample_position[1]]
-                current_options = all_current_options.remove(prev_current)
+                prev_current = current_map[sample_position[0], sample_position[1]] - 1
+                current_options = [c for c in all_current_options if c != prev_current]
 
                 # sample a new direction
                 new_current = self.rng.choice(current_options)
 
                 # set our new direction
                 for pos in group_info['mapping']:
-                    current_map[pos[0], pos[1]] = new_current
+                    current_map[pos[0], pos[1]] = new_current + 1
 
         return current_map
 
@@ -188,7 +198,7 @@ class OceanNav(Environment):
 
         # now we tick currents
         new_current_map = self.tick_currents(new_current_map)
-        flattened_new_current_map = np.flatten(new_current_map)
+        flattened_new_current_map = new_current_map.flatten()
 
         return np.concatenate((flattened_new_current_map, new_pos, reward_pos))
 

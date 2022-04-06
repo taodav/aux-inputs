@@ -86,10 +86,10 @@ if __name__ == "__main__":
             agent = LSTMAgent(network, optimizer, n_features,
                               n_actions, rand_key, args)
     elif args.arch == 'nn' and args.exploration == 'noisy':
-        agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape[0],
+        agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape,
                               train_env.action_space.n, rand_key, args)
     else:
-        agent = DQNAgent(network, optimizer, train_env.observation_space.shape[0],
+        agent = DQNAgent(network, optimizer, train_env.observation_space.shape,
                          train_env.action_space.n, rand_key, args)
 
     # Initialize our trainer

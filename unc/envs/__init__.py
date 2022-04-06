@@ -1,11 +1,14 @@
 import numpy as np
 import jax
+import json
 from pathlib import Path
+
 import unc.envs.wrappers.compass as cw
 import unc.envs.wrappers.rocksample as rw
 import unc.envs.wrappers.tiger as tw
 import unc.envs.wrappers.four_room as fr
 import unc.envs.wrappers.lobster as lf
+import unc.envs.wrappers.ocean_nav as on
 
 from .compass import CompassWorld
 from .fixed import FixedCompassWorld
@@ -16,6 +19,7 @@ from .simple_chain import SimpleChain
 from .dynamic_chain import DynamicChain
 from .four_room import FourRoom
 from .lobster import LobsterFishing
+from .ocean_nav import OceanNav
 from definitions import ROOT_DIR
 
 
@@ -58,21 +62,57 @@ lobster_wrapper_map = {
     'o': lf.BoundedDecayingTraceObservationWrapper
 }
 
+ocean_nav_wrapper_map = {
+    # 'o':
+}
 
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
     if "r" in env_str:
+        # r for rocksample
         env_str = env_str.replace('r', '')
         env = get_rocksample_env(rng, rand_key, env_str, *args, **kwargs)
     elif "t" in env_str:
+        # t for tiger env
         env = get_tiger_env(rng, env_str, *args, **kwargs)
+    elif "u" in env_str:
+        # u for underwater / ocean nav
+        # u has to go before 4 or 2, cuz u1, u2, u3 == ocean nav 1, 2, 3 etc.
+        env_str = env_str.replace('u', '')
+        assert any(c.isdigit() for c in env_str), "Missing OceanNav task specification"
+        env = get_ocean_nav_env(rng, env_str, *args, **kwargs)
     elif "4" in env_str:
+        # 4 for 4 room
         env_str = env_str.replace('4', '')
         env = get_four_room_env(rng, env_str, *args, **kwargs)
     elif "2" in env_str:
+        # 2 for 2 room / lobster env
         env_str = env_str.replace('2', '')
         env = get_lobster_env(rng, env_str, *args, **kwargs)
     else:
         env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
+    return env
+
+
+def get_ocean_nav_env(rng: np.random.RandomState,
+                      env_str: str,
+                      *args,
+                      task_fname: str = "task_{}_config.json",
+                      config_dir: Path = Path(ROOT_DIR, 'unc', 'envs', 'configs', 'ocean_nav'),
+                      **kwargs):
+    # get the first digit
+    task_num = None
+    for c in env_str:
+        if c.isdigit():
+            assert task_num is None, "More than one digit in env string"
+            task_num = c
+    task_fname = task_fname.format(c)
+    config_path = config_dir / task_fname
+    with open(config_path, 'r+') as f:
+        config = json.load(f)
+    env = OceanNav(rng, config)
+
+    # TODO: add wrappers here
+
     return env
 
 
