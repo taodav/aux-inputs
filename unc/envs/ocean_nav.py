@@ -112,14 +112,17 @@ class OceanNav(Environment):
         Channels are:
 
         obstacle map
-        (4x) current maps
+        (5x) current maps
         position map
         reward map
         """
         current_map, position, reward_pos = self.unpack_state(state)
         obstacle_map = np.expand_dims(self.obstacle_map.copy(), -1)
-        # current_map_one_hot = ind_to_one_hot(current_map, max_val=4, channels_first=True)
+
+        # One-hot vector, where we delete 0th channel b/c it's implied by the rest
         current_map_one_hot = ind_to_one_hot(current_map, max_val=4)
+        current_map_one_hot = current_map_one_hot[:, :, 1:]
+
         pos_map = np.expand_dims(pos_to_map(position, self.size), -1)
         reward_map = np.expand_dims(pos_to_map(reward_pos, self.size), -1)
         return np.concatenate((obstacle_map, current_map_one_hot, pos_map, reward_map), axis=-1, dtype=float)

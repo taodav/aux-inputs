@@ -63,6 +63,7 @@ lobster_wrapper_map = {
 }
 
 ocean_nav_wrapper_map = {
+    'v': on.VectorStateObservationWrapper
     # 'o':
 }
 
@@ -98,6 +99,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
                       *args,
                       task_fname: str = "task_{}_config.json",
                       config_dir: Path = Path(ROOT_DIR, 'unc', 'envs', 'configs', 'ocean_nav'),
+                      render: bool = True,
                       **kwargs):
     # get the first digit
     task_num = None
@@ -105,13 +107,26 @@ def get_ocean_nav_env(rng: np.random.RandomState,
         if c.isdigit():
             assert task_num is None, "More than one digit in env string"
             task_num = c
-    task_fname = task_fname.format(c)
+    task_fname = task_fname.format(task_num)
     config_path = config_dir / task_fname
     with open(config_path, 'r+') as f:
         config = json.load(f)
+
+    env_str = env_str.replace(task_num, '')
     env = OceanNav(rng, config)
 
     # TODO: add wrappers here
+    list_w = list(set(env_str))
+    wrapper_list = [ocean_nav_wrapper_map[w] for w in list_w if ocean_nav_wrapper_map[w] is not None]
+
+    ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
+    for w in ordered_wrapper_list:
+        if w == on.VectorStateObservationWrapper:
+            env = w(env)
+        else:
+            env = w(env)
+    if render:
+        env = on.OceanNavRenderWrapper(env)
 
     return env
 

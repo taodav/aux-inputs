@@ -38,6 +38,7 @@ class DQNAgent(Agent):
         self.eps = args.epsilon
         self.device = args.device
         self.args = args
+        self.curr_q = None
 
         self.error_fn = None
         if args.algo == 'sarsa':
@@ -51,7 +52,7 @@ class DQNAgent(Agent):
         self.eps = eps
 
     def act(self, state: np.ndarray) -> np.ndarray:
-        action, self._rand_key = self.functional_act(state, self.network_params, self._rand_key)
+        action, self._rand_key, self.curr_q = self.functional_act(state, self.network_params, self._rand_key)
         return action
 
     @partial(jit, static_argnums=0)
@@ -66,15 +67,15 @@ class DQNAgent(Agent):
         :return: epsilon-greedy action
         """
         probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
-        greedy_idx = self.greedy_act(state, network_params)
+        greedy_idx, qs = self.greedy_act(state, network_params)
         probs = index_add(probs, greedy_idx, 1 - self.eps)
 
         key, subkey = random.split(rand_key)
 
-        return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key
+        return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key, qs
 
     @partial(jit, static_argnums=0)
-    def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> jnp.ndarray:
+    def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """
         Get greedy actions given a state
         :param state: (b x *state.shape) State to find actions
@@ -82,7 +83,7 @@ class DQNAgent(Agent):
         :return: (b) Greedy actions
         """
         qs = self.Qs(state, network_params=network_params)
-        return jnp.argmax(qs, axis=1)
+        return jnp.argmax(qs, axis=1), qs
 
     def Qs(self, state: np.ndarray, network_params: hk.Params, *args) -> jnp.ndarray:
         """

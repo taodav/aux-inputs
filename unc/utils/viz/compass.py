@@ -73,7 +73,6 @@ def south_facing_agent(size: int, width: int = 5) -> np.ndarray:
     return np.flip(north_facing_agent(size, width=width), axis=0)
 
 
-
 def generate_agent_rgb(one_d_array: np.ndarray, val: int = 0, background_weights: np.ndarray = None):
     rgb = np.repeat(one_d_array[..., np.newaxis], 3, axis=-1)
     agent = (rgb == 1)

@@ -203,7 +203,7 @@ class BufferTrainer(Trainer):
 
             # FOR DEBUGGING
             # print()
-            # print(f"Q-values at end of episode: {self.agent.curr_q}")
+            print(f"Q-values at end of episode: {self.agent.curr_q}")
             # print(f"RNN Q-values at end of episode: {self.agent.rnn_curr_q}")
 
             self.episode_num += 1

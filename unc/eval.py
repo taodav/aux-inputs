@@ -27,10 +27,14 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
         agent.reset()
         action = agent.act(obs).item()
         if render:
+            q_vals = None
+            if hasattr(agent, "curr_q"):
+                q_vals = agent.curr_q[0]
             imgs.append(env.render(mode='rgb_array',
                                    show_obs=show_obs,
                                    show_weights=show_weights,
-                                   action=action))
+                                   action=action,
+                                   q_vals=q_vals))
 
         agent.set_eps(test_eps)
 
@@ -48,10 +52,14 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
 
             rews.append(reward)
             if render:
+                q_vals = None
+                if hasattr(agent, "curr_q"):
+                    q_vals = agent.curr_q[0]
                 imgs.append(env.render(mode='rgb_array',
                                        show_obs=show_obs,
                                        show_weights=show_weights,
-                                       action=action))
+                                       action=action,
+                                       q_vals=q_vals))
 
             if done:
                 break

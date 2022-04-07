@@ -17,6 +17,9 @@ class OceanNavWrapper(gym.Wrapper):
         if isinstance(self.env, OceanNavWrapper):
             assert self.env.priority <= self.priority
 
+    def unpack_state(self, state: np.ndarray):
+        return self.env.unpack_state(state)
+
     @property
     def obstacle_map(self):
         return self.env.obstacle_map
