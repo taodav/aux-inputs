@@ -6,7 +6,6 @@ import haiku as hk
 import optax
 from functools import partial
 from jax import random, jit, vmap
-from jax.ops import index_add
 from optax import GradientTransformation
 from pathlib import Path
 from typing import Tuple, Callable, Iterable
@@ -36,7 +35,6 @@ class DQNAgent(Agent):
         self.optimizer = optimizer
         self.optimizer_state = self.optimizer.init(self.network_params)
         self.eps = args.epsilon
-        self.device = args.device
         self.args = args
         self.curr_q = None
 
@@ -68,7 +66,7 @@ class DQNAgent(Agent):
         """
         probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
         greedy_idx, qs = self.greedy_act(state, network_params)
-        probs = index_add(probs, greedy_idx, 1 - self.eps)
+        probs = probs.at[greedy_idx].add(1 - self.eps)
 
         key, subkey = random.split(rand_key)
 

@@ -3,7 +3,6 @@ import haiku as hk
 import jax
 import optax
 import jax.numpy as jnp
-from jax.ops import index_add
 from jax import vmap, random, jit
 from functools import partial
 from typing import Tuple

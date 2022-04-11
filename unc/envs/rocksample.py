@@ -5,7 +5,6 @@ import numpy as np
 import jax.numpy as jnp
 from functools import partial
 from jax import jit, random, vmap
-from jax.ops import index_update
 from typing import Tuple
 from itertools import product
 from pathlib import Path
@@ -259,7 +258,7 @@ class RockSample(Environment):
         key, subkey = random.split(rand_key)
         rock_obs = random.choice(subkey, choices, (1, ), p=probs)[0]
 
-        new_rocks_obs = index_update(current_rocks_obs, rock_idx, rock_obs)
+        new_rocks_obs = current_rocks_obs.at[rock_idx].set(rock_obs)
         return new_rocks_obs, key
 
     @partial(jit, static_argnums=0)

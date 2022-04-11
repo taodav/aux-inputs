@@ -25,6 +25,10 @@ class OceanNavWrapper(gym.Wrapper):
         return self.env.obstacle_map
 
     @property
+    def glass_map(self):
+        return self.env.glass_map
+
+    @property
     def current_map(self):
         return self.env.current_map
 

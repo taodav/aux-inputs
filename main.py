@@ -1,5 +1,6 @@
 import numpy as np
 import optax
+import jax
 from jax import random
 from pathlib import Path
 
@@ -21,6 +22,10 @@ if __name__ == "__main__":
     # Some argument post-processing
     results_fname, results_fname_npy = get_results_fname(args)
     args.results_fname = results_fname_npy
+
+    # Setting our platform
+    # TODO: GPU determinism?
+    jax.config.update('jax_platform_name', args.platform)
 
     # Seeding
     np.random.seed(args.seed)

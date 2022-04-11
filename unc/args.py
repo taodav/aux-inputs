@@ -91,7 +91,7 @@ class Args(Tap):
     random_start: bool = True  # Do we have a random initial state distribution?
 
     seed: int = 2020  # Random seed
-    device: str = "cpu"  # What device do we use? (cpu | gpu)
+    platform: str = "cpu"  # What platform do we use? (cpu | gpu)
 
     test_eps: float = 0.0  # What's our test epsilon?
     log_dir: Union[Path, str] = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?

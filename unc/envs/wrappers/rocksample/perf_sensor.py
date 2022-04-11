@@ -1,7 +1,6 @@
 import numpy as np
 from functools import partial
 from jax import jit, random, vmap
-from jax.ops import index_update
 from .wrapper import RockSampleWrapper
 
 
@@ -56,7 +55,7 @@ class PerfectSensorWrapper(RockSampleWrapper):
         # w.p. prob we return correct rock observation.
         rock_obs = rock_morality[rock_idx]
 
-        new_rocks_obs = index_update(current_rocks_obs, rock_idx, rock_obs)
+        new_rocks_obs = current_rocks_obs.at[rock_idx].set(rock_obs)
         return new_rocks_obs, rand_key
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:

@@ -40,7 +40,6 @@ class LSTMAgent(DQNAgent):
         self.optimizer = optimizer
         self.optimizer_state = self.optimizer.init(self.network_params)
         self.eps = args.epsilon
-        self.device = args.device
         self.args = args
         self.curr_q = None
 

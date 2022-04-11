@@ -17,12 +17,14 @@ def get_current_rgb(current_direction: int, size: int, val: int = 0):
 
 def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
                position_map: np.ndarray, reward_map: np.ndarray,
+               glass_map: np.ndarray = None,
                scale: int = 50, grid_lines: bool = True):
     """
     Make a pixel representation of the OceanNav env
     """
     space_color = np.array([255, 255, 255], dtype=np.uint8)
     obstacle_color = np.array([255, 167, 0], dtype=np.uint8)
+    glass_color = np.array([102, 178, 255], dtype=np.uint8)
     goal_color = np.array([0, 150, 0], dtype=np.uint8)
     agent_color = np.array([0, 0, 0], dtype=np.uint8)
     grid_color = None
@@ -45,7 +47,10 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
         for x in range(env_size):
             to_fill = None
             if obstacle_map[y, x] != 0:
-                to_fill = np.zeros((scale, scale, 3)) + obstacle_color
+                if glass_map is not None and glass_map[y, x] != 0:
+                    to_fill = np.zeros((scale, scale, 3)) + glass_color
+                else:
+                    to_fill = np.zeros((scale, scale, 3)) + obstacle_color
             else:
                 maybe_white = False
                 if current_map[y, x].sum() > 0:

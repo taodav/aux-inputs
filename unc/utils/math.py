@@ -1,6 +1,5 @@
 import jax.lax
 import jax.numpy as jnp
-from jax.ops import index_add
 
 
 def mse(predictions: jnp.ndarray, targets: jnp.ndarray = None):
@@ -32,7 +31,7 @@ def expected_sarsa_error(q: jnp.ndarray, a: int, r: jnp.ndarray, g: jnp.ndarray,
                          eps: float = 0.1):
     next_greedy_action = q1.argmax()
     pi = jnp.ones_like(q1) * (eps / q1.shape[-1])
-    pi = index_add(pi, next_greedy_action, (1 - eps))
+    pi = pi.at[next_greedy_action].add(1 - eps)
     e_q1 = (pi * q1).sum(axis=-1)
     target = r + g * e_q1
     target = jax.lax.stop_gradient(target)

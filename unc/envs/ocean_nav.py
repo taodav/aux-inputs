@@ -65,6 +65,10 @@ class OceanNav(Environment):
         # Map of all obstacles
         self.obstacle_map = np.array(self.config['obstacle_map'], dtype=np.int16)
 
+        self.glass_map = None
+        if 'glass_map' in self.config:
+            self.glass_map = np.array(self.config['glass_map'], dtype=np.int16)
+
         # Map of all current directions
         self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
 
@@ -182,7 +186,9 @@ class OceanNav(Environment):
                 current_options = [c for c in all_current_options if c != prev_current]
 
                 # sample a new direction
-                new_current = self.rng.choice(current_options)
+                new_current = prev_current
+                if current_options:
+                    new_current = self.rng.choice(current_options)
 
                 # set our new direction
                 for pos in group_info['mapping']:

@@ -5,7 +5,6 @@ import optax
 from jax import random, jit, vmap
 import jax
 import jax.numpy as jnp
-from jax.ops import index_add
 from functools import partial
 from typing import Tuple, List
 
@@ -103,7 +102,6 @@ class kLSTMAgent(LSTMAgent):
         self.vmjit_functional_rnn_update = jit(vmap(super(kLSTMAgent, self).functional_update, in_axes=axes))
 
         self.eps = args.epsilon
-        self.device = args.device
         self.args = args
 
         # FOR DEBUGGING
