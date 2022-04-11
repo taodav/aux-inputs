@@ -22,7 +22,8 @@ class Args(Tap):
     s = Ground-truth state concatenated to observation.
     b = With some prob., sample a random observation over the ground-truth. "Blurry observations" .
     i = SLIP (i for ice) - When you move forward, with some prob., stay in the same spot.
-    p = Particle filter observations, where the mean and variance of the particles are prepended to observation.
+    p = [STATE-BASED ENVS] Particle filter observations, where the mean and variance of the particles are prepended to observation.
+    p = [OBS-BASED ENVS] Partially observable observations
     m = Particle filter with only mean of particles + observations + reward. This will only work if "p" is in env string.
     v = Particle filter with only variance of particles + observations + reward. This will only work if "p" is in env string.
         If m or v is in string without p, nothing happens.

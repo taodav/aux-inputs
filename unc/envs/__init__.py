@@ -64,7 +64,8 @@ lobster_wrapper_map = {
 
 ocean_nav_wrapper_map = {
     'v': on.VectorStateObservationWrapper,
-    'a': on.AgentCentricObservationWrapper
+    'a': on.AgentCentricObservationWrapper,
+    'p': on.PartiallyObservableWrapper
     # 'o':
 }
 

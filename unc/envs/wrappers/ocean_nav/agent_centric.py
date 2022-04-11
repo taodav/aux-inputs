@@ -25,6 +25,7 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         self.obstacle_filler_idx = 1
         self.position_filler_idx = 0
         self.reward_filler_idx = 0
+        self.glass_filler_idx = 0
         self.current_filler = np.array([0, 0, 0, 0], dtype=np.int16)
 
         self.expanded_obstacle_map = np.zeros((self.expanded_map_size, self.expanded_map_size, 1), dtype=np.int16)
@@ -36,6 +37,9 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         self.expanded_current_map = np.zeros((self.expanded_map_size, self.expanded_map_size, 4), dtype=np.int16)
         self.expanded_current_map[:, :] = self.current_filler
 
+        self.expanded_glass_map = np.zeros_like(self.expanded_obstacle_map)
+        self.expanded_glass_map += self.glass_filler_idx
+
         self.expanded_map_template = np.concatenate((self.expanded_obstacle_map, self.expanded_current_map, self.expanded_reward_map), axis=-1)
         self.expanded_map_agent_pos = np.array([self.expanded_map_size // 2, self.expanded_map_size // 2], dtype=np.int16)
 
@@ -45,7 +49,8 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
             low=low, high=high
         )
 
-    def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
+    def get_obs(self, state: np.ndarray, *args,
+                return_expanded_glass_map: bool = False, **kwargs) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         obs = super(AgentCentricObservationWrapper, self).get_obs(state, *args, **kwargs)
 
         # we still assume our obs has the same structure as the unwrapped env get_obs in terms of channels.
@@ -58,9 +63,14 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         y_start = self.expanded_map_agent_pos[0] - pos[0]
         x_start = self.expanded_map_agent_pos[1] - pos[1]
         expanded_map[y_start:y_start + self.map_size, x_start:x_start + self.map_size] = map_to_paste
+        expanded_map = expanded_map.astype(float)
 
-        return expanded_map.astype(float)
+        if return_expanded_glass_map:
+            expanded_glass_map = self.expanded_glass_map.copy()
+            expanded_glass_map[y_start:y_start + self.map_size, x_start:x_start + self.map_size, 0] = self.glass_map
+            return expanded_map, expanded_glass_map
 
+        return expanded_map
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)

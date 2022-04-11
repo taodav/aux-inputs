@@ -14,6 +14,8 @@ def cnn(hidden_size: int, actions: int, x: np.ndarray):
     kernel_sizes = [5, 4, 2]
     if list(x.shape[1:]) == [17, 17, 6]:
         kernel_sizes = [8, 6, 5]
+    elif list(x.shape[1:]) == [5, 5, 6]:
+        kernel_sizes = [3, 2, 2]
 
     convs = hk.Sequential([
         Conv2D(output_channels=32, kernel_shape=kernel_sizes[0], stride=1, padding="VALID",
