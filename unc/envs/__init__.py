@@ -63,7 +63,8 @@ lobster_wrapper_map = {
 }
 
 ocean_nav_wrapper_map = {
-    'v': on.VectorStateObservationWrapper
+    'v': on.VectorStateObservationWrapper,
+    'a': on.AgentCentricObservationWrapper
     # 'o':
 }
 
@@ -121,10 +122,8 @@ def get_ocean_nav_env(rng: np.random.RandomState,
 
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
     for w in ordered_wrapper_list:
-        if w == on.VectorStateObservationWrapper:
-            env = w(env)
-        else:
-            env = w(env)
+        env = w(env)
+
     if render:
         env = on.OceanNavRenderWrapper(env)
 

@@ -36,7 +36,14 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         self.expanded_current_map = np.zeros((self.expanded_map_size, self.expanded_map_size, 4), dtype=np.int16)
         self.expanded_current_map[:, :] = self.current_filler
 
-        self.expanded_map_template = np.concatenate((self.expanded_obstacle_map, self.expanded_current_map, self.expanded_reward_map))
+        self.expanded_map_template = np.concatenate((self.expanded_obstacle_map, self.expanded_current_map, self.expanded_reward_map), axis=-1)
+        self.expanded_map_agent_pos = np.array([self.expanded_map_size // 2, self.expanded_map_size // 2], dtype=np.int16)
+
+        low = np.zeros_like(self.expanded_map_template)
+        high = np.ones_like(low)
+        self.observation_space = gym.spaces.Box(
+            low=low, high=high
+        )
 
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
         obs = super(AgentCentricObservationWrapper, self).get_obs(state, *args, **kwargs)
@@ -47,13 +54,12 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
 
         map_to_paste = np.delete(obs, 5, axis=2)
 
-        expanded_pos = np.array([self.map_size - 1 - pos[0], self.map_size - 1 - pos[1]])
         expanded_map = self.expanded_map_template.copy()
-        y_start = expanded_pos[0] - pos[0]
-        x_start = expanded_pos[1] - pos[1]
+        y_start = self.expanded_map_agent_pos[0] - pos[0]
+        x_start = self.expanded_map_agent_pos[1] - pos[1]
         expanded_map[y_start:y_start + self.map_size, x_start:x_start + self.map_size] = map_to_paste
 
-        return expanded_map
+        return expanded_map.astype(float)
 
 
     def reset(self, **kwargs) -> np.ndarray:
