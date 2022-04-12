@@ -101,6 +101,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
                       *args,
                       task_fname: str = "task_{}_config.json",
                       config_dir: Path = Path(ROOT_DIR, 'unc', 'envs', 'configs', 'ocean_nav'),
+                      distance_noise: bool = True,
                       render: bool = True,
                       **kwargs):
     # get the first digit
@@ -123,7 +124,10 @@ def get_ocean_nav_env(rng: np.random.RandomState,
 
     ordered_wrapper_list = sorted(wrapper_list, key=lambda w: w.priority)
     for w in ordered_wrapper_list:
-        env = w(env)
+        if w == on.PartiallyObservableWrapper:
+            env = w(env, distance_noise=distance_noise)
+        else:
+            env = w(env)
 
     if render:
         env = on.OceanNavRenderWrapper(env)

@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-from jax import jit
 from typing import Union, Tuple
 
 from .agent_centric import AgentCentricObservationWrapper, OceanNavWrapper, OceanNav
@@ -9,7 +8,10 @@ from .agent_centric import AgentCentricObservationWrapper, OceanNavWrapper, Ocea
 class PartiallyObservableWrapper(AgentCentricObservationWrapper):
     priority = 3
 
-    def __init__(self, env: Union[OceanNav, OceanNavWrapper], window_size: int = 5):
+    def __init__(self, env: Union[OceanNav, OceanNavWrapper],
+                 window_size: int = 5,
+                 distance_noise: bool = False,
+                 prob_levels: Tuple[int, int, int] = (1, 0.8, 0.6)):
         """
         Partially observable OceanNav environment.
 
@@ -24,6 +26,7 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         assert not isinstance(env, AgentCentricObservationWrapper), "Cannot have PartiallyObservable wrapper around AgentCentric"
         super(PartiallyObservableWrapper, self).__init__(env)
 
+        self.distance_noise = distance_noise
         self.window_size = window_size
         assert self.window_size % 2 != 0, "window_size must be odd number"
 
@@ -32,6 +35,8 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
             raise NotImplementedError("Haven't implemented occlusion for anything larger than 5 yet.")
 
         half = self.window_size // 2
+        if distance_noise:
+            assert len(prob_levels) == half + 1, "Probabilities don't match window_size"
 
         larger_obs_shape = super(PartiallyObservableWrapper, self).observation_space.shape
         agent_pos = np.array(larger_obs_shape[:-1]) // 2
@@ -47,6 +52,21 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         self.observation_space = gym.spaces.Box(
             low=low, high=high
         )
+        self.prob_levels = prob_levels
+        self.prob_map = self.generate_prob_map()
+
+    def generate_prob_map(self) -> np.ndarray:
+        prob_map = np.zeros((self.window_size, self.window_size))
+
+        middle = self.window_size // 2
+        prob_map[middle, middle] = self.prob_levels[0]
+
+        for i, prob in enumerate(self.prob_levels[1:], start=1):
+            inner = prob_map[middle - i:-(middle - i)]
+
+
+
+
 
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
         expanded_ac_map, expanded_glass_map = \
