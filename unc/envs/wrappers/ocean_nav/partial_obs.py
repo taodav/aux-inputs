@@ -84,15 +84,11 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         current_mask = to_flip_mask[:, :, 1]
         reward_mask = to_flip_mask[:, :, 2]
 
-        # all the incorrect ones, we flip
-        obs[:, :, 0][obstacle_mask] = 1 - obs[:, :, 0][obstacle_mask]
-
         # for current it's a bit more complicated. For every bit we need to flip,
         # we randomly sample a current (or no current)
-        currents_to_sample = obs[:, :, 1:5][current_mask].shape[0]
-        random_currents = self.rng.choice(np.arange(5), size=currents_to_sample)
+        random_currents = self.rng.choice(np.arange(5), size=current_mask.shape)
         non_zero_currents = random_currents != 0
-        random_nonzero_currents_idx = random_currents[non_zero_currents] - 1
+        random_currents_shifted = random_currents - 1
 
         # we first zero out all the currents we want to flip
         obs[:, :, 1:5][current_mask] = 0
