@@ -11,7 +11,7 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
     def __init__(self, env: Union[OceanNav, OceanNavWrapper],
                  window_size: int = 5,
                  distance_noise: bool = False,
-                 prob_levels: Tuple[int, int, int] = (1, 0.8, 0.6)):
+                 prob_levels: Tuple[int, int, int] = (1, 0.85, 0.7)):
         """
         Partially observable OceanNav environment.
 
@@ -53,19 +53,52 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
             low=low, high=high
         )
         self.prob_levels = prob_levels
-        self.prob_map = self.generate_prob_map()
+
+        # Our prob noise map only has 3 channels.
+        # 1 for obstacles, 1 for current and 1 for reward position.
+        self.prob_map = np.repeat(self.generate_prob_map()[:, :, None], 3)
+
+        # self.potential_reward_map
 
     def generate_prob_map(self) -> np.ndarray:
         prob_map = np.zeros((self.window_size, self.window_size))
 
         middle = self.window_size // 2
+        prob_map[middle - 1:-(middle - 1), middle - 1:-(middle - 1)] = self.prob_levels[1]
         prob_map[middle, middle] = self.prob_levels[0]
 
-        for i, prob in enumerate(self.prob_levels[1:], start=1):
-            inner = prob_map[middle - i:-(middle - i)]
+        prev = prob_map[middle - 1:-(middle - 1), middle - 1:-(middle - 1)]
+        for i, prob in enumerate(self.prob_levels[2:], start=2):
+            prob_map[middle - i:-(middle - i), middle - i:-(middle - i)] = prob
+            prev_idx = middle - i + 1
+            prob_map[prev_idx:-prev_idx, prev_idx:-prev_idx] = prev
+            prev = prob_map[middle - i:-(middle - i), middle - i:-(middle - i)]
 
+        return prob_map
 
+    def noisify_observations(self, obs: np.ndarray) -> np.ndarray:
+        # we invert here, since the prob_map shows probability of accurate observations
+        to_flip_mask = np.invert(self.rng.binomial(1, p=self.prob_map).astype(bool))
 
+        obstacle_mask = to_flip_mask[:, :, 0]
+        current_mask = to_flip_mask[:, :, 1]
+        reward_mask = to_flip_mask[:, :, 2]
+
+        # all the incorrect ones, we flip
+        obs[:, :, 0][obstacle_mask] = 1 - obs[:, :, 0][obstacle_mask]
+
+        # for current it's a bit more complicated. For every bit we need to flip,
+        # we randomly sample a current (or no current)
+        currents_to_sample = obs[:, :, 1:5][current_mask].shape[0]
+        random_currents = self.rng.choice(np.arange(5), size=currents_to_sample)
+        non_zero_currents = random_currents != 0
+        random_nonzero_currents_idx = random_currents[non_zero_currents] - 1
+
+        # we first zero out all the currents we want to flip
+        obs[:, :, 1:5][current_mask] = 0
+
+        # now we set the corresponding observation
+        obs[:, :, 1:5][current_mask][non_zero_currents][np.arange(random_nonzero_currents_idx.shape[0]), random_nonzero_currents_idx] = 1
 
 
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
@@ -83,6 +116,11 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         final_map[:, :, 0][occlusion_mask] = self.obstacle_filler_idx
         final_map[:, :, 1:5][occlusion_mask] = self.current_filler
         final_map[:, :, 5][occlusion_mask] = self.self.reward_filler_idx
+
+        # we randomly flip our binary observations
+        if self.distance_noise:
+            final_map = self.noisify_observations(final_map)
+
         return final_map
 
     @staticmethod
