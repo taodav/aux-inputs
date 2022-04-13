@@ -65,7 +65,8 @@ lobster_wrapper_map = {
 ocean_nav_wrapper_map = {
     'v': on.VectorStateObservationWrapper,
     'a': on.AgentCentricObservationWrapper,
-    'p': on.PartiallyObservableWrapper
+    'p': on.PartiallyObservableWrapper,
+    'm': on.ObservationMapWrapper
     # 'o':
 }
 
@@ -103,6 +104,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
                       config_dir: Path = Path(ROOT_DIR, 'unc', 'envs', 'configs', 'ocean_nav'),
                       distance_noise: bool = True,
                       render: bool = True,
+                      uncertainty_decay: float = 1.,
                       **kwargs):
     # get the first digit
     task_num = None
@@ -126,6 +128,8 @@ def get_ocean_nav_env(rng: np.random.RandomState,
     for w in ordered_wrapper_list:
         if w == on.PartiallyObservableWrapper:
             env = w(env, distance_noise=distance_noise)
+        elif w == on.ObservationMapWrapper:
+            env = w(env, distance_noise=distance_noise, uncertainty_decay=uncertainty_decay)
         else:
             env = w(env)
 

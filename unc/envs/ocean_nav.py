@@ -65,9 +65,7 @@ class OceanNav(Environment):
         # Map of all obstacles
         self.obstacle_map = np.array(self.config['obstacle_map'], dtype=np.int16)
 
-        self.glass_map = None
-        if 'glass_map' in self.config:
-            self.glass_map = np.array(self.config['glass_map'], dtype=np.int16)
+        self.glass_map = np.array(self.config['glass_map'], dtype=np.int16)
 
         # Map of all current directions
         self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
@@ -218,5 +216,6 @@ class OceanNav(Environment):
         prev_state = self.state
         self.state = self.transition(self.state, action)
 
-        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
+        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {'position': self.position.copy()}
+
 
