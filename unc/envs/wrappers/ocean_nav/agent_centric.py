@@ -43,7 +43,7 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         self.expanded_map_template = np.concatenate((self.expanded_obstacle_map, self.expanded_current_map, self.expanded_reward_map), axis=-1)
         self.expanded_map_agent_pos = np.array([self.expanded_map_size // 2, self.expanded_map_size // 2], dtype=np.int16)
 
-        low = np.zeros_like(self.expanded_map_template)
+        low = np.zeros_like(self.expanded_map_template, dtype=int)
         high = np.ones_like(low)
         self.observation_space = gym.spaces.Box(
             low=low, high=high

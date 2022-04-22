@@ -4,7 +4,7 @@
   "currents": [
     {
       "mapping": [[7, 3], [7, 4], [7, 5], [8, 3], [8, 4], [8, 5]],
-      "change_rate": 40,
+      "change_rate": 80,
       "directions": [1, 3]
     }
   ],

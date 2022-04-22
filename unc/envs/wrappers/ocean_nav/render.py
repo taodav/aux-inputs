@@ -21,7 +21,7 @@ class OceanNavRenderWrapper(OceanNavWrapper):
         reward_map = obs[:, :, 6]
 
         viz = arr_to_viz(obstacle_map, current_map, position_map, reward_map,
-                         glass_map=self.glass_map)
+                         glass_map=self.glass_map, kelp_map=self.kelp_map)
 
         strs_to_attach = []
 

@@ -49,7 +49,9 @@ if __name__ == "__main__":
                         count_decay=args.count_decay,
                         trace_decay=args.trace_decay,
                         unnormalized_counts=args.unnormalized_counts,
-                        po_degree=args.po_degree)
+                        po_degree=args.po_degree,
+                        distance_noise=args.distance_noise,
+                        uncertainty_decay=args.uncertainty_decay)
 
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:
@@ -69,7 +71,6 @@ if __name__ == "__main__":
         output_size = train_env.action_space.n * args.atoms
     network = build_network(args.n_hidden, output_size, model_str=model_str)
     optimizer = optax.adam(args.step_size)
-
 
     if args.arch == 'lstm':
         n_features = train_env.observation_space.shape[0]
@@ -113,7 +114,7 @@ if __name__ == "__main__":
 
     # Potentially run a test episode
     if args.view_test_ep:
-        imgs, rews = test_episodes(agent, train_env, n_episodes=1,
+        imgs, rews = test_episodes(agent, train_env, n_episodes=args.test_episodes,
                                    render=True, test_eps=args.test_eps,
                                    max_episode_steps=args.max_episode_steps)
         vod_path = args.results_dir / f"{results_fname}.mp4"

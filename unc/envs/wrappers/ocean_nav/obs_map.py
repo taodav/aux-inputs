@@ -40,10 +40,11 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
 
         self.obs_map_size = self.map_size + 2 * self.obs_map_buffer
 
-        self.observation_map = np.zeros((self.obs_map_size, self.obs_map_size, channels))
+        self.observation_map = np.zeros((self.obs_map_size, self.obs_map_size, channels), dtype=np.half)
+        self.expanded_obs_map = np.zeros((self.expanded_map_size, self.expanded_map_size, channels), dtype=np.half)
 
-        low = np.zeros_like(self.expanded_map_template)
-        high = np.ones_like(low)
+        low = np.zeros_like(self.expanded_obs_map, dtype=np.half)
+        high = np.ones_like(low, dtype=np.half)
         self.observation_space = gym.spaces.Box(
             low=low, high=high
         )
@@ -54,7 +55,16 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
         It turns out, with the edge buffers in window_obs, the position we need to incorporate
         is exactly the start position of the window to add.
         """
+        if self.uncertainty_decay < 1.:
+            if self.distance_noise:
+                raise NotImplementedError("Haven't decided on how to incorporate distance noise yet into uncertainty")
+            window_shape = window_obs.shape[:-1]
+            certainty = np.ones(window_shape + (1,))
+            window_obs = np.concatenate((window_obs, certainty), axis=-1)
         self.observation_map[pos[0]:pos[0] + window_obs.shape[0], pos[1]:pos[1] + window_obs.shape[1]] = window_obs
+
+    def tick_uncertainties(self):
+        self.observation_map[:, :, -1] *= self.uncertainty_decay
 
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
@@ -66,7 +76,7 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
         # first we get rid of our buffer
         map_centric_map = self.observation_map[self.obs_map_buffer:-self.obs_map_buffer, self.obs_map_buffer:-self.obs_map_buffer]
 
-        expanded_map = self.expanded_map_template.copy()
+        expanded_map = self.expanded_obs_map.copy()
         y_start = self.expanded_map_agent_pos[0] - pos[0]
         x_start = self.expanded_map_agent_pos[1] - pos[1]
         expanded_map[y_start:y_start + self.map_size, x_start:x_start + self.map_size] = map_centric_map
@@ -84,6 +94,9 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         _, reward, done, info = self.env.step(action)
         window_obs = super(ObservationMapWrapper, self).get_obs(self.state)
+
+        if self.uncertainty_decay < 1.:
+            self.tick_uncertainties()
 
         self.incorporate_obs(window_obs, self.position)
 

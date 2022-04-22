@@ -45,6 +45,9 @@ class Args(Tap):
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
 
+    distance_noise: bool = False  # [OCEANNAV] For our OceanNav partially observable wrappers, do we use distance noise?
+    uncertainty_decay: float = 1.  # [OCEANNAV] How quickly do we decay our uncertainty?
+
     rock_obs_init: float = 0.  # [ROCKSAMPLE] What value do we initialize our rock observations to?
     half_efficiency_distance: float = 20.  # [ROCKSAMPLE] Half efficiency distance for checking rocks
 
@@ -99,6 +102,7 @@ class Args(Tap):
     results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
+    test_episodes: int = 5  # How many episodes do we test on at the end of training?
     save_model: bool = False  # Do we save our model after finishing training?
 
     replay: bool = False  # Do we use a replay buffer to learn?

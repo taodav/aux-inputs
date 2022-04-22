@@ -29,6 +29,10 @@ class OceanNavWrapper(gym.Wrapper):
         return self.env.glass_map
 
     @property
+    def kelp_map(self):
+        return self.env.kelp_map
+
+    @property
     def current_map(self):
         return self.env.current_map
 

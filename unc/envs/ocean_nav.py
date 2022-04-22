@@ -34,6 +34,9 @@ class OceanNav(Environment):
         self.size = self.config['size']
         self.rng = rng
         self.current_bump_reward = self.config['current_bump_reward']
+        self.kelp_prob = 0.
+        if "kelp_prob" in self.config:
+            self.kelp_prob = self.config["kelp_prob"]
 
         self.position = None
         self.reward = None
@@ -46,10 +49,8 @@ class OceanNav(Environment):
         self.state_space = gym.spaces.MultiDiscrete(self.size * self.size + 2 + 2)
         self.action_space = gym.spaces.Discrete(4)
 
-        # low = np.zeros((7, self.size, self.size))
-        # high = np.ones((7, self.size, self.size))
-        low = np.zeros((self.size, self.size, 7))
-        high = np.ones((self.size, self.size, 7))
+        low = np.zeros((self.size, self.size, 7), dtype=int)
+        high = np.ones((self.size, self.size, 7), dtype=int)
         self.observation_space = gym.spaces.Box(
             low=low, high=high
         )
@@ -67,6 +68,10 @@ class OceanNav(Environment):
 
         self.glass_map = np.array(self.config['glass_map'], dtype=np.int16)
 
+        self.kelp_map = np.zeros_like(self.glass_map)
+        if "kelp_map" in self.config:
+            self.kelp_map = np.array(self.config['kelp_map'], dtype=np.int16)
+
         # Map of all current directions
         self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
 
@@ -80,7 +85,11 @@ class OceanNav(Environment):
     def reset_currents(self):
         self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
         for curr_info in self.currents:
-            sampled_curr_direction = self.rng.choice(curr_info['directions'])
+            if "start_probs" in curr_info:
+                sampled_curr_direction = self.rng.choice(curr_info['directions'], p=curr_info["start_probs"])
+            else:
+                sampled_curr_direction = self.rng.choice(curr_info['directions'])
+
             for y, x in curr_info['mapping']:
                 self.current_map[y, x] = sampled_curr_direction + 1
 
@@ -153,8 +162,9 @@ class OceanNav(Environment):
     def move(self, pos: np.ndarray, action: int):
         new_pos = pos.copy()
 
-        new_pos += self.direction_mapping[action]
-        new_pos = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
+        if self.kelp_prob == 0. or self.kelp_map[pos[0], pos[1]] == 0 or self.rng.rand() > self.kelp_prob:
+            new_pos += self.direction_mapping[action]
+            new_pos = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
 
         # if we bump into a wall inside the grid
         if self.obstacle_map[new_pos[0], new_pos[1]] > 0:
@@ -185,8 +195,10 @@ class OceanNav(Environment):
 
                 # sample a new direction
                 new_current = prev_current
-                if current_options:
+                if len(current_options) > 1:
                     new_current = self.rng.choice(current_options)
+                elif current_options:
+                    new_current = current_options[0]
 
                 # set our new direction
                 for pos in group_info['mapping']:
@@ -194,12 +206,22 @@ class OceanNav(Environment):
 
         return current_map
 
+    @staticmethod
+    def opposite_directions(dir_1: int, dir_2: int):
+        return (dir_1 == 0 and dir_2 == 2) or (dir_1 == 2 and dir_2 == 0) or (dir_1 == 1 and dir_2 == 3) or (dir_1 == 3 and dir_2 == 1)
+
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         current_map, position, reward_pos = self.unpack_state(state)
         new_current_map = current_map.copy()
 
         # We first move according to our action
-        new_pos = self.move(position, action)
+        # have it so that you can't move against the current direction if it exists
+        # you're currently in (swim orthogonal to the rip!)
+        old_current_direction = current_map[position[0], position[1]]
+        if old_current_direction > 0 and self.opposite_directions(old_current_direction - 1, action):
+            new_pos = position.copy()
+        else:
+            new_pos = self.move(position, action)
 
         # now we move again according to any currents
         current_direction = current_map[new_pos[0], new_pos[1]]

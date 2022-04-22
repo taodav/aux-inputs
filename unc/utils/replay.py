@@ -7,7 +7,9 @@ from unc.utils import Batch
 
 class ReplayBuffer:
     def __init__(self, capacity: int, rng: np.random.RandomState,
-                 obs_size: Tuple, state_size: Tuple = None):
+                 obs_size: Tuple,
+                 obs_dtype: type,
+                 state_size: Tuple = None):
         """
         Replay buffer that saves both observation and state.
         :param capacity:
@@ -19,9 +21,13 @@ class ReplayBuffer:
         self.state_size = state_size
         self.obs_size = obs_size
 
+        # TODO: change this to half precision to save GPU memory.
         if self.state_size is not None:
             self.s = np.zeros((self.capacity, *self.state_size))
-        self.obs = np.zeros((self.capacity, *self.obs_size))
+        if obs_dtype is not None:
+            self.obs = np.zeros((self.capacity, *self.obs_size), dtype=obs_dtype)
+        else:
+            self.obs = np.zeros((self.capacity, *self.obs_size))
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
         self.r = np.zeros(self.capacity, dtype=np.float)

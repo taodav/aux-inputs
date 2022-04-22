@@ -25,21 +25,25 @@ if __name__ == "__main__":
     env.position[0] = 2
     env.position[1] = 4
 
-    actions = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 0, 0]
+    actions = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3]
     for a in actions:
         obs, rew, done, info = env.step(a)
 
     expected_obstacle_map = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 0, 0, 0, 0, 0, 1, 0],
-        [0, 1, 0, 0, 0, 0, 0, 1, 0],
-        [0, 1, 0, 0, 0, 0, 0, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 0, 0, 0, 1, 1, 0],
+        [1, 1, 1, 0, 0, 0, 1, 1, 1],
         [0, 1, 1, 0, 0, 0, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0]
     ])
     observation_map = env.observation_map[env.obs_map_buffer:-env.obs_map_buffer, env.obs_map_buffer:-env.obs_map_buffer]
     obstacle_map = observation_map[:, :, 0]
     assert np.all(obstacle_map == expected_obstacle_map), "discrepancy in obstacle maps."
+
+    pos = info['position']
+    agent_centric_obstacle_map = obs[0:9, 2:11, 0]
+    assert np.all(expected_obstacle_map == agent_centric_obstacle_map)

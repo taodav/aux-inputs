@@ -32,5 +32,18 @@ if __name__ == "__main__":
     for _ in range(6):
         obs, rew, done, info = env.step(2)
 
-    print("here")
+    # Test kelp filled env here
+    env = get_env(rng, rand_key, env_str="u0p", distance_noise=False)
+
+    env.reset()
+
+    env.position[0] = 4
+    env.position[1] = 6
+
+    obs = env.get_obs(env.state)
+    size = env.observation_space.shape[0]
+
+    assert obs[4, 4, 1 + 3] == 1 and obs[4, 4, 1:5].sum() == 1
+
+    print("All tests passed")
 

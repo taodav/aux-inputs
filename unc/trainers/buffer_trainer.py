@@ -45,7 +45,8 @@ class BufferTrainer(Trainer):
             self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, obs_shape,
                                         state_size=self.agent.state_shape)
         else:
-            self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape)
+            self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape,
+                                       obs_dtype=self.env.observation_space.low.dtype)
         self.prefilled_buffer = prefilled_buffer
 
         self.p_prefilled = args.p_prefilled

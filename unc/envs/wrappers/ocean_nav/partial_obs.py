@@ -48,7 +48,7 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         x_start = agent_pos[1] - half
         self.x_range = [x_start, x_start + self.window_size]
 
-        low = np.zeros((self.window_size, self.window_size, larger_obs_shape[-1]))
+        low = np.zeros((self.window_size, self.window_size, larger_obs_shape[-1]), dtype=int)
         high = np.ones_like(low)
         self.observation_space = gym.spaces.Box(
             low=low, high=high
