@@ -63,7 +63,11 @@ class OceanNav(Environment):
         self.currents = self.config['currents']
 
         # we get the per-timestep prob of changing
-        self.current_inverse_rates = np.array([g['change_rate'] for g in self.currents])
+        self.current_inverse_rates = np.array([g['change_rate'] for g in self.currents if g['change_rate'] > 0])
+
+        # this mask gives you all the currents that we tick each step.
+        # this is an optimization!
+        self.tick_mask = np.array([g['change_rate'] > 0 for g in self.currents], dtype=bool)
         self.lambs = 1 / self.current_inverse_rates
         self.pmfs_1 = self.lambs * np.exp(-self.lambs)
 
@@ -187,12 +191,11 @@ class OceanNav(Environment):
         update current map
         """
         # sample a bool for each current group
-        change_mask = self.rng.binomial(1, p=self.pmfs_1).astype(bool)
+        change_mask = np.zeros_like(self.tick_mask, dtype=bool)
+        change_mask[self.tick_mask] = self.rng.binomial(1, p=self.pmfs_1).astype(bool)
 
-        for i, change_bool in enumerate(change_mask):
-            if change_bool:
-
-                group_info = self.currents[i]
+        for i, group_info in enumerate(self.currents):
+            if group_info['change_rate'] > 0 and change_mask[i]:
 
                 # get all current directions we could sample
                 all_current_options = group_info['directions'][:]
