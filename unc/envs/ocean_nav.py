@@ -240,8 +240,9 @@ class OceanNav(Environment):
         # now we tick currents
         new_current_map = self.tick_currents(new_current_map)
         flattened_new_current_map = new_current_map.flatten()
+        flattened_reward_pos = reward_pos.flatten()
 
-        return np.concatenate((flattened_new_current_map, new_pos, reward_pos))
+        return np.concatenate((flattened_new_current_map, new_pos, flattened_reward_pos))
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         prev_state = self.state

@@ -65,14 +65,16 @@ class FishingWrapper(OceanNavWrapper):
                 new_reward_positions[i] = new_rew_pos
 
         flattened_new_current_map = current_map.flatten()
-        return np.concatenate((flattened_new_current_map, position, new_reward_positions), axis=0)
+        flattened_new_reward_positions = new_reward_positions.flatten()
+        return np.concatenate((flattened_new_current_map, position, flattened_new_reward_positions), axis=0)
 
     def get_reward(self, prev_state: np.ndarray, action: int) -> float:
         current_map, position, reward_pos = self.unpack_state(self.state)
+        prev_current_map, prev_position, prev_reward_pos = self.unpack_state(prev_state)
 
         reward = 0
         for i, rew in enumerate(reward_pos):
-            if np.all(rew == -1) and np.all(reward_pos[i] != -1):
+            if np.all(rew == -1) and np.all(prev_reward_pos[i] != -1):
                 reward += 1
         assert reward < 2
 
