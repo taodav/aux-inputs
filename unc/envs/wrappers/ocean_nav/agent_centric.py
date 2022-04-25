@@ -13,7 +13,7 @@ class AgentCentricObservationWrapper(OceanNavWrapper):
         """
         Agent-centric observation.
 
-        We take as input a previous get_obs w x h x 7 tensor and make it agent-centric.
+        We take as input a previous get_obs w x h x 6 tensor and make it agent-centric.
         """
         super(AgentCentricObservationWrapper, self).__init__(env)
         self.map_size = self.observation_space.shape[0]
