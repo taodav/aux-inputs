@@ -9,7 +9,11 @@ from unc.utils.data import ind_to_one_hot
 
 def pos_to_map(pos: np.ndarray, size: int):
     pos_map = np.zeros((size, size), dtype=np.int16)
-    pos_map[pos[0], pos[1]] = 1
+    if len(pos.shape) == 2:
+        for p in pos:
+            pos_map[p[0], p[1]] = 1
+    elif len(pos.shape) == 1:
+        pos_map[pos[0], pos[1]] = 1
     return pos_map
 
 
@@ -39,7 +43,7 @@ class OceanNav(Environment):
             self.kelp_prob = self.config["kelp_prob"]
 
         self.position = None
-        self.reward = None
+        self.rewards = None
 
         self.position_max = np.array([self.size - 1, self.size - 1], dtype=int)
         self.position_min = np.array([0, 0], dtype=int)
@@ -96,24 +100,25 @@ class OceanNav(Environment):
     def reset(self) -> np.ndarray:
         self.reset_currents()
         self.position = self.start_positions[self.rng.choice(range(len(self.start_positions)))]
-        self.reward = self.possible_reward_positions[self.rng.choice(range(len(self.possible_reward_positions)))]
+        self.rewards = self.possible_reward_positions[self.rng.choice(range(len(self.possible_reward_positions)))][None, :]
         return self.get_obs(self.state)
 
     @property
     def state(self):
         flattened_current_map = self.current_map.flatten()
-        return np.concatenate([flattened_current_map, self.position, self.reward])
+        flattened_rewards = self.rewards.flatten()
+        return np.concatenate([flattened_current_map, self.position, flattened_rewards])
 
     @state.setter
     def state(self, state: np.ndarray):
-        self.current_map, self.position, self.reward = self.unpack_state(state)
+        self.current_map, self.position, self.rewards = self.unpack_state(state)
 
     def unpack_state(self, state: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         map_size = self.size * self.size
         flattened_current_map = state[:map_size]
         position = state[map_size:map_size + 2]
-        reward = state[-2:]
-        return np.reshape(flattened_current_map, (self.size, self.size)), position, reward
+        reward = state[map_size + 2:]
+        return np.reshape(flattened_current_map, (self.size, self.size)), position, reward.reshape(-1, 2)
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         """
@@ -127,7 +132,7 @@ class OceanNav(Environment):
         position map
         reward map
         """
-        current_map, position, reward_pos = self.unpack_state(state)
+        current_map, position, reward_poses = self.unpack_state(state)
         obstacle_map = np.expand_dims(self.obstacle_map.copy(), -1)
 
         # One-hot vector, where we delete 0th channel b/c it's implied by the rest
@@ -135,18 +140,16 @@ class OceanNav(Environment):
         current_map_one_hot = current_map_one_hot[:, :, 1:]
 
         pos_map = np.expand_dims(pos_to_map(position, self.size), -1)
-        reward_map = np.expand_dims(pos_to_map(reward_pos, self.size), -1)
+        reward_map = np.expand_dims(pos_to_map(reward_poses, self.size), -1)
         return np.concatenate((obstacle_map, current_map_one_hot, pos_map, reward_map), axis=-1, dtype=float)
 
     def get_terminal(self) -> bool:
-        return np.all(self.position == self.reward)
+        matching_pos = np.all((self.position == self.rewards), axis=-1)
+        return np.any(matching_pos)
 
-    def get_reward(self, prev_state: np.ndarray, action: int) -> float:
-        if np.all(self.position == self.reward):
-            return 1.
-
+    def get_current_reward(self, state: np.ndarray, prev_state: np.ndarray, action: int) -> float:
         # Here we see if a current has pushed us into a wall
-        current_map, position, reward_pos = self.unpack_state(self.state)
+        current_map, position, reward_pos = self.unpack_state(state)
         current_direction = current_map[position[0], position[1]]
 
         # if we're in a current
@@ -156,8 +159,14 @@ class OceanNav(Environment):
             # if the current didn't move us, that means the current bumped us into a wall.
             if np.all(post_move_position == position):
                 return self.current_bump_reward
-
         return 0.
+
+    def get_reward(self, prev_state: np.ndarray, action: int) -> float:
+        matching_pos = np.all((self.position == self.rewards), axis=-1)
+        if np.any(matching_pos):
+            return 1.
+
+        return self.get_current_reward(self.state, prev_state, action)
 
     def move(self, pos: np.ndarray, action: int):
         new_pos = pos.copy()

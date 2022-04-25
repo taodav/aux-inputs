@@ -20,9 +20,20 @@ class OceanNavWrapper(gym.Wrapper):
     def unpack_state(self, state: np.ndarray):
         return self.env.unpack_state(state)
 
+    def get_current_reward(self, state: np.ndarray, prev_state: np.ndarray, action: int) -> float:
+        return self.env.get_current_reward(state, prev_state, action)
+
     @property
     def obstacle_map(self):
         return self.env.obstacle_map
+
+    @property
+    def start_positions(self):
+        return self.env.start_positions
+
+    @property
+    def config(self):
+        return self.env.config
 
     @property
     def glass_map(self):
@@ -45,6 +56,22 @@ class OceanNavWrapper(gym.Wrapper):
         return self.env.state_space
 
     @property
+    def rewards(self) -> np.ndarray:
+        return self.env.rewards
+
+    @rewards.setter
+    def rewards(self, rewards: np.ndarray) -> None:
+        self.env.rewards = rewards
+
+    @property
+    def position(self) -> np.ndarray:
+        return self.env.position
+
+    @position.setter
+    def position(self, position: np.ndarray) -> None:
+        self.env.position = position
+
+    @property
     def state(self) -> np.ndarray:
         return self.env.state
 
@@ -55,6 +82,9 @@ class OceanNavWrapper(gym.Wrapper):
     @state.setter
     def state(self, state) -> None:
         self.env.state = state
+
+    def reset_currents(self) -> None:
+        self.env.reset_currents()
 
     def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
         return self.env.batch_get_obs(states)
