@@ -47,6 +47,7 @@ class Args(Tap):
 
     distance_noise: bool = False  # [OCEANNAV] For our OceanNav partially observable wrappers, do we use distance noise?
     uncertainty_decay: float = 1.  # [OCEANNAV] How quickly do we decay our uncertainty?
+    task_fname: str = "task_{}_config.json"  # [OCEANNAV] What's our task config file name?
 
     rock_obs_init: float = 0.  # [ROCKSAMPLE] What value do we initialize our rock observations to?
     half_efficiency_distance: float = 20.  # [ROCKSAMPLE] Half efficiency distance for checking rocks
@@ -129,6 +130,10 @@ class Args(Tap):
 
         if self.exploration == 'noisy':
             self.epsilon = 0.
+
+        # if we're fishing and we're trying to use the default config
+        if "u" in self.env and "f" in self.env and self.task_fname == "task_{}_config.json":
+            self.task_fname = "fishing_{}_config.json"
 
 
 def md5(args: Args) -> str:

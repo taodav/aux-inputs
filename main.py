@@ -51,7 +51,8 @@ if __name__ == "__main__":
                         unnormalized_counts=args.unnormalized_counts,
                         po_degree=args.po_degree,
                         distance_noise=args.distance_noise,
-                        uncertainty_decay=args.uncertainty_decay)
+                        uncertainty_decay=args.uncertainty_decay,
+                        task_fname=args.task_fname)
 
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:

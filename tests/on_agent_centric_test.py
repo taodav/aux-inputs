@@ -1,6 +1,5 @@
 import numpy as np
 from jax import random
-from typing import List
 
 from unc.envs import get_env
 

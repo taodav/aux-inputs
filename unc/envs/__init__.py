@@ -66,8 +66,8 @@ ocean_nav_wrapper_map = {
     'v': on.VectorStateObservationWrapper,
     'a': on.AgentCentricObservationWrapper,
     'p': on.PartiallyObservableWrapper,
-    'm': on.ObservationMapWrapper
-    # 'o':
+    'm': on.ObservationMapWrapper,
+    'f': on.FishingWrapper
 }
 
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):

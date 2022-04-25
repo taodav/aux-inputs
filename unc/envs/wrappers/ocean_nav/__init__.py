@@ -4,3 +4,4 @@ from .render import OceanNavRenderWrapper
 from .agent_centric import AgentCentricObservationWrapper
 from .partial_obs import PartiallyObservableWrapper
 from .obs_map import ObservationMapWrapper
+from .fishing import FishingWrapper
