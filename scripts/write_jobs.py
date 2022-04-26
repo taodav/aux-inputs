@@ -37,6 +37,10 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt',
         if 'p' in arg['env'] and 'update_weight_interval' in arg and arg['update_weight_interval'] > 1:
             continue
 
+        # we don't have uncertainty decay for uf{}a
+        if 'uf' in arg['env'] and 'a' in arg['env'] and arg['uncertainty_decay'] < 1.:
+            continue
+
         run_string = f"python {main_fname}"
 
         for k, v in arg.items():
