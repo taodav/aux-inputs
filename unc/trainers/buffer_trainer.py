@@ -8,6 +8,7 @@ from unc.envs.wrappers.rocksample import RockSampleWrapper
 from unc.agents import Agent, LSTMAgent
 from unc.utils import ReplayBuffer, EpisodeBuffer
 from unc.utils.data import Batch, zip_batches
+from unc.eval import test_episodes
 
 from .trainer import Trainer
 
@@ -17,7 +18,7 @@ from unc.debug import summarize_checks, all_unchecked_rock_q_vals
 
 class BufferTrainer(Trainer):
     def __init__(self, args: Args, agent: Agent, env: Union[RockSample, RockSampleWrapper],
-                 prefilled_buffer: ReplayBuffer = None):
+                 test_env: Union[RockSample, RockSampleWrapper], prefilled_buffer: ReplayBuffer = None):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
 
@@ -30,7 +31,7 @@ class BufferTrainer(Trainer):
         :param env: environment to train on (currently only supports rocksample)
         :param prefilled_buffer: buffer pre-filled from a certain policy
         """
-        super(BufferTrainer, self).__init__(args, agent, env)
+        super(BufferTrainer, self).__init__(args, agent, env, test_env)
 
         self.batch_size = args.batch_size
         self.arch = args.arch
@@ -194,6 +195,13 @@ class BufferTrainer(Trainer):
                     time_remaining = (total_target_updates - num_logs) * avg_time_per_log
                     self._print(f"Remaining time: {time_remaining / 60:.2f}")
                     prev_time = curr_time
+
+                # Offline evaluation
+                if self.offline_eval_freq > 0 and self.offline_eval_freq % self.num_steps == 0:
+                    _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
+                                                 test_eps=self.test_eps, render=False,
+                                                 max_episode_steps=self.max_episode_steps)
+                    self.info['offline_eval_reward'].append(eval_rews)
 
                 if done:
                     break

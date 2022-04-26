@@ -31,32 +31,23 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     rng = np.random.RandomState(args.seed)
     rand_key = random.PRNGKey(args.seed)
+
+    test_rng = np.random.RandomState(args.seed + 10)
+    test_rand_key = random.PRNGKey(args.seed + 10)
     # TODO: when we do GPU jobs, make sure JAX CuDNN backend has determinism and seeding done
 
-    # Initializing our environment
+    # Initializing our environment, args we need are filtered out in get_env
     train_env = get_env(rng,
                         rand_key,
-                        env_str=args.env,
-                        blur_prob=args.blur_prob,
-                        random_start=args.random_start,
-                        slip_prob=args.slip_prob,
-                        slip_turn=args.slip_turn,
-                        size=args.size,
-                        n_particles=args.n_particles,
-                        update_weight_interval=args.update_weight_interval,
-                        rock_obs_init=args.rock_obs_init,
-                        half_efficiency_distance=args.half_efficiency_distance,
-                        count_decay=args.count_decay,
-                        trace_decay=args.trace_decay,
-                        unnormalized_counts=args.unnormalized_counts,
-                        po_degree=args.po_degree,
-                        distance_noise=args.distance_noise,
-                        uncertainty_decay=args.uncertainty_decay,
-                        task_fname=args.task_fname)
+                        args)
 
+    test_env = get_env(test_rng,
+                       test_rand_key,
+                       args)
+
+    # Getting our pre-filled replay buffer if we need it.
     prefilled_buffer = None
     if args.replay and args.p_prefilled > 0:
-        # Getting our pre-filled replay buffer if we need it.
         buffer_path = Path(ROOT_DIR, 'data', f'buffer_{args.env}_{args.seed}.pkl')
         replay_dict = Sampler.load(buffer_path)
         prefilled_buffer = replay_dict['buffer']
@@ -101,9 +92,9 @@ if __name__ == "__main__":
 
     # Initialize our trainer
     if args.replay:
-        trainer = BufferTrainer(args, agent, train_env, prefilled_buffer=prefilled_buffer)
+        trainer = BufferTrainer(args, agent, train_env, test_env, prefilled_buffer=prefilled_buffer)
     else:
-        trainer = Trainer(args, agent, train_env)
+        trainer = Trainer(args, agent, train_env, test_env)
     trainer.reset()
 
     # Train!

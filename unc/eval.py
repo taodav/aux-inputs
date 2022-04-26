@@ -2,12 +2,11 @@ import numpy as np
 import gym
 from typing import Union, Tuple
 
-from unc.envs import CompassWorld
 from unc.agents import Agent
 from unc.trainers.trainer import Trainer
 
 
-def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
+def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                   n_episodes: int = 1, test_eps: float = 0.0, render: bool = True,
                   max_episode_steps: int = 1000, show_obs: bool = True, show_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     imgs = []
@@ -68,6 +67,8 @@ def test_episodes(agent: Agent, env: Union[CompassWorld, gym.Wrapper],
 
         rews = np.array(rews)
         all_rews.append(rews)
+
     imgs = np.array(imgs)
+    all_rews = np.stack(all_rews)
 
     return imgs, all_rews

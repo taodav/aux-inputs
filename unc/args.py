@@ -102,8 +102,9 @@ class Args(Tap):
     log_dir: Union[Path, str] = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
     results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
+    offline_eval_freq: int = 0  # How frequently do we do offline evaluation?
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
-    test_episodes: int = 5  # How many episodes do we test on at the end of training?
+    test_episodes: int = 10  # How many episodes do we test on at the end of training?
     save_model: bool = False  # Do we save our model after finishing training?
 
     replay: bool = False  # Do we use a replay buffer to learn?

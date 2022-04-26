@@ -10,6 +10,7 @@ import unc.envs.wrappers.four_room as fr
 import unc.envs.wrappers.lobster as lf
 import unc.envs.wrappers.ocean_nav as on
 
+from unc.args import Args
 from .compass import CompassWorld
 from .fixed import FixedCompassWorld
 from .rocksample import RockSample
@@ -70,36 +71,56 @@ ocean_nav_wrapper_map = {
     'f': on.FishingWrapper
 }
 
-def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, env_str: str = "r", *args, **kwargs):
+
+def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args):
+    env_str = args.env
+
+    kwargs = dict(env_str=args.env,
+                  blur_prob=args.blur_prob,
+                  random_start=args.random_start,
+                  slip_prob=args.slip_prob,
+                  slip_turn=args.slip_turn,
+                  size=args.size,
+                  n_particles=args.n_particles,
+                  update_weight_interval=args.update_weight_interval,
+                  rock_obs_init=args.rock_obs_init,
+                  half_efficiency_distance=args.half_efficiency_distance,
+                  count_decay=args.count_decay,
+                  trace_decay=args.trace_decay,
+                  unnormalized_counts=args.unnormalized_counts,
+                  po_degree=args.po_degree,
+                  distance_noise=args.distance_noise,
+                  uncertainty_decay=args.uncertainty_decay,
+                  task_fname=args.task_fname)
+
     if "r" in env_str:
         # r for rocksample
         env_str = env_str.replace('r', '')
-        env = get_rocksample_env(rng, rand_key, env_str, *args, **kwargs)
+        env = get_rocksample_env(rng, rand_key, env_str, **kwargs)
     elif "t" in env_str:
         # t for tiger env
-        env = get_tiger_env(rng, env_str, *args, **kwargs)
+        env = get_tiger_env(rng, env_str, **kwargs)
     elif "u" in env_str:
         # u for underwater / ocean nav
         # u has to go before 4 or 2, cuz u1, u2, u3 == ocean nav 1, 2, 3 etc.
         env_str = env_str.replace('u', '')
         assert any(c.isdigit() for c in env_str), "Missing OceanNav task specification"
-        env = get_ocean_nav_env(rng, env_str, *args, **kwargs)
+        env = get_ocean_nav_env(rng, env_str, **kwargs)
     elif "4" in env_str:
         # 4 for 4 room
         env_str = env_str.replace('4', '')
-        env = get_four_room_env(rng, env_str, *args, **kwargs)
+        env = get_four_room_env(rng, env_str, **kwargs)
     elif "2" in env_str:
         # 2 for 2 room / lobster env
         env_str = env_str.replace('2', '')
-        env = get_lobster_env(rng, env_str, *args, **kwargs)
+        env = get_lobster_env(rng, env_str, **kwargs)
     else:
-        env = get_compass_env(rng, *args, env_str=env_str, **kwargs)
+        env = get_compass_env(rng, env_str=env_str, **kwargs)
     return env
 
 
 def get_ocean_nav_env(rng: np.random.RandomState,
                       env_str: str,
-                      *args,
                       task_fname: str = "task_{}_config.json",
                       config_dir: Path = Path(ROOT_DIR, 'unc', 'envs', 'configs', 'ocean_nav'),
                       distance_noise: bool = True,
@@ -141,7 +162,6 @@ def get_ocean_nav_env(rng: np.random.RandomState,
 
 def get_lobster_env(rng: np.random.RandomState,
                     env_str: str,
-                    *args,
                     traverse_prob: float = 0.8,
                     render: bool = True,
                     trace_decay: float = 0.8,
@@ -168,7 +188,7 @@ def get_four_room_env(rng: np.random.RandomState,
                       env_str: str = "4",
                       render: bool = True,
                       trace_decay: float = 0.99,
-                      *args, **kwargs):
+                      **kwargs):
     env = FourRoom(rng)
     list_w = list(set(env_str))
     wrapper_list = [four_room_wrapper_map[w] for w in list_w if four_room_wrapper_map[w] is not None]
@@ -189,7 +209,6 @@ def get_four_room_env(rng: np.random.RandomState,
 def get_rocksample_env(rng: np.random.RandomState,
                        rand_key: jax.random.PRNGKey, env_str: str = "r",
                        config_path: Path = Path(ROOT_DIR, "unc", "envs", "configs", "rock_sample_config.json"),
-                       *args,
                        update_weight_interval: int = 1,
                        half_efficiency_distance: float = 20.,
                        rock_obs_init: float = 0.,
@@ -230,7 +249,7 @@ def get_rocksample_env(rng: np.random.RandomState,
     return env
 
 
-def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
+def get_compass_env(rng: np.random.RandomState, env_str: str = "s",
                     random_start: bool = True,
                     blur_prob: float = 0.1,
                     slip_prob: float = 0.1,
@@ -293,7 +312,7 @@ def get_compass_env(rng: np.random.RandomState, *args, env_str: str = "s",
     return env
 
 
-def get_tiger_env(rng: np.random.RandomState, *args, env_str: str = "t",
+def get_tiger_env(rng: np.random.RandomState, env_str: str = "t",
                   update_weight_interval: int = 1,
                   resample_interval: int = None,
                   n_particles: int = -1,

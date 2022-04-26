@@ -2,16 +2,19 @@ import gym
 import logging
 from time import time, ctime
 import numpy as np
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Union
 from collections import deque
 
 from unc.args import Args
 from unc.agents import Agent
 from unc.utils.data import Batch
+from unc.eval import test_episodes
 
 
 class Trainer:
-    def __init__(self, args: Args, agent: Agent, env: gym.Env):
+    def __init__(self, args: Args, agent: Agent,
+                 env: Union[gym.Env, gym.Wrapper],
+                 test_env: Union[gym.Env, gym.Wrapper]):
         self.args = args
         self.discounting = args.discounting
 
@@ -27,6 +30,11 @@ class Trainer:
         self.env = env
         self.n_actions = env.action_space.n
         self.action_cond = args.action_cond
+
+        self.test_env = test_env
+        self.offline_eval_freq = args.offline_eval_freq
+        self.test_eps = args.test_eps
+        self.test_episodes = args.test_episodes
 
         self.episode_num = 0
         self.num_steps = 0
@@ -51,6 +59,9 @@ class Trainer:
         if 'p' in self.args.env:
             self.info['pf_episodic_mean'] = []
             self.info['pf_episodic_var'] = []
+
+        if self.offline_eval_freq > 0:
+            self.info['offline_eval_reward'] = []
 
         self.num_steps = 0
 
@@ -164,6 +175,13 @@ class Trainer:
                 episode_loss += loss
                 episode_reward += reward[0]
                 self.num_steps += 1
+
+                # Offline evaluation
+                if self.offline_eval_freq > 0 and self.offline_eval_freq % self.num_steps == 0:
+                    _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
+                                                 test_eps=self.test_eps, render=False,
+                                                 max_episode_steps=self.max_episode_steps)
+                    self.info['offline_eval_reward'].append(eval_rews)
 
                 if done.item():
                     # if use_pf:
