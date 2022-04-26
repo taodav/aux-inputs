@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     obs = env.reset()
     position = env.position
-    reward = env.reward
+    reward = env.rewards[0]
 
     # our obs is quite big.
     one_hot_current_map, obs_pos, obs_rew_pos = unpack_obs(obs)
