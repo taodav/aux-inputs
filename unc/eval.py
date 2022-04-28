@@ -3,7 +3,7 @@ import gym
 from typing import Union, Tuple
 
 from unc.agents import Agent
-from unc.trainers.trainer import Trainer
+from unc.utils import preprocess_step
 
 
 def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
@@ -63,7 +63,7 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
             if done:
                 break
 
-            obs, reward, done, info, action = Trainer.preprocess_step(next_obs, reward, done, info, action)
+            obs, reward, done, info, action = preprocess_step(next_obs, reward, done, info, action)
 
         rews = np.array(rews)
         all_rews.append(rews)

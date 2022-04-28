@@ -139,3 +139,6 @@ results/
 
 # Saved data used for training
 data/
+
+# run files
+scripts/runs/

@@ -7,7 +7,7 @@ from collections import deque
 
 from unc.args import Args
 from unc.agents import Agent
-from unc.utils.data import Batch
+from unc.utils.data import Batch, preprocess_step
 from unc.eval import test_episodes
 
 
@@ -156,7 +156,7 @@ class Trainer:
                 self.info['reward'].append(reward)
 
                 # Preprocess everything for updating
-                next_obs, reward, done, info, action = self.preprocess_step(next_obs, reward, done, info, action.item())
+                next_obs, reward, done, info, action = preprocess_step(next_obs, reward, done, info, action.item())
 
                 gamma = (1 - done) * self.discounting
 
@@ -177,19 +177,10 @@ class Trainer:
                 self.num_steps += 1
 
                 # Offline evaluation
-                if self.offline_eval_freq > 0 and self.offline_eval_freq % self.num_steps == 0:
-                    _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
-                                                 test_eps=self.test_eps, render=False,
-                                                 max_episode_steps=self.max_episode_steps)
-                    self.info['offline_eval_reward'].append(eval_rews)
+                if self.offline_eval_freq > 0 and self.num_steps % self.offline_eval_freq == 0:
+                    self.offline_evaluation()
 
                 if done.item():
-                    # if use_pf:
-                    #     state_info = obs[0][:6]
-                    #     means = state_info[::2]
-                    #     vars = state_info[1::2]
-                    #     pf_episode_means.append(means)
-                    #     pf_episode_vars.append(vars)
                     break
 
                 obs = next_obs
@@ -201,6 +192,14 @@ class Trainer:
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
+
+    def offline_evaluation(self):
+        _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
+                                     test_eps=self.test_eps, render=False,
+                                     max_episode_steps=self.max_episode_steps)
+        eval_returns = np.sum(eval_rews, axis=-1)
+        self._print(f"Step {self.num_steps} avg. offline evaluation returns: {np.mean(eval_returns):.2f}")
+        self.info['offline_eval_reward'].append(eval_returns)
 
     def post_episode_print(self, episode_reward: int, episode_loss: float, t: int,
                            additional_info: dict = None):
@@ -225,18 +224,6 @@ class Trainer:
             for k, v in additional_info.items():
                 print_str += f"{k}: {v / (t + 1):.4f}, "
         self._print(print_str)
-
-    @staticmethod
-    def preprocess_step(obs: np.ndarray,
-                        reward: float,
-                        done: bool,
-                        info: dict,
-                        action: int):
-        obs = np.array([obs])
-        reward = np.array([reward])
-        done = np.array([done])
-        action = np.array([action])
-        return obs, reward, done, info, action
 
     def _maybe_convert_rewards(self, rewards: List[Any]):
         """

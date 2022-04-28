@@ -75,8 +75,7 @@ ocean_nav_wrapper_map = {
 def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args):
     env_str = args.env
 
-    kwargs = dict(env_str=args.env,
-                  blur_prob=args.blur_prob,
+    kwargs = dict(blur_prob=args.blur_prob,
                   random_start=args.random_start,
                   slip_prob=args.slip_prob,
                   slip_turn=args.slip_turn,
@@ -162,7 +161,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
 
 def get_lobster_env(rng: np.random.RandomState,
                     env_str: str,
-                    traverse_prob: float = 0.8,
+                    traverse_prob: float = 0.4,
                     render: bool = True,
                     trace_decay: float = 0.8,
                     **kwargs):

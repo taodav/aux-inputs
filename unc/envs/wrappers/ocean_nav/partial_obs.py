@@ -39,7 +39,7 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         if distance_noise:
             assert len(prob_levels) == half + 1, "Probabilities don't match window_size"
 
-        larger_obs_shape = super(PartiallyObservableWrapper, self).observation_space.shape
+        larger_obs_shape = self.observation_space.shape
         agent_pos = np.array(larger_obs_shape[:-1]) // 2
 
         y_start = agent_pos[0] - half

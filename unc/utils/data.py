@@ -23,6 +23,18 @@ class Batch:
     indices: Union[np.ndarray, Iterable] = None  # Indices that were sampled
 
 
+def preprocess_step(obs: np.ndarray,
+                    reward: float,
+                    done: bool,
+                    info: dict,
+                    action: int):
+    obs = np.array([obs])
+    reward = np.array([reward])
+    done = np.array([done])
+    action = np.array([action])
+    return obs, reward, done, info, action
+
+
 def zip_batches(b1: Batch, b2: Batch):
     zipped = {}
     for k, v1 in b1.__dict__.items():

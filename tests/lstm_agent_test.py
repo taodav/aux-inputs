@@ -8,8 +8,7 @@ from unc.envs import SimpleChain
 from unc.args import Args
 from unc.agents import LSTMAgent
 from unc.models import build_network
-from unc.trainers import Trainer
-from unc.utils import Batch
+from unc.utils import Batch, preprocess_step
 
 
 
@@ -49,7 +48,7 @@ if __name__ == "__main__":
         for t in range(args.trunc):
             action = agent.act(obs)
             next_obs, reward, done, info = train_env.step(action)
-            next_obs, reward, done, info, action = Trainer.preprocess_step(next_obs, reward, done, info, action)
+            next_obs, reward, done, info, action = preprocess_step(next_obs, reward, done, info, action)
             steps += 1
             all_next_obs.append(next_obs)
             all_actions.append(action)

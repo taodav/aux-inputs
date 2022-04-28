@@ -6,7 +6,7 @@ pillow
 matplotlib
 opencv-python
 dill
-jax[cpu]
+jax[cuda]
 optax
 dm-haiku
 tqdm

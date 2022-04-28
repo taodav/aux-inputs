@@ -197,11 +197,8 @@ class BufferTrainer(Trainer):
                     prev_time = curr_time
 
                 # Offline evaluation
-                if self.offline_eval_freq > 0 and self.offline_eval_freq % self.num_steps == 0:
-                    _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
-                                                 test_eps=self.test_eps, render=False,
-                                                 max_episode_steps=self.max_episode_steps)
-                    self.info['offline_eval_reward'].append(eval_rews)
+                if self.offline_eval_freq > 0 and self.num_steps % self.offline_eval_freq == 0:
+                    self.offline_evaluation()
 
                 if done:
                     break
@@ -212,7 +209,7 @@ class BufferTrainer(Trainer):
 
             # FOR DEBUGGING
             # print()
-            print(f"Q-values at end of episode: {self.agent.curr_q}")
+            # print(f"Q-values at end of episode: {self.agent.curr_q}")
             # print(f"RNN Q-values at end of episode: {self.agent.rnn_curr_q}")
 
             self.episode_num += 1

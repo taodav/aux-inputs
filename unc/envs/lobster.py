@@ -15,7 +15,7 @@ class LobsterFishing(Environment):
     reward_inverse_rates = np.array([10, 10])
 
     def __init__(self,
-                 rng: np.random.RandomState = np.random.RandomState(),
+                 rng: np.random.RandomState,
                  traverse_prob: float = 0.3):
         super(LobsterFishing, self).__init__()
 

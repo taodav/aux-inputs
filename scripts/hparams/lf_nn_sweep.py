@@ -10,6 +10,6 @@ hparams = {
             'step_size': [0.00001, 0.0001, 0.001],
             'total_steps': [50000],
             'max_episode_steps': [200],
-            'seed': [(i + 2020) for i in range(10)]
+            'seed': [(i + 2020) for i in range(30)]
         }
 }
