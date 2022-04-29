@@ -36,8 +36,9 @@ def cnn_lstm(hidden_size: int, actions: int, x: np.ndarray, h: np.ndarray):
         Conv2D(output_channels=hidden_size, kernel_shape=kernel_sizes[2], stride=1, padding="VALID",
                w_init=init, b_init=b_init),
         jax.nn.relu,
+        hk.Flatten(),
         hk.Linear(hidden_size, w_init=init, b_init=b_init),
-        hk.Flatten()
+        jax.nn.relu,
     ])
 
     lstm = LSTM(hidden_size)
