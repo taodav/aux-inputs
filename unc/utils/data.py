@@ -4,7 +4,7 @@ import haiku as hk
 from pathlib import Path
 from PIL import Image
 from dataclasses import dataclass
-from typing import Union, Iterable, List
+from typing import Union, Iterable, List, Tuple
 
 
 @dataclass
@@ -33,6 +33,18 @@ def preprocess_step(obs: np.ndarray,
     done = np.array([done])
     action = np.array([action])
     return obs, reward, done, info, action
+
+
+def get_action_encoding(features_shape: Tuple[int], action: int, action_space: int):
+    """
+    Get a one-hot encoding of the action.
+    return empty tensor if action == -1.
+    """
+    action_encoding_shape = features_shape[:-1] + (action_space,)
+    action_encoding = np.zeros(action_encoding_shape)
+    if action > -1:
+        action_encoding[..., action] = 1
+    return action_encoding
 
 
 def zip_batches(b1: Batch, b2: Batch):

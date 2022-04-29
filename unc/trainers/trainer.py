@@ -7,7 +7,7 @@ from collections import deque
 
 from unc.args import Args
 from unc.agents import Agent
-from unc.utils.data import Batch, preprocess_step
+from unc.utils.data import Batch, preprocess_step, get_action_encoding
 from unc.eval import test_episodes
 
 
@@ -76,6 +76,8 @@ class Trainer:
 
         return epsilon
 
+
+
     def collect_rnn_batch(self, b: Batch, hs: np.ndarray, next_hs: np.ndarray, trunc_batch: Batch) -> Tuple[Batch, Batch]:
         trunc_batch.obs.append(b.obs), trunc_batch.action.append(b.action), trunc_batch.next_obs.append(b.next_obs)
         trunc_batch.gamma.append(b.gamma), trunc_batch.reward.append(b.reward), trunc_batch.next_action.append(b.next_action)
@@ -119,7 +121,8 @@ class Trainer:
             obs = self.env.reset()
             # Action conditioning
             if self.action_cond == 'cat':
-                obs = np.concatenate([obs, np.zeros(self.n_actions)])
+                action_encoding = get_action_encoding(self.agent.features_shape, -1, self.n_actions)
+                obs = np.concatenate([obs, action_encoding], axis=-1)
 
             obs = np.expand_dims(obs, 0)
             self.agent.reset()
@@ -149,9 +152,8 @@ class Trainer:
 
                 # Action conditioning
                 if self.action_cond == 'cat':
-                    one_hot_action = np.zeros(self.n_actions)
-                    one_hot_action[action] = 1
-                    next_obs = np.concatenate([next_obs, one_hot_action])
+                    action_encoding = get_action_encoding(self.agent.features_shape, action, self.n_actions)
+                    next_obs = np.concatenate([next_obs, action_encoding], axis=-1)
 
                 self.info['reward'].append(reward)
 

@@ -6,11 +6,11 @@ from jax import random, jit, vmap
 import jax
 import jax.numpy as jnp
 from functools import partial
-from typing import Tuple, List
+from typing import Tuple, Iterable
 
 from unc.args import Args
 from unc.utils import Batch
-from unc.utils.math import mse, seq_sarsa_error, sarsa_error
+from unc.utils.math import mse, seq_sarsa_error
 from .lstm import LSTMAgent
 
 
@@ -19,7 +19,7 @@ class kLSTMAgent(LSTMAgent):
                  value_network: hk.Transformed,
                  rnn_optimizer: GradientTransformation,
                  value_optimizer: GradientTransformation,
-                 n_features: int,
+                 features_shape: Iterable[int],
                  n_actions: int,
                  rand_key: random.PRNGKey,
                  args: Args):
@@ -35,7 +35,7 @@ class kLSTMAgent(LSTMAgent):
         :param rand_key:
         :param args:
         """
-        self.n_features = n_features
+        self.features_shape = features_shape
         self.n_hidden = args.n_hidden
         self.n_actions = n_actions
 
@@ -65,11 +65,11 @@ class kLSTMAgent(LSTMAgent):
         # Here we instantiate k RNNs...
         # Unless we share params. Then we let the apply fn do all the batching for us.
         if self.same_params:
-            x = jnp.zeros((1, self.trunc, self.n_features))
+            x = jnp.zeros((1, self.trunc, *self.features_shape))
             rnn_init_fn = self.rnn_network.init
             init_hs = jax.tree_map(lambda x: x[:, 0], self.hidden_state)
         else:
-            x = jnp.zeros((self.k, 1, self.trunc, self.n_features))
+            x = jnp.zeros((self.k, 1, self.trunc, *self.features_shape))
             rnn_init_fn = vmap(self.rnn_network.init)
             init_hs = self.hidden_state
         self.rnn_network_params = rnn_init_fn(rnn_init_rand_keys, x, init_hs)

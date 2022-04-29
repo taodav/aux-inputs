@@ -3,7 +3,7 @@ import gym
 from typing import Union, Tuple
 
 from unc.agents import Agent
-from unc.utils import preprocess_step
+from unc.utils import preprocess_step, get_action_encoding
 
 
 def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
@@ -20,7 +20,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
 
         # Action conditioning
         if hasattr(agent.args, 'action_cond') and agent.args.action_cond == 'cat':
-            obs = np.concatenate([obs, np.zeros(env.action_space.n)])
+            action_encoding = get_action_encoding(agent.features_shape, -1, env.action_space.n)
+            obs = np.concatenate([obs, action_encoding], axis=-1)
 
         obs = np.array([obs])
         agent.reset()
@@ -45,9 +46,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
 
             # Action conditioning
             if hasattr(agent.args, 'action_cond') and agent.args.action_cond == 'cat':
-                one_hot_action = np.zeros(env.action_space.n)
-                one_hot_action[action] = 1
-                next_obs = np.concatenate([next_obs, one_hot_action])
+                action_encoding = get_action_encoding(agent.features_shape, action, env.action_space.n)
+                next_obs = np.concatenate([next_obs, action_encoding], axis=-1)
 
             rews.append(reward)
             if render:

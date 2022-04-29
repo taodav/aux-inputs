@@ -64,24 +64,25 @@ if __name__ == "__main__":
     network = build_network(args.n_hidden, output_size, model_str=model_str)
     optimizer = optax.adam(args.step_size)
 
-    if args.arch == 'lstm':
-        n_features = train_env.observation_space.shape[0]
+    # for both lstm and cnn_lstm
+    if 'lstm' in args.arch:
+        features_shape = train_env.observation_space.shape
         n_actions = train_env.action_space.n
 
         # Currently we only do action conditioning with the LSTM agent.
         if args.action_cond == 'cat':
-            n_features += n_actions
+            features_shape = features_shape[:-1] + (features_shape[-1] + n_actions,)
         if args.k_rnn_hs > 1:
             # value network takes as input mean + variance of hidden states and cell states.
             value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
             value_optimizer = optax.adam(args.value_step_size)
             agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
-                               n_features, n_actions, rand_key, args)
+                               features_shape, n_actions, rand_key, args)
         elif args.distributional:
-            agent = DistributionalLSTMAgent(network, optimizer, n_features,
+            agent = DistributionalLSTMAgent(network, optimizer, features_shape,
                                             n_actions, rand_key, args)
         else:
-            agent = LSTMAgent(network, optimizer, n_features,
+            agent = LSTMAgent(network, optimizer, features_shape,
                               n_actions, rand_key, args)
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape,

@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from optax import GradientTransformation
 from jax import random, jit, vmap
 from functools import partial
-from typing import Tuple
+from typing import Tuple, Iterable
 
 from unc.args import Args
 from unc.utils import Batch
@@ -17,14 +17,14 @@ from .dqn import DQNAgent
 class LSTMAgent(DQNAgent):
     def __init__(self, network: hk.Transformed,
                  optimizer: GradientTransformation,
-                 n_features: int,
+                 features_shape: Iterable[int],
                  n_actions: int,
                  rand_key: random.PRNGKey,
                  args: Args):
         """
         LSTM agent.
         """
-        self.n_features = n_features
+        self.features_shape = features_shape
         self.n_hidden = args.n_hidden
         self.n_actions = n_actions
 
@@ -35,7 +35,7 @@ class LSTMAgent(DQNAgent):
         self._rand_key, network_rand_key = random.split(rand_key)
         self.network = network
         self.reset()
-        self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, self.trunc, self.n_features)),
+        self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, self.trunc, *self.features_shape)),
                                                 h=self.hidden_state)
         self.optimizer = optimizer
         self.optimizer_state = self.optimizer.init(self.network_params)

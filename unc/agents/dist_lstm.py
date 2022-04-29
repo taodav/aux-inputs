@@ -1,12 +1,11 @@
 import numpy as np
 import haiku as hk
-import optax
 import jax
 import jax.numpy as jnp
 from optax import GradientTransformation
 from functools import partial
 from jax import random, jit, nn, vmap
-from typing import Tuple
+from typing import Iterable
 
 from unc.args import Args
 from .lstm import LSTMAgent
@@ -15,12 +14,12 @@ from .lstm import LSTMAgent
 class DistributionalLSTMAgent(LSTMAgent):
     def __init__(self, network: hk.Transformed,
                  optimizer: GradientTransformation,
-                 n_features: int,
+                 features_shape: Iterable[int],
                  n_actions: int,
                  rand_key: random.PRNGKey,
                  args: Args):
         super(DistributionalLSTMAgent, self).__init__(
-            network, optimizer, n_features, n_actions, rand_key, args
+            network, optimizer, features_shape, n_actions, rand_key, args
         )
 
         self.atoms = args.atoms

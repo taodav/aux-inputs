@@ -7,8 +7,7 @@ from unc.envs import RockSample
 from unc.envs.wrappers.rocksample import RockSampleWrapper
 from unc.agents import Agent, LSTMAgent
 from unc.utils import ReplayBuffer, EpisodeBuffer
-from unc.utils.data import Batch, zip_batches
-from unc.eval import test_episodes
+from unc.utils.data import Batch, zip_batches, get_action_encoding
 
 from .trainer import Trainer
 
@@ -38,12 +37,14 @@ class BufferTrainer(Trainer):
         self.action_cond = args.action_cond
         self.n_actions = self.env.action_space.n
 
-        if self.arch == 'lstm' and isinstance(self.agent, LSTMAgent):
+        if 'lstm' in self.arch and isinstance(self.agent, LSTMAgent):
             # We save state for an LSTM agent
             obs_shape = self.env.observation_space.shape
             if self.action_cond == 'cat':
-                obs_shape = (obs_shape[0] + self.n_actions,)
+                obs_shape = obs_shape[:-1] + (obs_shape[-1] + self.n_actions,)
+
             self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, obs_shape,
+                                        obs_dtype=self.env.observation_space.low.dtype,
                                         state_size=self.agent.state_shape)
         else:
             self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape,
@@ -53,7 +54,7 @@ class BufferTrainer(Trainer):
         self.p_prefilled = args.p_prefilled
 
         # Do we save our agent hidden state?
-        self.save_hidden = args.arch == 'lstm' and hasattr(self.agent, 'hidden_state')
+        self.save_hidden = 'lstm' in args.arch and hasattr(self.agent, 'hidden_state')
 
     def update_buffer_hidden(self, sample_idxs: np.ndarray, other_info: dict,
                              update_mask: np.ndarray = None):
@@ -110,7 +111,8 @@ class BufferTrainer(Trainer):
 
             # Action conditioning
             if self.action_cond == 'cat':
-                obs = np.concatenate([obs, np.zeros(self.n_actions)])
+                action_encoding = get_action_encoding(self.agent.features_shape, -1, self.n_actions)
+                obs = np.concatenate([obs, action_encoding], axis=-1)
 
             obs = np.expand_dims(obs, 0)
             self.agent.reset()
@@ -140,9 +142,8 @@ class BufferTrainer(Trainer):
 
                 # Action conditioning
                 if self.action_cond == 'cat':
-                    one_hot_action = np.zeros(self.n_actions)
-                    one_hot_action[action] = 1
-                    next_obs = np.concatenate([next_obs, one_hot_action])
+                    action_encoding = get_action_encoding(self.agent.features_shape, action, self.n_actions)
+                    next_obs = np.concatenate([next_obs, action_encoding], axis=-1)
 
                 next_obs = np.array([next_obs])
 

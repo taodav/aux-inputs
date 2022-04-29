@@ -111,8 +111,8 @@ class EpisodeBuffer(ReplayBuffer):
     is essentially a mask for
     """
     def __init__(self, capacity: int, rng: np.random.RandomState,
-                 obs_size: Tuple, state_size: Tuple = None):
-        super(EpisodeBuffer, self).__init__(capacity, rng, obs_size, state_size=state_size)
+                 obs_size: Tuple, obs_dtype: type, state_size: Tuple = None):
+        super(EpisodeBuffer, self).__init__(capacity, rng, obs_size, obs_dtype, state_size=state_size)
         self.end = np.zeros_like(self.d, dtype=bool)
 
     def push(self, batch: Batch):
