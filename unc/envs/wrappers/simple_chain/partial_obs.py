@@ -12,7 +12,7 @@ class PartiallyObservableWrapper(SimpleChainWrapper):
     priority = 3
 
     def __init__(self, env: Union[SimpleChainWrapper, SimpleChain],
-                 obs_shape: Tuple[int] = (1, )):
+                 obs_shape: Tuple[int, ...] = (1,)):
         super(PartiallyObservableWrapper, self).__init__(env)
 
         low = np.zeros(obs_shape)
@@ -21,8 +21,8 @@ class PartiallyObservableWrapper(SimpleChainWrapper):
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         if state[0] == 1:
-            return np.ones_like(self.observation_space.shape)
-        return np.zeros_like(self.observation_space.shape)
+            return np.ones(self.observation_space.shape)
+        return np.zeros(self.observation_space.shape)
 
     def reset(self):
         super(PartiallyObservableWrapper, self).reset()
