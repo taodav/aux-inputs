@@ -6,6 +6,7 @@ from .q_network import QNetwork, nn
 from .noisy import noisy_network
 from .lstm import lstm, value
 from .cnn import cnn
+from .cnn_lstm import cnn_lstm
 
 def get_network(hidden_size: int, output_size: int, x: jnp.ndarray):
     q = QNetwork(hidden_size, output_size)
@@ -40,6 +41,9 @@ def build_network(hidden_size: int, output_size: int,
         network = hk.without_apply_rng(hk.transform(network_fn))
     elif model_str == 'cnn':
         network_fn = partial(cnn, hidden_size, output_size)
+        network = hk.without_apply_rng(hk.transform(network_fn))
+    elif model_str == 'cnn_lstm':
+        network_fn = partial(cnn_lstm, hidden_size, output_size)
         network = hk.without_apply_rng(hk.transform(network_fn))
     else:
         raise NotImplementedError
