@@ -21,11 +21,15 @@ class SimpleChain(Environment):
     def state(self):
         return self._state
 
+    @state.setter
+    def state(self, state: np.ndarray):
+        self._state = state
+
     def reset(self):
-        self._state = np.zeros(self.n)
+        self.state = np.zeros(self.n)
         self.current_idx = 0
-        self._state[self.current_idx] = 1
-        return self.get_obs(self._state)
+        self.state[self.current_idx] = 1
+        return self.get_obs(self.state)
 
     def get_reward(self, prev_state: np.ndarray = None, action: int = None) -> int:
         if self.state[-1] == 1:
@@ -36,7 +40,7 @@ class SimpleChain(Environment):
         return np.ndarray([1])
 
     def get_terminal(self) -> bool:
-        return self._state[-1] == 1
+        return self.state[-1] == 1
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         # Just go right
@@ -50,6 +54,6 @@ class SimpleChain(Environment):
         return 1
 
     def step(self, action: int):
-        self._state = self.transition(self._state.copy(), action)
-        return self.get_obs(self._state), self.get_reward(), self.get_terminal(), {}
+        self.state = self.transition(self.state.copy(), action)
+        return self.get_obs(self.state), self.get_reward(), self.get_terminal(), {}
 

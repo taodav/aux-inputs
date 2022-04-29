@@ -3,34 +3,14 @@ import optax
 from jax import random
 
 from unc.envs import SimpleChain
+from unc.envs.wrappers.simple_chain import PartiallyObservableWrapper
 from unc.args import Args
 from unc.agents import LSTMAgent
 from unc.models import build_network
 from unc.utils import Batch, preprocess_step
 
 
-
-if __name__ == "__main__":
-    parser = Args()
-    args = parser.parse_args()
-    args.n_hidden = 1
-    args.trunc = 10
-    args.epsilon = 0.
-    args.step_size = 0.01
-    args.seed = 2020
-    args.total_steps = int(1e6)
-
-    rand_key = random.PRNGKey(args.seed)
-    train_env = SimpleChain(n=args.trunc)
-
-    network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
-    optimizer = optax.adam(args.step_size)
-
-    agent = LSTMAgent(network, optimizer, train_env.observation_space.shape[0],
-                      train_env.action_space.n, rand_key, args)
-    agent.set_eps(args.epsilon)
-
-    print("Starting test for LSTM on SingleChain environment")
+def run_episodes(train_env, agent, args):
     steps = 0
 
     eps = 0
@@ -82,4 +62,31 @@ if __name__ == "__main__":
                   f"MSVE {msve}, "
                   f"History Q-values: {hist_q_vals}\n")
 
+
+
+if __name__ == "__main__":
+    parser = Args()
+    args = parser.parse_args()
+    args.n_hidden = 1
+    args.trunc = 10
+    args.epsilon = 0.
+    args.step_size = 0.01
+    args.seed = 2020
+    args.total_steps = int(1e6)
+
+    rand_key = random.PRNGKey(args.seed)
+
+    # First we test normal LSTM
+    train_env = PartiallyObservableWrapper(SimpleChain(n=args.trunc), obs_shape=(2,))
+
+    network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
+    optimizer = optax.adam(args.step_size)
+
+    agent = LSTMAgent(network, optimizer, train_env.observation_space.shape,
+                      train_env.action_space.n, rand_key, args)
+    agent.set_eps(args.epsilon)
+
+    print("Starting test for LSTM on PO SingleChain environment")
+
+    run_episodes(train_env, agent, args)
 
