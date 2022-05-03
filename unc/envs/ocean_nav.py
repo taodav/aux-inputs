@@ -32,16 +32,20 @@ class OceanNav(Environment):
     """
     direction_mapping = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]], dtype=np.int16)
 
-    def __init__(self, rng: np.random.RandomState, config: dict):
+    def __init__(self, rng: np.random.RandomState,
+                 config: dict,
+                 slip_prob: float = 0.):
         super(OceanNav, self).__init__()
         self.config = config
         self.size = self.config['size']
         self.rng = rng
         self.current_bump_reward = self.config['current_bump_reward']
         self.kelp_prob = 0.
+
         if "kelp_prob" in self.config:
             self.kelp_prob = self.config["kelp_prob"]
 
+        self.slip_prob = slip_prob
         self.position = None
         self.rewards = None
 
@@ -159,7 +163,7 @@ class OceanNav(Environment):
         # if we're in a current
         if current_direction > 0:
             prev_current_map, prev_pos, reward_pos = self.unpack_state(prev_state)
-            post_move_position = self.move(prev_pos, action)
+            post_move_position = self.move(prev_pos, action, slippage=False)
             # if the current didn't move us, that means the current bumped us into a wall.
             if np.all(post_move_position == position):
                 return self.current_bump_reward
@@ -172,10 +176,12 @@ class OceanNav(Environment):
 
         return self.get_current_reward(self.state, prev_state, action)
 
-    def move(self, pos: np.ndarray, action: int):
+    def move(self, pos: np.ndarray, action: int, slippage: bool = True):
         new_pos = pos.copy()
+        not_kelp_slip = self.kelp_prob == 0. or self.kelp_map[pos[0], pos[1]] == 0 or self.rng.rand() > self.kelp_prob
+        not_normal_slip = self.slip_prob == 0. or self.rng.rand() > self.slip_prob
 
-        if self.kelp_prob == 0. or self.kelp_map[pos[0], pos[1]] == 0 or self.rng.rand() > self.kelp_prob:
+        if not slippage or (not_kelp_slip and not_normal_slip):
             new_pos += self.direction_mapping[action]
             new_pos = np.maximum(np.minimum(new_pos, self.position_max), self.position_min)
 
@@ -238,7 +244,7 @@ class OceanNav(Environment):
         # now we move again according to any currents
         current_direction = current_map[new_pos[0], new_pos[1]]
         if current_direction > 0:
-            new_pos = self.move(new_pos, current_direction - 1)
+            new_pos = self.move(new_pos, current_direction - 1, slippage=False)
 
         # now we tick currents
         new_current_map = self.tick_currents(new_current_map)

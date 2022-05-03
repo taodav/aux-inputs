@@ -1,7 +1,7 @@
 hparams = {
     'file_name': "runs_rs_lstm_hs_pf.txt",
     'args':
-    {
+    [{
         'algo': ['sarsa'],
         'arch': ['lstm'],
         'env': ['rg'],
@@ -21,5 +21,5 @@ hparams = {
         'buffer_size': [10000, 100000],
         'total_steps': [1500000],
         'seed': [(i + 2020) for i in range(10)]
-    }
+    }]
 }

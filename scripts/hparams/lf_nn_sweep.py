@@ -1,7 +1,7 @@
 hparams = {
     'file_name': "lobster_nn_sweep.txt",
     'args':
-        {
+        [{
             'algo': ['sarsa'],
             'arch': ['nn', 'linear'],
             'env': ['2', '2o'],
@@ -11,5 +11,5 @@ hparams = {
             'total_steps': [50000],
             'max_episode_steps': [200],
             'seed': [(i + 2020) for i in range(30)]
-        }
+        }]
 }

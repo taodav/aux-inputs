@@ -2,7 +2,7 @@ hparams = {
     'file_name': "runs_rs_lstm_pf.txt",
     # 'file_name': "runs_rs_lstm_hed_5.txt",
     'args':
-        {
+        [{
             'algo': ['sarsa'],
             'arch': ['lstm'],
             'env': ['rpg'],
@@ -18,5 +18,5 @@ hparams = {
             # 'half_efficiency_distance': [5.],
             # 'action_cond': [None, 'cat'],
             'seed': [(i + 2020) for i in range(10)]
-        }
+        }]
 }

@@ -1,7 +1,7 @@
 hparams = {
     'file_name': "runs_compass_lstm_pf.txt",
     'args':
-    {
+    [{
         'algo': ['sarsa'],
         'arch': ['lstm'],
         'env': ['fpg'],
@@ -14,5 +14,5 @@ hparams = {
         'total_steps': [1000000],
         'action_cond': ['cat', None],
         'seed': [(i + 2020) for i in range(10)]
-     }
+     }]
 }

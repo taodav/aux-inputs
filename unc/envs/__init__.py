@@ -89,6 +89,7 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args
                   unnormalized_counts=args.unnormalized_counts,
                   po_degree=args.po_degree,
                   distance_noise=args.distance_noise,
+                  distance_unc_encoding=args.distance_unc_encoding,
                   uncertainty_decay=args.uncertainty_decay,
                   task_fname=args.task_fname)
 
@@ -125,6 +126,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
                       distance_noise: bool = True,
                       render: bool = True,
                       uncertainty_decay: float = 1.,
+                      slip_prob: float = 0.,
                       **kwargs):
     # get the first digit
     task_num = None
@@ -138,7 +140,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
         config = json.load(f)
 
     env_str = env_str.replace(task_num, '')
-    env = OceanNav(rng, config)
+    env = OceanNav(rng, config, slip_prob=slip_prob)
 
     # TODO: add wrappers here
     list_w = list(set(env_str))

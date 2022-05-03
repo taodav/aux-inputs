@@ -1,0 +1,14 @@
+gym
+numpy
+typed-argument-parser
+tensorboard
+pillow
+matplotlib
+opencv-python
+dill
+jax
+jaxlib
+optax
+dm-haiku
+tqdm
+-e .

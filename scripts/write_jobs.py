@@ -7,7 +7,7 @@ from itertools import product
 from definitions import ROOT_DIR
 
 
-def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt',
+def generate_runs(run_dicts: List[dict], runs_dir: Path, runs_fname: str = 'runs.txt',
                   main_fname: str = 'main.py',
                   results_dir: Path = None,
                   log_dir: Path = None) -> List[str]:
@@ -25,44 +25,54 @@ def generate_runs(run_dict: dict, runs_dir: Path, runs_fname: str = 'runs.txt',
 
     f = open(runs_path, 'a+')
 
-    keys, values = [], []
-    for k, v in run_dict.items():
-        keys.append(k)
-        values.append(v)
     num_runs = 0
-    for i, args in enumerate(product(*values)):
+    for run_dict in run_dicts:
+        keys, values = [], []
+        for k, v in run_dict.items():
+            keys.append(k)
+            values.append(v)
+        for i, args in enumerate(product(*values)):
 
-        arg = {k: v for k, v in zip(keys, args)}
+            arg = {k: v for k, v in zip(keys, args)}
 
-        if 'p' in arg['env'] and 'update_weight_interval' in arg and arg['update_weight_interval'] > 1:
-            continue
-
-        # we don't have uncertainty decay for uf{}a
-        if 'uf' in arg['env'] and 'a' in arg['env'] and arg['uncertainty_decay'] < 1.:
-            continue
-
-        run_string = f"python {main_fname}"
-
-        for k, v in arg.items():
-
-            if v is True:
-                run_string += f" --{k}"
-            elif v is False or v is None:
+            if 'p' in arg['env'] and 'update_weight_interval' in arg and arg['update_weight_interval'] > 1:
                 continue
-            else:
-                run_string += f" --{k} {v}"
 
-        if results_dir is not None:
-            run_string += f" --results_dir {results_dir}"
+            # we don't have uncertainty decay for uf{}a
+            if 'uf' in arg['env'] and 'a' in arg['env']:
+                if arg['uncertainty_decay'] < 1.:
+                    continue
+                if 'distance_noise' in arg and 'distance_unc_encoding' in arg:
+                    if arg['distance_noise'] or arg['distance_unc_encoding']:
+                        continue
 
-        if log_dir is not None:
-            run_string += f" --log_dir {log_dir}"
+            # if distance_noise == False, then distance_unc_encoding can't be true
+            if 'distance_noise' in arg and 'distance_unc_encoding' in arg:
+                if 'uf' in arg['env'] and not arg['distance_noise'] and arg['distance_unc_encoding']:
+                    continue
 
-        run_string += "\n"
-        f.write(run_string)
-        num_runs += 1
+            run_string = f"python {main_fname}"
 
-        print(num_runs, run_string)
+            for k, v in arg.items():
+
+                if v is True:
+                    run_string += f" --{k}"
+                elif v is False or v is None:
+                    continue
+                else:
+                    run_string += f" --{k} {v}"
+
+            if results_dir is not None:
+                run_string += f" --results_dir {results_dir}"
+
+            if log_dir is not None:
+                run_string += f" --log_dir {log_dir}"
+
+            run_string += "\n"
+            f.write(run_string)
+            num_runs += 1
+
+            print(num_runs, run_string)
 
 
 def import_module_to_hparam(hparam_path: Path) -> dict:

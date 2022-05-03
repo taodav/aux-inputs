@@ -11,6 +11,7 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
     def __init__(self, env: Union[OceanNav, OceanNavWrapper],
                  window_size: int = 5,
                  distance_noise: bool = False,
+                 distance_unc_encoding: bool = False,
                  prob_levels: Tuple[int, int, int] = (1, 0.8, 0.65),
                  uncertainty_decay: float = 1.):
         """
@@ -20,17 +21,26 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
         (and it's position), everything beyond this is occluded, except for everything
         memorized in the map.
 
+        if distance_noise is True, then we add distance noise to our observations
+
+        if distance_unc_encoding is True, then we decay our uncertainty map radially outwards.
+
         At every step, the agent takes this observation and incorporates it into
         it's own map.
-
-        TODO: add uncertainty channel and a decay variable
 
         """
         super(ObservationMapWrapper, self).__init__(env, window_size=window_size,
                                                     distance_noise=distance_noise,
                                                     prob_levels=prob_levels)
         self.uncertainty_decay = uncertainty_decay
+        self.distance_uncertainty_encoding = distance_unc_encoding
+
         window_obs_size = self.observation_space.shape
+        window_shape = window_obs_size[:-1]
+        self.certainty_map = np.ones(window_shape + (1,))
+        if self.distance_uncertainty_encoding:
+            decay_levels = (self.uncertainty_decay ** i for i in range(self.window_size // 2 + 1))
+            self.certainty_map = self.generate_prob_map(decay_levels)
 
         channels = window_obs_size[-1]
         if self.uncertainty_decay < 1:
@@ -56,10 +66,7 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
         is exactly the start position of the window to add.
         """
         if self.uncertainty_decay < 1.:
-            if self.distance_noise:
-                raise NotImplementedError("Haven't decided on how to incorporate distance noise yet into uncertainty")
-            window_shape = window_obs.shape[:-1]
-            certainty = np.ones(window_shape + (1,))
+            certainty = self.certainty_map.copy()
             window_obs = np.concatenate((window_obs, certainty), axis=-1)
         self.observation_map[pos[0]:pos[0] + window_obs.shape[0], pos[1]:pos[1] + window_obs.shape[1]] = window_obs
 

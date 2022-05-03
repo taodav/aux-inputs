@@ -12,7 +12,7 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
     def __init__(self, env: Union[OceanNav, OceanNavWrapper],
                  window_size: int = 5,
                  distance_noise: bool = False,
-                 prob_levels: Tuple[int, int, int] = (1, 0.8, 0.65)):
+                 prob_levels: Tuple[int, int, int] = (1, 0.85, 0.7)):
         """
         Partially observable OceanNav environment.
 
@@ -59,15 +59,17 @@ class PartiallyObservableWrapper(AgentCentricObservationWrapper):
         # 1 for obstacles, 1 for current and 1 for reward position.
         self.prob_map = np.repeat(self.generate_prob_map()[:, :, None], 3, axis=-1)
 
-    def generate_prob_map(self) -> np.ndarray:
+    def generate_prob_map(self, prob_levels: Tuple[float, ...] = None) -> np.ndarray:
+        if prob_levels is None:
+            prob_levels = self.prob_levels
         prob_map = np.zeros((self.window_size, self.window_size))
 
         middle = self.window_size // 2
-        prob_map[middle - 1:-(middle - 1), middle - 1:-(middle - 1)] = self.prob_levels[1]
-        prob_map[middle, middle] = self.prob_levels[0]
+        prob_map[middle - 1:-(middle - 1), middle - 1:-(middle - 1)] = prob_levels[1]
+        prob_map[middle, middle] = prob_levels[0]
 
         prev = prob_map[middle - 1:-(middle - 1), middle - 1:-(middle - 1)].copy()
-        for i, prob in enumerate(self.prob_levels[2:], start=2):
+        for i, prob in enumerate(prob_levels[2:], start=2):
             prob_map[middle - i:self.window_size - (middle - i), middle - i:self.window_size - (middle - i)] = prob
             prev_idx = middle - i + 1
             prob_map[prev_idx:-prev_idx, prev_idx:-prev_idx] = prev

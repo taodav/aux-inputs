@@ -1,7 +1,7 @@
 hparams = {
     'file_name': "runs_rs_state_count.txt",
     'args':
-        {
+        [{
             'algo': ['sarsa'],
             'arch': ['nn'],
             'env': ['rc'],
@@ -16,5 +16,5 @@ hparams = {
             'unnormalized_counts': [True],
             'count_decay': [0.75, 0.9, 1.],
             'seed': [(i + 2020) for i in range(10)]
-        }
+        }]
 }

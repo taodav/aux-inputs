@@ -1,7 +1,7 @@
 hparams = {
     'file_name': "runs_compass_state_count.txt",
     'args':
-        {
+        [{
             'algo': ['sarsa'],
             'arch': ['nn'],
             'env': ['fc'],
@@ -14,5 +14,5 @@ hparams = {
             'buffer_size': [10000],
             'total_steps': [1000000],
             'seed': [(i + 2020) for i in range(10)]
-        }
+        }]
 }

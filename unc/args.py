@@ -39,13 +39,14 @@ class Args(Tap):
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm)
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 9  # How large do we want each dimension of our gridworld to be?
-    slip_prob: float = 0.1  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
+    slip_prob: float = 0.0  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?
     slip_turn: bool = False  # If we're in the slip setting, do we slip on turns as well?
     total_steps: int = 60000  # Total number of steps to take
     max_episode_steps: int = 1000  # Maximum number of steps in an episode
     blur_prob: float = 0.3  # If b is in env (blurry env), what is the probability that we see a random observation?
 
     distance_noise: bool = False  # [OCEANNAV] For our OceanNav partially observable wrappers, do we use distance noise?
+    distance_unc_encoding: bool = False  # [OCEANNAV] For our OceanNav partially observable mapping wrapper, do we explicitly encode uncertainty over distance?
     uncertainty_decay: float = 1.  # [OCEANNAV] How quickly do we decay our uncertainty?
     task_fname: str = "task_{}_config.json"  # [OCEANNAV] What's our task config file name?
 

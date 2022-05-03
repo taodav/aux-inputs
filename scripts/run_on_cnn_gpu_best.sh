@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=9
 #SBATCH --mem=9G
 #SBATCH --time=0-12:00
-#SBATCH --array=1-50
+#SBATCH --array=1-25
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
@@ -27,7 +27,7 @@ UPPER_IDX=$((SLURM_ARRAY_TASK_ID * RUNS_PER_JOB))
 LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf3_cnn.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf2m_cnn_best.txt)
 
 echo "$TO_RUN"
 
