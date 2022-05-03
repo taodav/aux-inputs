@@ -72,7 +72,7 @@ if __name__ == "__main__":
     args.epsilon = 0.
     args.step_size = 0.01
     args.seed = 2020
-    args.total_steps = int(1e4)
+    args.total_steps = int(1e5)
     args.platform = "gpu"
 
     rand_key = random.PRNGKey(args.seed)
@@ -93,9 +93,9 @@ if __name__ == "__main__":
 
     print("Tests passed for LSTM on PO SingleChain environment")
 
-    train_env = PartiallyObservableWrapper(SimpleChain(n=args.trunc), obs_shape=(5, 5))
+    train_env = PartiallyObservableWrapper(SimpleChain(n=args.trunc), obs_shape=(5, 5, 1))
 
-    network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
+    network = build_network(args.n_hidden, train_env.action_space.n, model_str="cnn_lstm")
     optimizer = optax.adam(args.step_size)
 
     agent = LSTMAgent(network, optimizer, train_env.observation_space.shape,
