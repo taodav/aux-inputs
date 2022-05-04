@@ -18,15 +18,15 @@ export XLA_PYTHON_CLIENT_MEM_FRACTION=0.25
 
 RUNS_PER_JOB=2
 
-UPPER_IDX=$((38 * RUNS_PER_JOB))
+UPPER_IDX=$((25 * RUNS_PER_JOB))
 LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 
 #SED_STR=""
 echo "${LOWER_IDX},${UPPER_IDX}p"
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf2m_cnn_best.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf3_cnn_lstm.txt)
 echo "$TO_RUN"
 
 # The -u means ungrouped - output is ungrouped and printed.
-#parallel --joblog "$SCRATCH/log/on_cnn_gpu.log" -u ::: "$TO_RUN"
+parallel --joblog "$SCRATCH/log/on_cnn_gpu.log" -u ::: "$TO_RUN"
