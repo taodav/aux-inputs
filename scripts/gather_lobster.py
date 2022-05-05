@@ -131,7 +131,7 @@ if __name__ == "__main__":
     obs_args.discounting = 0.9
     obs_args.n_hidden = 5
     obs_args.step_size = 0.001
-    obs_args.total_steps = 50000
+    obs_args.total_steps = 500000
     obs_args.max_episode_steps = 200
     obs_args.seed = 2022
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     unc_args.discounting = 0.9
     unc_args.n_hidden = 5
     unc_args.step_size = 0.001
-    unc_args.total_steps = 50000
+    unc_args.total_steps = 500000
     unc_args.max_episode_steps = 200
     unc_args.seed = 2022
 
@@ -178,7 +178,16 @@ if __name__ == "__main__":
         }
     }
     results_fname = Path(ROOT_DIR, 'results', 'lobster_data.npy')
+    obs_agent_fname = Path(ROOT_DIR, 'results', f'2_{obs_args.arch}_agent.pth')
+    unc_agent_fname = Path(ROOT_DIR, 'results', f'2o_{unc_args.arch}_agent.pth')
 
     save_info(results_fname, results)
     print(f"Saved observations for test episodes in {results_fname}")
+
+    obs_agent.save(obs_agent_fname)
+    print(f"Saved 2 agent to {obs_agent_fname}")
+
+    unc_agent.save(unc_agent_fname)
+    print(f"Saved 2o agent to {unc_agent_fname}")
+
 

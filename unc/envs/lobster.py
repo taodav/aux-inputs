@@ -22,7 +22,7 @@ class LobsterFishing(Environment):
         self.observation_space = gym.spaces.Box(
             low=np.zeros(9), high=np.ones(9)
         )
-        # actions are go right, go left, collect
+        # actions are go left, go right, collect
         self.action_space = gym.spaces.Discrete(3)
 
         self.traverse_prob = traverse_prob
