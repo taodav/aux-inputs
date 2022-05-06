@@ -60,7 +60,8 @@ four_room_wrapper_map = {
 }
 
 lobster_wrapper_map = {
-    'o': lf.BoundedDecayingTraceObservationWrapper
+    'o': lf.BoundedDecayingTraceObservationWrapper,
+    'g': lf.GroundTruthStateWrapper
 }
 
 ocean_nav_wrapper_map = {

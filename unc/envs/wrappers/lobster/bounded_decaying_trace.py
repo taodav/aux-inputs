@@ -42,7 +42,6 @@ class BoundedDecayingTraceObservationWrapper(LobsterFishingWrapper):
         else:
             self.trace[1] += obs[6]
 
-
     def get_obs(self, state: np.ndarray, *args, **kwargs) -> np.ndarray:
         obs = self.env.get_obs(state).copy()
         obs[3] = self.trace[0]

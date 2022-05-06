@@ -11,6 +11,7 @@ from unc.models import build_network
 from unc.sampler import Sampler
 from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent, kLSTMAgent, DistributionalLSTMAgent
 from unc.utils import save_info, save_video
+from unc.optim import get_optimizer
 from unc.eval import test_episodes
 from definitions import ROOT_DIR
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     if args.distributional:
         output_size = train_env.action_space.n * args.atoms
     network = build_network(args.n_hidden, output_size, model_str=model_str)
-    optimizer = optax.adam(args.step_size)
+    optimizer = get_optimizer(args.optim, args.step_size)
 
     # for both lstm and cnn_lstm
     if 'lstm' in args.arch:
@@ -75,7 +76,7 @@ if __name__ == "__main__":
         if args.k_rnn_hs > 1:
             # value network takes as input mean + variance of hidden states and cell states.
             value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
-            value_optimizer = optax.adam(args.value_step_size)
+            value_optimizer = get_optimizer(args.optim, args.value_step_size)
             agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
                                features_shape, n_actions, rand_key, args)
         elif args.distributional:
