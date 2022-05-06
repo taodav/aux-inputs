@@ -10,9 +10,13 @@ def cnn(hidden_size: int, actions: int, x: np.ndarray):
 
     # TODO: we hardcode these sizes in first. There MAY be a use to making this nicer.
     kernel_sizes = [5, 4, 2]
-    if list(x.shape[1:]) == [17, 17, 6]:
+    if list(x.shape[1:-1]) == [25, 25]:
+        kernel_sizes = [11, 9, 7]
+    elif list(x.shape[1:-1]) == [21, 21]:
+        kernel_sizes = [10, 7, 1]
+    elif list(x.shape[1:-1]) == [17, 17]:
         kernel_sizes = [8, 6, 5]
-    elif list(x.shape[1:]) == [5, 5, 6]:
+    elif list(x.shape[1:-1]) == [5, 5]:
         kernel_sizes = [3, 2, 2]
 
     convs = hk.Sequential([
