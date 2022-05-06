@@ -45,7 +45,8 @@ class FishingWrapper(OceanNavWrapper):
     def reset(self):
         self.reset_currents()
         self.position = self.start_positions[self.rng.choice(range(len(self.start_positions)))]
-        self.rewards = self.generate_possible_rewards(self.reward_centroids)
+        # self.rewards = self.generate_possible_rewards(self.reward_centroids)
+        self.rewards = np.zeros_like(self.reward_centroids) - 1
         return self.get_obs(self.state)
 
     def get_terminal(self) -> bool:

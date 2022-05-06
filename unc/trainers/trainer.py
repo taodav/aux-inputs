@@ -54,6 +54,8 @@ class Trainer:
             'episode_length': [],
             'reward': [],
             'avg_episode_loss': [],
+            'total_time': 0,  # total time for training
+            'eval_time': 0,  # total time spent on eval
             'args': self.args.as_dict()
         }
         if 'p' in self.args.env:

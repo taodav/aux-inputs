@@ -94,7 +94,7 @@ class BufferTrainer(Trainer):
 
         # Timing stuff
         prev_time = time_start
-        log_interval = 1000
+        log_interval = 1000 if self.offline_eval_freq == 0 else self.offline_eval_freq
         total_target_updates = self.total_steps // log_interval
         num_logs = 0
         avg_time_per_log = 0
@@ -185,6 +185,12 @@ class BufferTrainer(Trainer):
                 episode_reward += reward
                 self.num_steps += 1
 
+                # Offline evaluation
+                if self.offline_eval_freq > 0 and self.num_steps % self.offline_eval_freq == 0:
+                    before_eval_time = time()
+                    self.offline_evaluation()
+                    self.info['eval_time'] += time() - before_eval_time
+
                 # Logging and timing
                 if self.num_steps % log_interval == 0:
                     time_to_check = True
@@ -197,9 +203,6 @@ class BufferTrainer(Trainer):
                     self._print(f"Remaining time: {time_remaining / 60:.2f}")
                     prev_time = curr_time
 
-                # Offline evaluation
-                if self.offline_eval_freq > 0 and self.num_steps % self.offline_eval_freq == 0:
-                    self.offline_evaluation()
 
                 if done:
                     break
@@ -219,3 +222,4 @@ class BufferTrainer(Trainer):
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
+        self.info['total_time'] = time_start - time_end
