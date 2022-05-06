@@ -100,6 +100,6 @@
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   ],
   "rewards": [[1, 0], [2, 9], [9, 1], [9, 9]],
-  "reward_change_rate": 80,
+  "reward_change_rate": 120,
   "starts": [[5, 5]]
 }
