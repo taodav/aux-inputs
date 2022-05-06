@@ -32,10 +32,17 @@ class LobsterFishingRenderWrapper(LobsterFishingWrapper):
 
         if show_obs:
             obs = self.get_obs(self.state)
-            obs_str = f"""
+            obs_str = ""
+            if obs.shape[0] == 9:
+                obs_str = f"""
 Obs - Position: {int(self.state[0])} 
 r1 o+t: {obs[3]:.2f}, r1 o+a: {obs[4]:.2f}, r1 not-o: {obs[5]:.2f}
 r2 o+t: {obs[6]:.2f}, r2 o+a: {obs[7]:.2f}, r2 not-o: {obs[8]:.2f}"""
+            elif obs.shape[0] == 7:
+                obs_str = f"""
+Obs - Position: {int(self.state[0])} 
+r1 o+t: {obs[3]:.2f}, r1 o+a: {obs[4]:.2f}
+r2 o+t: {obs[5]:.2f}, r2 o+a: {obs[6]:.2f}"""
             strs_to_attach[0] += obs_str
 
         full_viz = append_text(full_viz, strs_to_attach)

@@ -16,7 +16,7 @@ class LobsterFishing(Environment):
 
     def __init__(self,
                  rng: np.random.RandomState,
-                 traverse_prob: float = 0.3):
+                 traverse_prob: float = 0.4):
         super(LobsterFishing, self).__init__()
 
         self.observation_space = gym.spaces.Box(
