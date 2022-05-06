@@ -11,23 +11,41 @@ class GroundTruthStateWrapper(LobsterFishingWrapper):
     """
     priority = 2
 
+    state_mapping = [
+        [0, 3, 6, 9],
+        [1, 4, 7, 10],
+        [2, 5, 8, 11]
+    ]
+
     def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper]):
         super(GroundTruthStateWrapper, self).__init__(env)
         self.observation_space = gym.spaces.Box(
-            low=np.zeros(7), high=np.ones(7)
+            low=np.zeros(12), high=np.ones(12)
         )
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         state = state.astype(int)
-        position = np.zeros(3)
-        position[state[0]] = 1
-        r1_obs = np.zeros(2)
-        r2_obs = np.zeros(2)
 
-        r1_obs[state[1]] = 1
-        r2_obs[state[2]] = 1
+        state_vector = np.zeros(12)
+        possible_states = self.state_mapping[state[0]]
 
-        return np.concatenate((position, r1_obs, r2_obs))
+        r1 = state[1]
+        r2 = state[2]
+
+        if r1 and r2:
+            rew_idx = 0
+        elif not r1 and r2:
+            rew_idx = 1
+        elif r1 and not r2:
+            rew_idx = 2
+        else:
+            rew_idx = 3
+
+        state_idx = possible_states[rew_idx]
+
+        state_vector[state_idx] = 1
+
+        return state_vector
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)

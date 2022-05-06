@@ -19,7 +19,7 @@
     },
     {
       "mapping": [
-        [5, 0],
+        [5, 0]
       ],
       "change_rate": 120,
       "directions": [0, 2]
@@ -47,7 +47,7 @@
     },
     {
       "mapping": [
-        [13, 3]
+        [12, 3]
       ],
       "change_rate": 120,
       "directions": [1, 3]

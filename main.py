@@ -62,7 +62,10 @@ if __name__ == "__main__":
     output_size = train_env.action_space.n
     if args.distributional:
         output_size = train_env.action_space.n * args.atoms
-    network = build_network(args.n_hidden, output_size, model_str=model_str)
+
+    # we don't use a bias unit if we're using ground-truth states
+    with_bias = not ('g' in args.env and model_str == 'linear')
+    network = build_network(args.n_hidden, output_size, model_str=model_str, with_bias=with_bias)
     optimizer = get_optimizer(args.optim, args.step_size)
 
     # for both lstm and cnn_lstm

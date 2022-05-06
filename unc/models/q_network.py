@@ -17,7 +17,7 @@ def nn(layers: List[int], actions: int, x: np.ndarray, with_bias: bool = True):
     hidden = hk.Sequential(hidden)
 
     values = hk.Sequential([
-        hk.Linear(actions, w_init=init, b_init=b_init)
+        hk.Linear(actions, w_init=init, b_init=b_init, with_bias=with_bias)
     ])
 
     h = hidden(x)

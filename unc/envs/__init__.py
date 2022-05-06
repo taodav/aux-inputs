@@ -164,7 +164,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
 
 def get_lobster_env(rng: np.random.RandomState,
                     env_str: str,
-                    traverse_prob: float = 0.4,
+                    traverse_prob: float = 0.6,
                     render: bool = True,
                     trace_decay: float = 0.8,
                     **kwargs):

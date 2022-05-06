@@ -12,11 +12,11 @@ class LobsterFishing(Environment):
     https://docs.google.com/document/d/16srtrtyKE40GXQNTx7VCR_leesarrukrg03vqr9MO8k/edit
 
     """
-    reward_inverse_rates = np.array([10, 10])
+    reward_inverse_rates = np.array([20, 20])
 
     def __init__(self,
                  rng: np.random.RandomState,
-                 traverse_prob: float = 0.4):
+                 traverse_prob: float = 0.6):
         super(LobsterFishing, self).__init__()
 
         self.observation_space = gym.spaces.Box(
