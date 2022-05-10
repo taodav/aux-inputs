@@ -129,7 +129,6 @@ if __name__ == "__main__":
     gt_args.arch = "linear"
     gt_args.env = "2g"
     gt_args.discounting = 0.9
-    gt_args.n_hidden = 5
     gt_args.step_size = 0.0001
     gt_args.total_steps = 500000
     gt_args.max_episode_steps = 200
@@ -144,7 +143,6 @@ if __name__ == "__main__":
     obs_args.arch = "linear"
     obs_args.env = "2"
     obs_args.discounting = 0.9
-    obs_args.n_hidden = 5
     obs_args.step_size = 0.0001
     obs_args.total_steps = 500000
     obs_args.max_episode_steps = 200
@@ -159,7 +157,6 @@ if __name__ == "__main__":
     unc_args.arch = "linear"
     unc_args.env = "2o"
     unc_args.discounting = 0.9
-    unc_args.n_hidden = 5
     unc_args.step_size = 0.0001
     unc_args.total_steps = 500000
     unc_args.max_episode_steps = 200
@@ -200,7 +197,7 @@ if __name__ == "__main__":
     save_info(results_fname, results)
     print(f"Saved observations for test episodes in {results_fname}")
 
-    obs_agent.save(obs_agent_fname)
+    gt_agent.save(gt_agent_fname)
     print(f"Saved 2g agent to {gt_agent_fname}")
 
     obs_agent.save(obs_agent_fname)

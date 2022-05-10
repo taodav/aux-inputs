@@ -86,6 +86,7 @@ def import_module_to_hparam(hparam_path: Path) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--hparam', default='', type=str)
+    parser.add_argument('--local', action='store_true')
     args = parser.parse_args()
 
     runs_dir = Path(ROOT_DIR, 'scripts', 'runs')
@@ -93,9 +94,11 @@ if __name__ == "__main__":
     hparam_path = Path(ROOT_DIR, 'scripts', 'hparams', args.hparam + ".py")
     hparams = import_module_to_hparam(hparam_path)
 
-    # Here we assume we want to write to the scratch directory in CC.
-    results_dir = Path("/home/taodav/scratch/uncertainty/results")
-    log_dir = Path("/home/taodav/scratch/uncertainty/log")
+    results_dir, log_dir = None, None
+    if not args.local:
+        # Here we assume we want to write to the scratch directory in CC.
+        results_dir = Path("/home/taodav/scratch/uncertainty/results")
+        log_dir = Path("/home/taodav/scratch/uncertainty/log")
 
     # Make our directories if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
