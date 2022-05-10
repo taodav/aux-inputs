@@ -8,9 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=5G
-#SBATCH --time=0-24:00
-#SBATCH --array=16,20,23,27,28
-
+#SBATCH --time=0-48:00
+#SBATCH --array=1-12
 
 # get the correct version of both from CC
 module load gcc python/3.8 cuda/11.4 cudnn/8.2
@@ -18,5 +17,5 @@ module load gcc python/3.8 cuda/11.4 cudnn/8.2
 cd ../  # Go to main project folder
 source venv/bin/activate
 
-TO_RUN=$(sed -n "${SLURM_ARRAY_TASK_ID}p" scripts/runs/runs_uf2_cnn_lstm.txt)
+TO_RUN=$(sed -n "${SLURM_ARRAY_TASK_ID}p" scripts/runs/runs_uf5_comb.txt)
 eval $TO_RUN
