@@ -10,4 +10,6 @@ jax[cuda]
 optax
 dm-haiku
 tqdm
+plotly==5.7.0
+pandas
 -e .

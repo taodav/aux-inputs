@@ -122,17 +122,23 @@ def init_and_train(args: Args):
 
 
 if __name__ == "__main__":
+    discounting = 0.9
+    step_size = 5e-4
+    total_steps = 1000000
+    max_episode_steps = 200
+
     parser = Args()
     gt_args = parser.parse_args()
 
     gt_args.algo = "sarsa"
     gt_args.arch = "linear"
     gt_args.env = "2g"
-    gt_args.discounting = 0.9
-    gt_args.step_size = 0.0001
-    gt_args.total_steps = 500000
-    gt_args.max_episode_steps = 200
-    gt_args.seed = 2022
+    gt_args.discounting = discounting
+    gt_args.step_size = step_size
+    gt_args.total_steps = total_steps
+    gt_args.max_episode_steps = max_episode_steps
+    gt_args.seed = 2023
+    gt_args.epsilon = 0.2
 
     gt_agent, gt_test_env = init_and_train(gt_args)
 
@@ -142,13 +148,13 @@ if __name__ == "__main__":
     obs_args.algo = "sarsa"
     obs_args.arch = "linear"
     obs_args.env = "2"
-    obs_args.discounting = 0.9
-    obs_args.step_size = 0.0001
-    obs_args.total_steps = 500000
-    obs_args.max_episode_steps = 200
+    obs_args.discounting = discounting
+    obs_args.step_size = step_size
+    obs_args.total_steps = total_steps
+    obs_args.max_episode_steps = max_episode_steps
     obs_args.seed = 2022
 
-    obs_agent, obs_test_env = init_and_train(obs_args)
+    # obs_agent, obs_test_env = init_and_train(obs_args)
 
     parser = Args()
     unc_args = parser.parse_args()
@@ -156,52 +162,53 @@ if __name__ == "__main__":
     unc_args.algo = "sarsa"
     unc_args.arch = "linear"
     unc_args.env = "2o"
-    unc_args.discounting = 0.9
-    unc_args.step_size = 0.0001
-    unc_args.total_steps = 500000
-    unc_args.max_episode_steps = 200
+    unc_args.discounting = discounting
+    unc_args.step_size = step_size
+    unc_args.total_steps = total_steps
+    unc_args.max_episode_steps = max_episode_steps
     unc_args.seed = 2022
+    unc_args.epsilon = 0.5
 
     unc_agent, unc_test_env = init_and_train(unc_args)
 
     episodes_to_collect = 5
 
-    obs_collected_obs, obs_collected_rew = collect_observations(obs_agent, obs_test_env,
-                                                                n_episodes=episodes_to_collect,
-                                                                max_episode_steps=obs_args.max_episode_steps,
-                                                                test_eps=0.)
+    # obs_collected_obs, obs_collected_rew = collect_observations(obs_agent, obs_test_env,
+    #                                                             n_episodes=episodes_to_collect,
+    #                                                             max_episode_steps=obs_args.max_episode_steps,
+    #                                                             test_eps=0.)
+    #
+    # unc_collected_obs, unc_collected_rew = collect_observations(unc_agent, unc_test_env,
+    #                                                             n_episodes=episodes_to_collect,
+    #                                                             max_episode_steps=unc_args.max_episode_steps,
+    #                                                             test_eps=0.)
 
-    unc_collected_obs, unc_collected_rew = collect_observations(unc_agent, unc_test_env,
-                                                                n_episodes=episodes_to_collect,
-                                                                max_episode_steps=unc_args.max_episode_steps,
-                                                                test_eps=0.)
-
-    results = {
-        '2': {
-            'args': obs_args.as_dict(),
-            'obs': obs_collected_obs,
-            'rews': obs_collected_rew
-        },
-        '2o': {
-            'args': unc_args.as_dict(),
-            'obs': unc_collected_obs,
-            'rews': unc_collected_rew
-
-        }
-    }
+    # results = {
+    #     '2': {
+    #         'args': obs_args.as_dict(),
+    #         'obs': obs_collected_obs,
+    #         'rews': obs_collected_rew
+    #     },
+    #     '2o': {
+    #         'args': unc_args.as_dict(),
+    #         'obs': unc_collected_obs,
+    #         'rews': unc_collected_rew
+    #
+    #     }
+    # }
     results_fname = Path(ROOT_DIR, 'results', 'lobster_data.npy')
     gt_agent_fname = Path(ROOT_DIR, 'results', f'2g_{gt_args.arch}_agent.pth')
     obs_agent_fname = Path(ROOT_DIR, 'results', f'2_{obs_args.arch}_agent.pth')
     unc_agent_fname = Path(ROOT_DIR, 'results', f'2o_{unc_args.arch}_agent.pth')
 
-    save_info(results_fname, results)
-    print(f"Saved observations for test episodes in {results_fname}")
+    # save_info(results_fname, results)
+    # print(f"Saved observations for test episodes in {results_fname}")
 
     gt_agent.save(gt_agent_fname)
     print(f"Saved 2g agent to {gt_agent_fname}")
 
-    obs_agent.save(obs_agent_fname)
-    print(f"Saved 2 agent to {obs_agent_fname}")
+    # obs_agent.save(obs_agent_fname)
+    # print(f"Saved 2 agent to {obs_agent_fname}")
 
     unc_agent.save(unc_agent_fname)
     print(f"Saved 2o agent to {unc_agent_fname}")
