@@ -48,6 +48,7 @@ class Args(Tap):
 
     distance_noise: bool = False  # [OCEANNAV] For our OceanNav partially observable wrappers, do we use distance noise?
     distance_unc_encoding: bool = False  # [OCEANNAV] For our OceanNav partially observable mapping wrapper, do we explicitly encode uncertainty over distance?
+    random_reward_start: bool = False  # [FISHING] Do we randomly init rewards?
     uncertainty_decay: float = 1.  # [OCEANNAV] How quickly do we decay our uncertainty?
     task_fname: str = "task_{}_config.json"  # [OCEANNAV] What's our task config file name?
 

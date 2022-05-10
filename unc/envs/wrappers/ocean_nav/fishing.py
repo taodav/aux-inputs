@@ -22,14 +22,16 @@ class FishingWrapper(OceanNavWrapper):
     Terminals - Always False in this case.
     """
 
-    def __init__(self, env: Union[OceanNav, OceanNavWrapper]):
+    def __init__(self, env: Union[OceanNav, OceanNavWrapper],
+                 random_reward_start: bool = False):
         super(FishingWrapper, self).__init__(env)
-        self.reward_centroids = np.array(self.config['rewards'], dtype=np.int16)
+        rew_pos_list = [rew_dict['position'] for rew_dict in self.config['rewards']]
+        self.reward_centroids = np.array(rew_pos_list, dtype=np.int16)
+        self.random_reward_start = random_reward_start
 
         # Set a default here if we don't include it in config
-        self.reward_change_rate = 40
-        if 'reward_change_rate' in self.config:
-            self.reward_change_rate = self.config['reward_change_rate']
+        # self.reward_change_rate = np.ones(len(rew_pos_list)) * 40
+        self.reward_change_rate = np.array([rew_dict['change_rate'] for rew_dict in self.config['rewards']])
         reward_lambs = 1 / self.reward_change_rate
 
         # TODO: For now we assume all rewards have the same change rates
@@ -38,15 +40,22 @@ class FishingWrapper(OceanNavWrapper):
         self.rewards = None
 
     @staticmethod
-    def generate_possible_rewards(centroids: np.ndarray) -> np.ndarray:
-        # TODO
-        return np.array(centroids, dtype=np.int16)
+    def generate_possible_rewards(centroids: np.ndarray):
+        rewards = np.array(centroids, dtype=np.int16)
+        return rewards
+
+    def reset_rewards(self, centroids: np.ndarray) -> np.ndarray:
+        rewards = self.generate_possible_rewards(centroids)
+        if self.random_reward_start:
+            missing_mask = self.rng.randint(2, size=len(centroids)).astype(bool)
+            rewards[missing_mask] = np.array([-1, -1])
+
+        return rewards
 
     def reset(self):
         self.reset_currents()
         self.position = self.start_positions[self.rng.choice(range(len(self.start_positions)))]
-        # self.rewards = self.generate_possible_rewards(self.reward_centroids)
-        self.rewards = np.zeros_like(self.reward_centroids) - 1
+        self.rewards = self.reset_rewards(self.reward_centroids)
         return self.get_obs(self.state)
 
     def get_terminal(self) -> bool:
@@ -60,7 +69,7 @@ class FishingWrapper(OceanNavWrapper):
         for i, rew_pos in enumerate(reward_positions):
             if np.all(rew_pos == position):
                 new_reward_positions[i] = np.array([-1, -1], dtype=np.int16)
-            elif np.all(rew_pos == -1) and self.rng.rand() < self.rewards_pmfs_1:
+            elif np.all(rew_pos == -1) and self.rng.rand() < self.rewards_pmfs_1[i]:
                 # now we need to tick the rewards
                 new_rew_pos = self.generate_possible_rewards(self.reward_centroids[i:i+1])[0]
                 new_reward_positions[i] = new_rew_pos

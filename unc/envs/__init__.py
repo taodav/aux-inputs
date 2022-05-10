@@ -92,7 +92,8 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args
                   distance_noise=args.distance_noise,
                   distance_unc_encoding=args.distance_unc_encoding,
                   uncertainty_decay=args.uncertainty_decay,
-                  task_fname=args.task_fname)
+                  task_fname=args.task_fname,
+                  random_reward_start=args.random_reward_start)
 
     if "r" in env_str:
         # r for rocksample
@@ -128,6 +129,7 @@ def get_ocean_nav_env(rng: np.random.RandomState,
                       render: bool = True,
                       uncertainty_decay: float = 1.,
                       slip_prob: float = 0.,
+                      random_reward_start: bool = False,
                       **kwargs):
     # get the first digit
     task_num = None
@@ -143,7 +145,6 @@ def get_ocean_nav_env(rng: np.random.RandomState,
     env_str = env_str.replace(task_num, '')
     env = OceanNav(rng, config, slip_prob=slip_prob)
 
-    # TODO: add wrappers here
     list_w = list(set(env_str))
     wrapper_list = [ocean_nav_wrapper_map[w] for w in list_w if ocean_nav_wrapper_map[w] is not None]
 
@@ -153,6 +154,8 @@ def get_ocean_nav_env(rng: np.random.RandomState,
             env = w(env, distance_noise=distance_noise)
         elif w == on.ObservationMapWrapper:
             env = w(env, distance_noise=distance_noise, uncertainty_decay=uncertainty_decay)
+        elif w == on.FishingWrapper:
+            env = w(env, random_reward_start=random_reward_start)
         else:
             env = w(env)
 

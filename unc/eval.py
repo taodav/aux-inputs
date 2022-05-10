@@ -30,6 +30,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
             q_vals = None
             if hasattr(agent, "curr_q"):
                 q_vals = agent.curr_q[0]
+                if len(q_vals.shape) == 2:
+                    q_vals = q_vals[0]
             imgs.append(env.render(mode='rgb_array',
                                    show_obs=show_obs,
                                    show_weights=show_weights,
@@ -54,6 +56,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                 q_vals = None
                 if hasattr(agent, "curr_q"):
                     q_vals = agent.curr_q[0]
+                    if len(q_vals.shape) == 2:
+                        q_vals = q_vals[0]
                 imgs.append(env.render(mode='rgb_array',
                                        show_obs=show_obs,
                                        show_weights=show_weights,

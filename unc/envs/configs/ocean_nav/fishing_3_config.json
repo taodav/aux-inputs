@@ -141,7 +141,23 @@
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   ],
-  "rewards": [[1, 0], [2, 9], [9, 1], [9, 9]],
-  "reward_change_rate": 80,
+  "rewards": [
+    {
+      "position": [1, 0],
+      "change_rate": 80
+    },
+    {
+      "position": [2, 9],
+      "change_rate": 80
+    },
+    {
+      "position": [9, 1],
+      "change_rate": 80
+    },
+    {
+      "position": [10, 10],
+      "change_rate": 80
+    }
+  ],
   "starts": [[5, 5]]
 }

@@ -11,9 +11,11 @@ def pos_to_map(pos: np.ndarray, size: int):
     pos_map = np.zeros((size, size), dtype=np.int16)
     if len(pos.shape) == 2:
         for p in pos:
-            pos_map[p[0], p[1]] = 1
+            if np.all(p > -1):
+                pos_map[p[0], p[1]] = 1
     elif len(pos.shape) == 1:
-        pos_map[pos[0], pos[1]] = 1
+        if np.all(pos > -1):
+            pos_map[pos[0], pos[1]] = 1
     return pos_map
 
 
@@ -91,8 +93,8 @@ class OceanNav(Environment):
         self.start_positions = np.array(self.config['starts'], dtype=np.int16)
 
         # Reward positions to sample from. Note: we can only have 1 active reward in an env currently.
-        # TODO (maybe): Extend this to multiple rewards
-        self.possible_reward_positions = np.array(self.config['rewards'], dtype=np.int16)
+        rew_pos_list = [rew_dict['position'] for rew_dict in self.config['rewards']]
+        self.possible_reward_positions = np.array(rew_pos_list, dtype=np.int16)
 
     def reset_currents(self):
         self.current_map = np.zeros((self.size, self.size), dtype=np.int16)
