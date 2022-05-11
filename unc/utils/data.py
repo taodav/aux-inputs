@@ -203,5 +203,15 @@ def ind_to_one_hot(arr: np.ndarray, max_val: int, channels_first: bool = False) 
 def sample_idx_batch(batch_size: int, length: int, rand_key: random.PRNGKey):
     new_rand_key, sample_rand_key = random.split(rand_key, 2)
     unif = random.uniform(sample_rand_key, (batch_size,))
-    idx = jnp.round_(unif * length)
+    idx = jnp.floor(unif * length).astype(int)
     return idx, new_rand_key
+
+
+def sample_seq_idxes(batch_size: int, capacity: int, seq_len: int, length: int, eligible_idxes: jnp.ndarray, rand_key: random.PRNGKey):
+    sampled_ei_idx, new_rand_key = sample_idx_batch(batch_size, length, rand_key)
+    sample_idx = eligible_idxes[sampled_ei_idx]
+    seq_range = jnp.arange(seq_len, dtype=int)[:, None]
+    sample_seq_idx = (sample_idx + seq_range).T % capacity
+
+    return sample_seq_idx, new_rand_key
+

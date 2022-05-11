@@ -37,13 +37,15 @@ if __name__ == "__main__":
     test_rand_key = random.PRNGKey(args.seed + 10)
     # TODO: when we do GPU jobs, make sure JAX CuDNN backend has determinism and seeding done
 
+    train_env_key, test_env_key, rand_key = random.split(rand_key, 3)
+
     # Initializing our environment, args we need are filtered out in get_env
     train_env = get_env(rng,
-                        rand_key,
+                        train_env_key,
                         args)
 
     test_env = get_env(test_rng,
-                       test_rand_key,
+                       test_env_key,
                        args)
 
     # Getting our pre-filled replay buffer if we need it.
@@ -69,6 +71,7 @@ if __name__ == "__main__":
     optimizer = get_optimizer(args.optim, args.step_size)
 
     # for both lstm and cnn_lstm
+    agent_key, rand_key = random.split(rand_key, 2)
     if 'lstm' in args.arch:
         features_shape = train_env.observation_space.shape
         n_actions = train_env.action_space.n
@@ -76,28 +79,30 @@ if __name__ == "__main__":
         # Currently we only do action conditioning with the LSTM agent.
         if args.action_cond == 'cat':
             features_shape = features_shape[:-1] + (features_shape[-1] + n_actions,)
+
         if args.k_rnn_hs > 1:
             # value network takes as input mean + variance of hidden states and cell states.
             value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
             value_optimizer = get_optimizer(args.optim, args.value_step_size)
             agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
-                               features_shape, n_actions, rand_key, args)
+                               features_shape, n_actions, agent_key, args)
         elif args.distributional:
             agent = DistributionalLSTMAgent(network, optimizer, features_shape,
-                                            n_actions, rand_key, args)
+                                            n_actions, agent_key, args)
         else:
             agent = LSTMAgent(network, optimizer, features_shape,
-                              n_actions, rand_key, args)
+                              n_actions, agent_key, args)
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape,
-                              train_env.action_space.n, rand_key, args)
+                              train_env.action_space.n, agent_key, args)
     else:
         agent = DQNAgent(network, optimizer, train_env.observation_space.shape,
-                         train_env.action_space.n, rand_key, args)
+                         train_env.action_space.n, agent_key, args)
 
     # Initialize our trainer
     if args.replay:
-        trainer = BufferTrainer(args, agent, train_env, test_env, prefilled_buffer=prefilled_buffer)
+        rand_key, buffer_rand_key = random.split(rand_key, 2)
+        trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key, prefilled_buffer=prefilled_buffer)
     else:
         trainer = Trainer(args, agent, train_env, test_env)
     trainer.reset()

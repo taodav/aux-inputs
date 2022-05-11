@@ -1,12 +1,17 @@
 import numpy as np
-from jax import random, jit
+import time as tm
+from jax import random
 from typing import Tuple, Union
+from collections import deque
 
-from unc.utils import Batch, sample_idx_batch, sample_seq_idxes
+from unc.envs import get_env
+from unc.utils.data import Batch
+from unc.utils.replay import ReplayBuffer, EpisodeBuffer
+from unc.args import Args
 
 
-class ReplayBuffer:
-    def __init__(self, capacity: int, rand_key: random.PRNGKey,
+class OldReplayBuffer:
+    def __init__(self, capacity: int, rng: np.random.RandomState,
                  obs_size: Tuple,
                  obs_dtype: type,
                  state_size: Tuple = None):
@@ -17,7 +22,7 @@ class ReplayBuffer:
         """
 
         self.capacity = capacity
-        self.rand_key = rand_key
+        self.rng = rng
         self.state_size = state_size
         self.obs_size = obs_size
 
@@ -37,10 +42,7 @@ class ReplayBuffer:
         self._filled = False
 
         # We have the -1 here b/c we write next_obs as well.
-        self.eligible_idxes = np.zeros(self.capacity - 1, dtype=int)
-        self.n_eligible_idxes = 0
-        self.ei_cursor = 0
-        self.jitted_sampled_idx_batch = jit(sample_idx_batch, static_argnums=0)
+        self.eligible_idxes = deque(maxlen=self.capacity - 1)
 
     def reset(self):
         if self.state_size is not None:
@@ -51,13 +53,11 @@ class ReplayBuffer:
         self.r = np.zeros(self.capacity, dtype=np.float)
         self.d = np.zeros(self.capacity, dtype=bool)
 
-        self.ei_cursor = 0
         self._cursor = 0
         self._filled = False
 
     def push(self, batch: Batch):
         next_cursor = (self._cursor + 1) % self.capacity
-        next_ei_cursor = (self.ei_cursor + 1) % (self.capacity - 1)
 
         self.a[self._cursor] = batch.action
         if self.state_size is not None and batch.state is not None and batch.next_state is not None:
@@ -72,18 +72,11 @@ class ReplayBuffer:
 
         self.obs[next_cursor] = batch.next_obs
 
-        self.eligible_idxes[self.ei_cursor] = self._cursor
-        self.n_eligible_idxes = min(self.capacity - 1, self.n_eligible_idxes + 1)
-        self.ei_cursor = next_ei_cursor
+        self.eligible_idxes.append(self._cursor)
         self._cursor = next_cursor
 
     def __len__(self):
         return len(self.eligible_idxes)
-
-    def sample_eligible_idxes(self, batch_size: int):
-        length = self.n_eligible_idxes
-        idxes, self.rand_key = self.jitted_sampled_idx_batch(batch_size, length, self.rand_key)
-        return self.eligible_idxes[idxes]
 
     def sample(self, batch_size: int, **kwargs) -> Batch:
         """
@@ -94,7 +87,7 @@ class ReplayBuffer:
         :return:
         """
 
-        sample_idx = self.sample_eligible_idxes(batch_size)
+        sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
         batch = {}
         if self.state_size is not None:
             batch['state'] = self.s[sample_idx]
@@ -110,34 +103,27 @@ class ReplayBuffer:
         return Batch(**batch)
 
 
-class EpisodeBuffer(ReplayBuffer):
+class OldEpisodeBuffer(OldReplayBuffer):
     """
     For episode buffer, we return zero-padded batches back.
-
     We have to save "end" instead of done, to track if either an episode is finished
     or we reach the max number of steps
-
     How zero-padded batches work in our case is that the "done" tensor
     is essentially a mask for
     """
-    def __init__(self, capacity: int, rand_key: random.PRNGKey,
+
+    def __init__(self, capacity: int, rng: np.random.RandomState,
                  obs_size: Tuple, obs_dtype: type, state_size: Tuple = None):
-        super(EpisodeBuffer, self).__init__(capacity, rand_key, obs_size, obs_dtype, state_size=state_size)
-        self.jitted_sampled_seq_idxes = jit(sample_seq_idxes, static_argnums=(0, 1, 2))
+        super(OldEpisodeBuffer, self).__init__(capacity, rng, obs_size, obs_dtype, state_size=state_size)
         self.end = np.zeros_like(self.d, dtype=bool)
 
     def push(self, batch: Batch):
         self.end[self._cursor] = batch.end
-        super(EpisodeBuffer, self).push(batch)
-
-    def sample_eligible_idxes(self, batch_size: int, seq_len: int) -> np.ndarray:
-        length = self.n_eligible_idxes
-        sampled_eligible_idxes, self.rand_key = self.jitted_sampled_seq_idxes(batch_size, self.capacity, seq_len, length,
-                                                                  self.eligible_idxes, self.rand_key)
-        return sampled_eligible_idxes
+        super(OldEpisodeBuffer, self).push(batch)
 
     def sample(self, batch_size: int, seq_len: int = 1, as_dict: bool = False) -> Union[Batch, dict]:
-        sample_idx = self.sample_eligible_idxes(batch_size, seq_len)
+        sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
+        sample_idx = (sample_idx + np.arange(seq_len)[:, None]).T % self.capacity
 
         batch = {}
         batch['state'] = self.s[sample_idx]
@@ -158,7 +144,7 @@ class EpisodeBuffer(ReplayBuffer):
         ys_ends, xs_ends = ends.nonzero()
 
         # Also, we don't want any experience beyond our current cursor.
-        ys_cursor, xs_cursor = np.nonzero(np.array(sample_idx) == self.eligible_idxes[self.ei_cursor])
+        ys_cursor, xs_cursor = np.nonzero(sample_idx == self.eligible_idxes[-1])
 
         ys, xs = np.concatenate([ys_cursor, ys_ends]), np.concatenate([xs_cursor, xs_ends])
 
@@ -179,3 +165,98 @@ class EpisodeBuffer(ReplayBuffer):
             batch[key] = np.stack(np.split(arr, k, axis=0))
 
         return Batch(**batch)
+
+
+if __name__ == "__main__":
+    seed = 2020
+    buffer_size = 100000
+    iterations = 20000
+
+    parser = Args()
+    args = parser.parse_args()
+    args.seed = seed
+    args.buffer_size = buffer_size
+    args.env = "uf2a"
+    args.batch_size = 32
+    args.n_hidden = 10
+    args.trunc = 5
+
+    rng = np.random.RandomState(seed)
+    rand_key = random.PRNGKey(seed)
+
+    env = get_env(rng, rand_key, args)
+    new_buffer = ReplayBuffer(args.buffer_size, rand_key, (1, ),
+                              obs_dtype=env.observation_space.low.dtype)
+
+    new_epi_buffer = EpisodeBuffer(args.buffer_size, rand_key, (1, ),
+                                   obs_dtype=env.observation_space.low.dtype,
+                                   state_size=(2, args.n_hidden))
+
+    old_buffer = OldReplayBuffer(args.buffer_size, rng, (1, ),
+                                 obs_dtype=env.observation_space.low.dtype)
+
+    old_epi_buffer = OldEpisodeBuffer(args.buffer_size, rng, (1, ),
+                                      obs_dtype=env.observation_space.low.dtype,
+                                      state_size=(2, args.n_hidden))
+
+    obs = np.array([0])
+    state = rng.randint(0, 10, size=(2, args.n_hidden))
+    offset = 20
+    to_add = buffer_size + offset
+    for i in range(1, to_add + 1):
+        next_obs = np.array([i])
+        next_state = rng.randint(0, 10, size=(2, args.n_hidden))
+        sample = Batch(obs=obs, reward=0, next_obs=next_obs, action=0, done=i % 10 == 0,
+                       next_action=0, state=state, next_state=next_state, end=i % 10 == 0)
+
+        new_buffer.push(sample)
+        old_buffer.push(sample)
+        new_epi_buffer.push(sample)
+        old_epi_buffer.push(sample)
+
+        obs = next_obs
+        state = next_state
+
+    print(f"Pushed {to_add} samples to all buffers")
+
+    new_buff_sample_counts = np.zeros(args.buffer_size)
+    old_buff_sample_counts = np.zeros(args.buffer_size)
+    new_epi_buff_sample_counts = np.zeros(args.buffer_size + 1)
+    old_epi_buff_sample_counts = np.zeros(args.buffer_size + 1)
+
+    # we first test normal old buffer speed
+    t_start = tm.time()
+
+    for _ in range(iterations):
+        old_buffer.sample(args.batch_size)
+
+    t_end = tm.time()
+    print(f"Old buffer time for {iterations} samples: {t_end - t_start:.3f}")
+
+    # we first test normal new buffer speed
+    t_start = tm.time()
+
+    for _ in range(iterations):
+        new_buffer.sample(args.batch_size)
+
+    t_end = tm.time()
+    print(f"New buffer time for {iterations} samples: {t_end - t_start:.3f}")
+
+    # Now old episodic buffer speed
+    t_start = tm.time()
+
+    for _ in range(iterations):
+        old_epi_buffer.sample(args.batch_size, seq_len=args.trunc)
+
+    t_end = tm.time()
+    print(f"old episodic buffer time for {iterations} samples: {t_end - t_start:.3f}")
+
+
+    # Now new episodic buffer speed
+    t_start = tm.time()
+
+    for _ in range(iterations):
+        new_epi_buffer.sample(args.batch_size, seq_len=args.trunc)
+
+    t_end = tm.time()
+    print(f"new episodic buffer time for {iterations} samples: {t_end - t_start:.3f}")

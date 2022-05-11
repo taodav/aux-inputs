@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Union, List
 from time import time, ctime
+from jax import random
 
 from unc.args import Args
 from unc.envs import RockSample
@@ -17,7 +18,9 @@ from unc.debug import summarize_checks, all_unchecked_rock_q_vals
 
 class BufferTrainer(Trainer):
     def __init__(self, args: Args, agent: Agent, env: Union[RockSample, RockSampleWrapper],
-                 test_env: Union[RockSample, RockSampleWrapper], prefilled_buffer: ReplayBuffer = None):
+                 test_env: Union[RockSample, RockSampleWrapper],
+                 rand_key: random.PRNGKey,
+                 prefilled_buffer: ReplayBuffer = None):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
 
@@ -37,17 +40,20 @@ class BufferTrainer(Trainer):
         self.action_cond = args.action_cond
         self.n_actions = self.env.action_space.n
 
+        # NOTE: if we decide to use rand_key in more things besides buffer, we need
+        # to split here.
+
         if 'lstm' in self.arch and isinstance(self.agent, LSTMAgent):
             # We save state for an LSTM agent
             obs_shape = self.env.observation_space.shape
             if self.action_cond == 'cat':
                 obs_shape = obs_shape[:-1] + (obs_shape[-1] + self.n_actions,)
 
-            self.buffer = EpisodeBuffer(args.buffer_size, self.env.rng, obs_shape,
+            self.buffer = EpisodeBuffer(args.buffer_size, rand_key, obs_shape,
                                         obs_dtype=self.env.observation_space.low.dtype,
                                         state_size=self.agent.state_shape)
         else:
-            self.buffer = ReplayBuffer(args.buffer_size, self.env.rng, self.env.observation_space.shape,
+            self.buffer = ReplayBuffer(args.buffer_size, rand_key, self.env.observation_space.shape,
                                        obs_dtype=self.env.observation_space.low.dtype)
         self.prefilled_buffer = prefilled_buffer
 
