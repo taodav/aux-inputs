@@ -2,6 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 import haiku as hk
 from pathlib import Path
+from jax import random
 from PIL import Image
 from dataclasses import dataclass
 from typing import Union, Iterable, List, Tuple
@@ -197,3 +198,10 @@ def ind_to_one_hot(arr: np.ndarray, max_val: int, channels_first: bool = False) 
     if channels_first:
         one_hot = np.transpose(one_hot, (len(one_hot.shape) - 1, *range(len(one_hot.shape) - 1)))
     return one_hot
+
+
+def sample_idx_batch(batch_size: int, length: int, rand_key: random.PRNGKey):
+    new_rand_key, sample_rand_key = random.split(rand_key, 2)
+    unif = random.uniform(sample_rand_key, (batch_size,))
+    idx = jnp.round_(unif * length)
+    return idx, new_rand_key

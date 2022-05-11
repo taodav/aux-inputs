@@ -1,12 +1,14 @@
 import numpy as np
+import jax.numpy as jnp
+from jax import random, jit
 from typing import Tuple, Union
 from collections import deque
 
-from unc.utils import Batch
+from unc.utils import Batch, sample_idx_batch
 
 
 class ReplayBuffer:
-    def __init__(self, capacity: int, rng: np.random.RandomState,
+    def __init__(self, capacity: int, rand_key: random.PRNGKey,
                  obs_size: Tuple,
                  obs_dtype: type,
                  state_size: Tuple = None):
@@ -17,7 +19,7 @@ class ReplayBuffer:
         """
 
         self.capacity = capacity
-        self.rng = rng
+        self.rand_key = rand_key
         self.state_size = state_size
         self.obs_size = obs_size
 
@@ -38,6 +40,7 @@ class ReplayBuffer:
 
         # We have the -1 here b/c we write next_obs as well.
         self.eligible_idxes = deque(maxlen=self.capacity - 1)
+        self.jitted_sampled_idx_batch = jit(sample_idx_batch, static_argnums=0)
 
     def reset(self):
         if self.state_size is not None:
@@ -73,6 +76,11 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.eligible_idxes)
 
+    def sample_eligible_idxes(self, batch_size: int):
+        length = len(self.eligible_idxes)
+        idxes, self.rand_key = self.jitted_sampled_idx_batch(batch_size, length, self.rand_key)
+        return idxes
+
     def sample(self, batch_size: int, **kwargs) -> Batch:
         """
         NOTE: If done is True, then the next state returned is either all
@@ -81,10 +89,8 @@ class ReplayBuffer:
         :param batch_size:
         :return:
         """
-        if len(self.eligible_idxes) < batch_size:
-            batch_size = len(self.eligible_idxes)
 
-        sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
+        sample_idx = self.sample_eligible_idxes(batch_size)
         batch = {}
         if self.state_size is not None:
             batch['state'] = self.s[sample_idx]
@@ -100,6 +106,13 @@ class ReplayBuffer:
         return Batch(**batch)
 
 
+def sample_seq_idxes(batch_size: int, capacity: int, seq_len: int, length: int, rand_key: random.PRNGKey)
+    sample_idx, new_rand_key = sample_idx_batch(batch_size, length, rand_key)
+    sample_seq_idx = (sample_idx + jnp.arange(seq_len)[:, None]).T % capacity
+
+    return sample_seq_idx, new_rand_key
+
+
 class EpisodeBuffer(ReplayBuffer):
     """
     For episode buffer, we return zero-padded batches back.
@@ -110,18 +123,23 @@ class EpisodeBuffer(ReplayBuffer):
     How zero-padded batches work in our case is that the "done" tensor
     is essentially a mask for
     """
-    def __init__(self, capacity: int, rng: np.random.RandomState,
+    def __init__(self, capacity: int, rand_key: random.PRNGKey,
                  obs_size: Tuple, obs_dtype: type, state_size: Tuple = None):
-        super(EpisodeBuffer, self).__init__(capacity, rng, obs_size, obs_dtype, state_size=state_size)
+        super(EpisodeBuffer, self).__init__(capacity, rand_key, obs_size, obs_dtype, state_size=state_size)
+        self.jitted_sampled_seq_idxes = jit(sample_seq_idxes, static_argnums=(0, 1, 2))
         self.end = np.zeros_like(self.d, dtype=bool)
 
     def push(self, batch: Batch):
         self.end[self._cursor] = batch.end
         super(EpisodeBuffer, self).push(batch)
 
+    def sample_eligible_idxes(self, batch_size: int, seq_len: int) -> np.ndarray:
+        length = len(self.eligible_idxes)
+        sample_idx, self.rand_key = self.jitted_sampled_seq_idxes(batch_size, self.capacity, seq_len, length, self.rand_key)
+        return sample_idx
+
     def sample(self, batch_size: int, seq_len: int = 1, as_dict: bool = False) -> Union[Batch, dict]:
-        sample_idx = self.rng.choice(self.eligible_idxes, size=batch_size)
-        sample_idx = (sample_idx + np.arange(seq_len)[:, None]).T % self.capacity
+        sample_idx = self.sample_eligible_idxes(batch_size, seq_len)
 
         batch = {}
         batch['state'] = self.s[sample_idx]
