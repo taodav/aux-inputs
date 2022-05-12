@@ -93,6 +93,8 @@ class ObservationMapWrapper(PartiallyObservableWrapper):
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
+        self.observation_map = np.zeros_like(self.observation_map, dtype=np.half)
+
         window_obs = super(ObservationMapWrapper, self).get_obs(self.state)
         self.incorporate_obs(window_obs, self.position)
 

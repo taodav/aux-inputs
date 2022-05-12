@@ -29,7 +29,7 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
     glass_color = np.array([102, 178, 255], dtype=np.uint8)
     kelp_color = np.array([167, 246, 185], dtype=np.uint8)
     goal_color = np.array([0, 150, 0], dtype=np.uint8)
-    certainty_color = np.array([120, 0, 0], dtype=np.uint8)
+    certainty_color = np.array([231, 76, 60], dtype=np.uint8)
     agent_color = np.array([0, 0, 0], dtype=np.uint8)
     grid_color = None
 
@@ -78,9 +78,9 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
                     to_fill = np.zeros((scale, scale, 3))
                     to_fill[:, :] = np.copy(space_color)
 
-            if certainty_map is not None and certainty_map[y, x] > 0.01:
-                to_fill += np.floor(certainty_map[y, x] * 0.5 * certainty_color).astype(int)
-                to_fill = np.clip(to_fill, 0, 255)
+            if certainty_map is not None and certainty_map[y, x] > 0.001:
+                alpha = 0.65 * certainty_map[y, x]
+                to_fill = ((1 - alpha) * to_fill + alpha * certainty_color).astype(int)
 
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),
