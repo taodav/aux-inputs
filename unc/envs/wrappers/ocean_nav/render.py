@@ -40,7 +40,7 @@ class OceanNavRenderWrapper(OceanNavWrapper):
             if obs_map_env is not None:
                 obs = obs_map_env.get_obs(self.state)
                 if obs_map_env.uncertainty_decay < 1.:
-                    certainty_map = obs_map_env.certainty_map
+                    certainty_map = obs[:, :, 6]
                 obstacle_map = obs[:, :, 0]
                 current_map = obs[:, :, 1:5]
                 position_map = np.zeros_like(obstacle_map)
@@ -54,8 +54,11 @@ class OceanNavRenderWrapper(OceanNavWrapper):
             position_map = obs[:, :, 5]
             reward_map = obs[:, :, 6]
 
+        glass_map = self.glass_map if np.any(self.glass_map) else None
+        kelp_map = self.kelp_map if np.any(self.kelp_map) else None
+
         viz = arr_to_viz(obstacle_map, current_map, position_map, reward_map,
-                         glass_map=self.glass_map, kelp_map=self.kelp_map,
+                         glass_map=glass_map, kelp_map=kelp_map,
                          certainty_map=certainty_map)
 
         strs_to_attach = []

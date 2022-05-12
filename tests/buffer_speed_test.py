@@ -202,7 +202,7 @@ if __name__ == "__main__":
     obs = np.array([0])
     state = rng.randint(0, 10, size=(2, args.n_hidden))
     offset = 20
-    to_add = buffer_size + offset
+    to_add = buffer_size // 2 + offset
     for i in range(1, to_add + 1):
         next_obs = np.array([i])
         next_state = rng.randint(0, 10, size=(2, args.n_hidden))

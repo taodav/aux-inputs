@@ -78,8 +78,9 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
                     to_fill = np.zeros((scale, scale, 3))
                     to_fill[:, :] = np.copy(space_color)
 
-            if certainty_map[y, x] > 0.001:
-                to_fill += certainty_map[y, x] * 0.5 * certainty_color
+            if certainty_map is not None and certainty_map[y, x] > 0.01:
+                to_fill += np.floor(certainty_map[y, x] * 0.5 * certainty_color).astype(int)
+                to_fill = np.clip(to_fill, 0, 255)
 
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),

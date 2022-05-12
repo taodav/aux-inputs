@@ -11,6 +11,7 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                   max_episode_steps: int = 1000, show_obs: bool = True, show_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     imgs = []
     all_rews = []
+    render_map = "uf" in agent.args.env and "m" in agent.args.env
     if not hasattr(env, "weights") or not hasattr(env, "particles"):
         show_weights = False
 
@@ -36,7 +37,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                                    show_obs=show_obs,
                                    show_weights=show_weights,
                                    action=action,
-                                   q_vals=q_vals))
+                                   q_vals=q_vals,
+                                   render_map=render_map))
 
         agent.set_eps(test_eps)
 
@@ -62,7 +64,8 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                                        show_obs=show_obs,
                                        show_weights=show_weights,
                                        action=action,
-                                       q_vals=q_vals))
+                                       q_vals=q_vals,
+                                       render_map=render_map))
 
             if done:
                 break

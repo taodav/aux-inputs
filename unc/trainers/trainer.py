@@ -40,7 +40,7 @@ class Trainer:
         self.num_steps = 0
 
         self.info = None
-        self.trunc = args.trunc if args.arch in ['lstm', 'gru'] else 0
+        self.trunc = args.trunc if 'lstm' in args.arch else 0
 
         logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
 
