@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=12G
-#SBATCH --time=0-18:00
-#SBATCH --array=1-12
+#SBATCH --time=0-12:00
+#SBATCH --array=1-16
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
@@ -27,7 +27,7 @@ UPPER_IDX=$((SLURM_ARRAY_TASK_ID * RUNS_PER_JOB))
 LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf4_cnn_no_buff.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf8_cnn.txt)
 
 echo "$TO_RUN"
 

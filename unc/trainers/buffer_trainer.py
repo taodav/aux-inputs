@@ -228,4 +228,4 @@ class BufferTrainer(Trainer):
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")
-        self.info['total_time'] = time_start - time_end
+        self.info['total_time'] = time_end - time_start

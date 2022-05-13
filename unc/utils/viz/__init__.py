@@ -1,6 +1,9 @@
 import numpy as np
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple, List
+
+from definitions import ROOT_DIR
 
 
 def plot_arr(arr: np.ndarray):
@@ -22,7 +25,7 @@ def create_blank(viz_array: np.ndarray):
     :return:
     """
     h, w, _ = viz_array.shape
-    blank_image = Image.new('RGB', (w, h), (255, 255, 255))
+    blank_image = Image.new('RGB', (w, h // 2), (255, 255, 255))
     return blank_image
 
 
@@ -35,7 +38,9 @@ def write_on_image(canvas: Image, text_cols: List[str], start_pos: Tuple[int, in
     :return:
     """
     w, h = canvas.size
-    font = ImageFont.truetype("FreeMono.ttf", 18)
+    font_path = Path(ROOT_DIR, "scripts", "etc", "FreeMono.ttf")
+    font = ImageFont.truetype(str(font_path), 18)
+    # font = ImageFont.truetype("FreeMono.ttf", 18)
 
     next_position_to_add = start_pos
     d_actual = ImageDraw.Draw(canvas)
@@ -59,7 +64,7 @@ def write_on_image(canvas: Image, text_cols: List[str], start_pos: Tuple[int, in
 def append_text(viz_array: np.ndarray, to_append: List[str]) -> np.ndarray:
     img_to_append = create_blank(viz_array)
     img_to_append = write_on_image(img_to_append, to_append, start_pos=(0, 0))
-    arr_to_append = np.array(img_to_append)
+    arr_to_append = np.array(img_to_append, dtype=np.uint8)
 
     final_image = np.concatenate((viz_array, arr_to_append), axis=0)
 

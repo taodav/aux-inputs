@@ -20,7 +20,7 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
                kelp_map: np.ndarray = None,
                glass_map: np.ndarray = None,
                certainty_map: np.ndarray = None,
-               scale: int = 50, grid_lines: bool = True):
+               scale: int = 20, grid_lines: bool = True):
     """
     Make a pixel representation of the OceanNav env
     """
@@ -80,7 +80,7 @@ def arr_to_viz(obstacle_map: np.ndarray, current_map: np.ndarray,
 
             if certainty_map is not None and certainty_map[y, x] > 0.001:
                 alpha = 0.65 * certainty_map[y, x]
-                to_fill = ((1 - alpha) * to_fill + alpha * certainty_color).astype(int)
+                to_fill = ((1 - alpha) * to_fill + alpha * certainty_color).astype(np.uint8)
 
             if grid_lines:
                 final_viz_array[y * (scale + 1) + 1:(y + 1) * (scale + 1),

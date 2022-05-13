@@ -33,6 +33,7 @@ class OceanNavRenderWrapper(OceanNavWrapper):
         assert mode == 'rgb_array', "Not implemented render type"
         obs = None
         certainty_map = None
+        glass_map = None
 
         # this means we render our partially observable map
         if render_map:
@@ -47,6 +48,13 @@ class OceanNavRenderWrapper(OceanNavWrapper):
                 position_map[obs.shape[0] // 2, obs.shape[1] // 2] = 1
                 reward_map = obs[:, :, 5]
 
+                if np.any(self.glass_map):
+                    _, pos, _ = self.unwrapped.unpack_state(self.state)
+                    y_start = self.expanded_map_agent_pos[0] - pos[0]
+                    x_start = self.expanded_map_agent_pos[1] - pos[1]
+                    glass_map = obs_map_env.expanded_glass_map.copy()
+                    glass_map[y_start:y_start + obs_map_env.map_size, x_start:x_start + obs_map_env.map_size, 0] = self.glass_map
+
         if obs is None:
             obs = self.unwrapped.get_obs(self.state)
             obstacle_map = obs[:, :, 0]
@@ -54,7 +62,9 @@ class OceanNavRenderWrapper(OceanNavWrapper):
             position_map = obs[:, :, 5]
             reward_map = obs[:, :, 6]
 
-        glass_map = self.glass_map if np.any(self.glass_map) else None
+        if glass_map is None:
+            glass_map = self.glass_map if np.any(self.glass_map) else None
+
         kelp_map = self.kelp_map if np.any(self.kelp_map) else None
 
         viz = arr_to_viz(obstacle_map, current_map, position_map, reward_map,

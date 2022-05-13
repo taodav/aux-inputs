@@ -1,6 +1,9 @@
 import numpy as np
 from typing import Tuple
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
+
+from definitions import ROOT_DIR
 
 # ==========================================================
 #                        ROCKSAMPLE
@@ -87,7 +90,9 @@ def generate_label(h: int, w: int, str_label: str,
     # Start with an all white label
     label = Image.new('RGB', (w, h), (255, 255, 255))
     d_actual = ImageDraw.Draw(label)
-    font = ImageFont.truetype("FreeMono.ttf", font_size)
+    # font = ImageFont.truetype("FreeMono.ttf", font_size)
+    font_path = Path(ROOT_DIR, "scripts", "FreeMono.ttf")
+    font = ImageFont.truetype(str(font_path), font_size)
 
     img_to_guide = Image.new('RGB', (w, h), (255, 255, 255))
     d = ImageDraw.Draw(img_to_guide)
