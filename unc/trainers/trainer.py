@@ -63,7 +63,8 @@ class Trainer:
             self.info['pf_episodic_var'] = []
 
         if self.offline_eval_freq > 0:
-            self.info['offline_eval_reward'] = []
+            self.info['offline_eval_returns'] = []
+            self.info['offline_eval_discounted_returns'] = []
 
         self.num_steps = 0
 
@@ -102,6 +103,13 @@ class Trainer:
         time_start = time()
 
         self._print(f"Begin training at {ctime(time_start)}")
+
+        # Timing stuff
+        prev_time = time_start
+        log_interval = 1000 if self.offline_eval_freq == 0 else self.offline_eval_freq
+        total_target_updates = self.total_steps // log_interval
+        num_logs = 0
+        avg_time_per_log = 0
         # use_pf = 'p' in self.args.env
 
         while self.num_steps < self.total_steps:
@@ -184,6 +192,18 @@ class Trainer:
                 if self.offline_eval_freq > 0 and self.num_steps % self.offline_eval_freq == 0:
                     self.offline_evaluation()
 
+                # Logging and timing
+                if self.num_steps % log_interval == 0:
+                    time_to_check = True
+
+                    num_logs += 1
+                    curr_time = time()
+                    time_per_fix_freq = curr_time - prev_time
+                    avg_time_per_log += (1 / num_logs) * (time_per_fix_freq - avg_time_per_log)
+                    time_remaining = (total_target_updates - num_logs) * avg_time_per_log
+                    self._print(f"Remaining time: {time_remaining / 60:.2f}")
+                    prev_time = curr_time
+
                 if done.item():
                     break
 
@@ -201,9 +221,19 @@ class Trainer:
         _, eval_rews = test_episodes(self.agent, self.test_env, n_episodes=self.test_episodes,
                                      test_eps=self.test_eps, render=False,
                                      max_episode_steps=self.max_episode_steps)
-        eval_returns = np.sum(eval_rews, axis=-1)
+        eval_returns = np.zeros(len(eval_rews))
+        eval_discounted_returns = np.zeros_like(eval_returns)
+
+        for i, rew in enumerate(eval_rews):
+            eval_returns[i] = rew.sum()
+
+            discounts = self.discounting ** np.arange(len(rew))
+            eval_discounted_returns[i] = (rew * discounts).sum()
+
+        # eval_returns = np.sum(eval_rews, axis=-1)
         self._print(f"Step {self.num_steps} avg. offline evaluation returns: {np.mean(eval_returns):.2f}")
-        self.info['offline_eval_reward'].append(eval_returns)
+        self.info['offline_eval_returns'].append(eval_returns)
+        self.info['offline_eval_discounted_returns'].append(eval_discounted_returns)
 
     def post_episode_print(self, episode_reward: int, episode_loss: float, t: int,
                            additional_info: dict = None):

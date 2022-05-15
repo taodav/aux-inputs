@@ -40,7 +40,7 @@ def generate_runs(run_dicts: List[dict], runs_dir: Path, runs_fname: str = 'runs
 
             # we don't have uncertainty decay for uf{}a
             if 'uf' in arg['env'] and 'a' in arg['env']:
-                if arg['uncertainty_decay'] < 1.:
+                if 'uncertainty_decay' in arg and arg['uncertainty_decay'] < 1.:
                     continue
                 if 'distance_noise' in arg and 'distance_unc_encoding' in arg:
                     if arg['distance_noise'] or arg['distance_unc_encoding']:

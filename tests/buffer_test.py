@@ -35,7 +35,7 @@ class OldReplayBuffer:
             self.obs = np.zeros((self.capacity, *self.obs_size))
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
-        self.r = np.zeros(self.capacity, dtype=np.float)
+        self.r = np.zeros(self.capacity, dtype=float)
         self.d = np.zeros(self.capacity, dtype=bool)
 
         self._cursor = 0
@@ -249,3 +249,8 @@ if __name__ == "__main__":
     norm_new_epi_buff = new_epi_buff_sample_counts / new_epi_buff_sample_counts.sum()
 
     print(f"Sampled {iterations}. Checking ratio.")
+
+    assert np.allclose(norm_new_buff, norm_old_buff, atol=0.001)
+    assert np.allclose(norm_new_epi_buff, norm_old_epi_buff, atol=0.001)
+
+    print("Buffer tests passed.")

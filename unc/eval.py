@@ -1,6 +1,6 @@
 import numpy as np
 import gym
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 from unc.agents import Agent
 from unc.utils import preprocess_step, get_action_encoding
@@ -8,7 +8,7 @@ from unc.utils import preprocess_step, get_action_encoding
 
 def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
                   n_episodes: int = 1, test_eps: float = 0.0, render: bool = True,
-                  max_episode_steps: int = 1000, show_obs: bool = True, show_weights: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+                  max_episode_steps: int = 1000, show_obs: bool = True, show_weights: bool = True) -> Tuple[np.ndarray, List[np.ndarray]]:
     imgs = []
     all_rews = []
     render_map = "uf" in agent.args.env and "m" in agent.args.env
@@ -76,6 +76,5 @@ def test_episodes(agent: Agent, env: Union[gym.Env, gym.Wrapper],
         all_rews.append(rews)
 
     imgs = np.array(imgs)
-    all_rews = np.stack(all_rews)
 
     return imgs, all_rews

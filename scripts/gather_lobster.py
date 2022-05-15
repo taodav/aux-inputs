@@ -138,7 +138,7 @@ if __name__ == "__main__":
     gt_args.total_steps = total_steps
     gt_args.max_episode_steps = max_episode_steps
     gt_args.seed = 2023
-    gt_args.epsilon = 0.2
+    gt_args.epsilon = 0.5
 
     gt_agent, gt_test_env = init_and_train(gt_args)
 
@@ -153,8 +153,9 @@ if __name__ == "__main__":
     obs_args.total_steps = total_steps
     obs_args.max_episode_steps = max_episode_steps
     obs_args.seed = 2022
+    obs_args.epsilon = 0.5
 
-    # obs_agent, obs_test_env = init_and_train(obs_args)
+    obs_agent, obs_test_env = init_and_train(obs_args)
 
     parser = Args()
     unc_args = parser.parse_args()
@@ -208,7 +209,7 @@ if __name__ == "__main__":
     print(f"Saved 2g agent to {gt_agent_fname}")
 
     # obs_agent.save(obs_agent_fname)
-    # print(f"Saved 2 agent to {obs_agent_fname}")
+    print(f"Saved 2 agent to {obs_agent_fname}")
 
     unc_agent.save(unc_agent_fname)
     print(f"Saved 2o agent to {unc_agent_fname}")

@@ -202,8 +202,7 @@ def ind_to_one_hot(arr: np.ndarray, max_val: int, channels_first: bool = False) 
 
 def sample_idx_batch(batch_size: int, length: int, rand_key: random.PRNGKey):
     new_rand_key, sample_rand_key = random.split(rand_key, 2)
-    unif = random.uniform(sample_rand_key, (batch_size,))
-    idx = jnp.floor(unif * length).astype(int)
+    idx = random.randint(sample_rand_key, (batch_size,), minval=0, maxval=length, dtype=int)
     return idx, new_rand_key
 
 

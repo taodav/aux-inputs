@@ -3,8 +3,8 @@
 #SBATCH --account=def-amw8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
-#SBATCH --error=/home/taodav/scratch/log/slurm-%j-%n-%a.err
-#SBATCH --output=/home/taodav/scratch/log/slurm-%j-%n-%a.out
+#SBATCH --error=/home/taodav/scratch/log/uncertainty/rs-%j-%n-%a.err
+#SBATCH --output=/home/taodav/scratch/log/uncertainty/rs-%j-%n-%a.out
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=3G
 #SBATCH --time=0-12:00

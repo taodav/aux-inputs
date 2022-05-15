@@ -45,9 +45,13 @@ def compare_args(arg, res_arg):
 
 
 if __name__ == "__main__":
-    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf2_cnn_lstm.txt')
+    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf8_cnn_lstm.txt')
     results_dir_path = Path(ROOT_DIR, 'results')
-    all_results_paths = [results_dir_path / 'uf2m_cnn_lstm', results_dir_path / 'uf2p_cnn_lstm']
+    all_results_paths = [results_dir_path / 'uf8m_cnn_lstm']
+
+    # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_rs_lstm_no_cat.txt')
+    # results_dir_path = Path(Path.home(), 'scratch', 'uncertainty', 'results')
+    # all_results_paths = [results_dir_path / 'rg_lstm']
 
     # We first parse all args from the run file
     all_run_args = []
