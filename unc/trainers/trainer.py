@@ -35,6 +35,8 @@ class Trainer:
         self.offline_eval_freq = args.offline_eval_freq
         self.test_eps = args.test_eps
         self.test_episodes = args.test_episodes
+        self.checkpoint_freq = args.checkpoint_freq
+        self.save_all_checkpoints = args.save_all_checkpoints
 
         self.episode_num = 0
         self.num_steps = 0
@@ -79,7 +81,8 @@ class Trainer:
 
         return epsilon
 
-
+    def checkpoint(self):
+        pass
 
     def collect_rnn_batch(self, b: Batch, hs: np.ndarray, next_hs: np.ndarray, trunc_batch: Batch) -> Tuple[Batch, Batch]:
         trunc_batch.obs.append(b.obs), trunc_batch.action.append(b.action), trunc_batch.next_obs.append(b.next_obs)
@@ -203,6 +206,8 @@ class Trainer:
                     time_remaining = (total_target_updates - num_logs) * avg_time_per_log
                     self._print(f"Remaining time: {time_remaining / 60:.2f}")
                     prev_time = curr_time
+
+                if self.check
 
                 if done.item():
                     break

@@ -106,6 +106,8 @@ class Args(Tap):
     results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
     results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
     offline_eval_freq: int = 0  # How frequently do we do offline evaluation?
+    checkpoint_freq: int = 0  # How frequently do we do checkpoint our training?
+    save_all_checkpoints: bool = False  # Do we save all our checkpoints? If not, we only save our latest checkpoint.
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     test_episodes: int = 5  # How many episodes do we test on at the end of training/during offline eval?
     save_model: bool = False  # Do we save our model after finishing training?

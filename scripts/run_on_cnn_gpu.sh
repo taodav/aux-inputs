@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --account=def-amw8
+#SBATCH --account=rrg-whitem
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/on-cnn-%j-%n-%a.err
@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=12G
 #SBATCH --time=0-12:00
-#SBATCH --array=1-4
+#SBATCH --array=3-34
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 

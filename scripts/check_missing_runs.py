@@ -45,9 +45,9 @@ def compare_args(arg, res_arg):
 
 
 if __name__ == "__main__":
-    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf8_cnn_lstm.txt')
+    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf4_cnn.txt')
     results_dir_path = Path(ROOT_DIR, 'results')
-    all_results_paths = [results_dir_path / 'uf8m_cnn_lstm']
+    all_results_paths = [results_dir_path / 'uf4a_cnn']
 
     # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_rs_lstm_no_cat.txt')
     # results_dir_path = Path(Path.home(), 'scratch', 'uncertainty', 'results')

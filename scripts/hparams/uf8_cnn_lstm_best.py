@@ -1,5 +1,5 @@
 hparams = {
-    'file_name': "runs_uf8_cnn_lstm.txt",
+    'file_name': "runs_uf8_cnn_lstm_best.txt",
     'args':
         [{
             'algo': ['sarsa'],
@@ -13,15 +13,15 @@ hparams = {
             'replay': [True],
             'n_hidden': [32],
             'discounting': [0.99],
-            'step_size': [0.0000001, 0.000001, 0.00001, 0.0001],
-            'trunc': [1, 5, 10],
+            'step_size': [1e-5],
+            'trunc': [1],
             'action_cond': ['cat'],
-            'uncertainty_decay': [1., 0.95, 0.85, 0.65],
+            'uncertainty_decay': [1., 0.95],
             'buffer_size': [100000],
             'total_steps': [3000000],
             'offline_eval_freq': [5000],
             'platform': ["gpu"],
-            'seed': [(i + 2020) for i in range(3)]
+            'seed': [(i + 2020) for i in range(30)]
             # 'seed': [(i + 2020) for i in range(10)]
         }]
 }
