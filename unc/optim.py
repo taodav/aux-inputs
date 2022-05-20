@@ -1,7 +1,7 @@
 import optax
 
 
-def get_optimizer(optimizer: str, step_size: float):
+def get_optimizer(optimizer: str, step_size: float) -> optax.GradientTransformation:
     if optimizer == "adam":
         return optax.adam(step_size)
     elif optimizer == "sgd":

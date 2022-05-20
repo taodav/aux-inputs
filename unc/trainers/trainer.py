@@ -1,8 +1,10 @@
 import gym
 import logging
+import dill
 from time import time, ctime
 import numpy as np
 from typing import List, Any, Tuple, Union
+from pathlib import Path
 from collections import deque
 
 from unc.args import Args
@@ -14,7 +16,8 @@ from unc.eval import test_episodes
 class Trainer:
     def __init__(self, args: Args, agent: Agent,
                  env: Union[gym.Env, gym.Wrapper],
-                 test_env: Union[gym.Env, gym.Wrapper]):
+                 test_env: Union[gym.Env, gym.Wrapper],
+                 checkpoint_dir: Path = None):
         self.args = args
         self.discounting = args.discounting
 
@@ -23,7 +26,6 @@ class Trainer:
         self.epsilon_start = args.epsilon_start
         self.anneal_value = (self.epsilon_start - self.epsilon) / self.anneal_steps if self.anneal_steps > 0 else 0
 
-        self.total_steps = args.total_steps
         self.max_episode_steps = args.max_episode_steps
 
         self.agent = agent
@@ -31,11 +33,13 @@ class Trainer:
         self.n_actions = env.action_space.n
         self.action_cond = args.action_cond
 
+        self.total_steps = args.total_steps
         self.test_env = test_env
         self.offline_eval_freq = args.offline_eval_freq
         self.test_eps = args.test_eps
         self.test_episodes = args.test_episodes
         self.checkpoint_freq = args.checkpoint_freq
+        self.checkpoint_dir = checkpoint_dir
         self.save_all_checkpoints = args.save_all_checkpoints
 
         self.episode_num = 0
@@ -82,7 +86,20 @@ class Trainer:
         return epsilon
 
     def checkpoint(self):
-        pass
+        if self.checkpoint_dir is None:
+            print("Can't save checkpoint with no path!")
+            return
+
+        checkpoint_path = self.checkpoint_dir / f"{self.num_steps}.pkl"
+        with open(checkpoint_path, "wb") as f:
+            dill.dump(self, f)
+
+    @staticmethod
+    def load_checkpoint(checkpoint_path: Path):
+        with open(checkpoint_path, "rb") as f:
+            trainer = dill.load(f)
+
+        return trainer
 
     def collect_rnn_batch(self, b: Batch, hs: np.ndarray, next_hs: np.ndarray, trunc_batch: Batch) -> Tuple[Batch, Batch]:
         trunc_batch.obs.append(b.obs), trunc_batch.action.append(b.action), trunc_batch.next_obs.append(b.next_obs)
@@ -118,6 +135,8 @@ class Trainer:
         while self.num_steps < self.total_steps:
             episode_reward = 0
             episode_loss = 0
+
+            checkpoint_after_ep = False
 
             # For RNN training
             trunc_batch = None
@@ -207,7 +226,8 @@ class Trainer:
                     self._print(f"Remaining time: {time_remaining / 60:.2f}")
                     prev_time = curr_time
 
-                if self.check
+                if self.checkpoint_freq > 0 and self.num_steps % self.checkpoint_freq == 0:
+                    checkpoint_after_ep = True
 
                 if done.item():
                     break
@@ -218,6 +238,9 @@ class Trainer:
 
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t)
+
+            if checkpoint_after_ep:
+                self.checkpoint()
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")

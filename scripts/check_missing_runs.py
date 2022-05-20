@@ -36,7 +36,7 @@ def maybe_convert_value(value):
 
 def compare_args(arg, res_arg):
     for k, v in arg.items():
-        if k == 'results_dir' or k == 'log_dir':
+        if k == 'results_dir':
             continue
 
         if v != res_arg[k]:

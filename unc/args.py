@@ -1,11 +1,7 @@
 import hashlib
-from jaxlib.xla_extension import Device
-from time import time, ctime
-from typing import Union
 from tap import Tap
-from pathlib import Path
+from typing import List
 
-from definitions import ROOT_DIR
 
 class Args(Tap):
     env: str = "f"
@@ -98,13 +94,16 @@ class Args(Tap):
     epsilon_start: float = 1.0  # If we do epsilon annealing, where do we start the epsilon?
     random_start: bool = True  # Do we have a random initial state distribution?
 
-    seed: int = 2020  # Random seed
-    platform: str = "cpu"  # What platform do we use? (cpu | gpu)
+    # Experience replay hypers
+    replay: bool = False  # Do we use a replay buffer to learn?
+    batch_size: int = 64  # Batch size for buffer training
+    p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
+    buffer_size: int = 20000  # How large is our "online" buffer?
 
+    seed: int = 2020  # Random seed
+
+    platform: str = "cpu"  # What platform do we use? (cpu | gpu)
     test_eps: float = 0.0  # What's our test epsilon?
-    log_dir: Union[Path, str] = Path(ROOT_DIR, 'log')  # For tensorboard logging. Where do we log our files?
-    results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
-    results_fname: str = "default.npy"  # What file name do we save results to? If nothing filled, we use a hash + time.
     offline_eval_freq: int = 0  # How frequently do we do offline evaluation?
     checkpoint_freq: int = 0  # How frequently do we do checkpoint our training?
     save_all_checkpoints: bool = False  # Do we save all our checkpoints? If not, we only save our latest checkpoint.
@@ -112,28 +111,7 @@ class Args(Tap):
     test_episodes: int = 5  # How many episodes do we test on at the end of training/during offline eval?
     save_model: bool = False  # Do we save our model after finishing training?
 
-    replay: bool = False  # Do we use a replay buffer to learn?
-    batch_size: int = 64  # Batch size for buffer training
-    p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
-    buffer_size: int = 20000  # How large is our "online" buffer?
-
-    def configure(self) -> None:
-        def to_path(str_path: str) -> Path:
-            return Path(str_path)
-
-        self.add_argument('--results_dir', type=to_path)
-        self.add_argument('--log_dir', type=to_path)
-
     def process_args(self) -> None:
-        # Create our log and results directories if it doesn't exist
-        # We also save the different environments in different folders
-        self.log_dir /= f"{self.env}_{self.arch}"
-        self.log_dir.mkdir(parents=True, exist_ok=True)
-
-        self.results_dir /= f"{self.env}_{self.arch}"
-        # self.results_dir /= str(self.size)
-        self.results_dir.mkdir(parents=True, exist_ok=True)
-
         if self.exploration == 'noisy':
             self.epsilon = 0.
 
@@ -142,13 +120,30 @@ class Args(Tap):
             self.task_fname = "fishing_{}_config.json"
 
 
-def md5(args: Args) -> str:
-    return hashlib.md5(str(args).encode('utf-8')).hexdigest()
+def hash_training_args(args: Args, to_skip: List[str] = None) -> str:
+    """
+    Turn all the relevant TRAINING args into a hash.
+
+    This means we hash a dictionary with all the irrelevant eval arguments removed.
+    See the list defined in this func.
+
+    We skip total_steps to allow for continuing training.
+    """
+    default_to_skip = [
+        'platform', 'test_eps', 'offline_eval_freq', 'checkpoint_freq',
+        'save_all_checkpoints', 'view_test_ep', 'test_episodes', 'save_model',
+        'total_steps'
+    ]
+    if to_skip is None:
+        to_skip = default_to_skip
+    else:
+        to_skip += default_to_skip
+
+    args_dict = args.as_dict()
+    for k in to_skip:
+        del args_dict[k]
+
+    return hashlib.md5(str(args_dict).encode('utf-8')).hexdigest()
 
 
-def get_results_fname(args: Args):
-    time_str = ctime(time())
-    results_fname_npy = f"{md5(args)}_{time_str}.npy"
-    results_fname = f"{md5(args)}_{time_str}"
-    return results_fname, results_fname_npy
 

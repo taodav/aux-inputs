@@ -2,10 +2,10 @@ import numpy as np
 from typing import Union, List
 from time import time, ctime
 from jax import random
+from pathlib import Path
 
 from unc.args import Args
-from unc.envs import RockSample
-from unc.envs.wrappers.rocksample import RockSampleWrapper
+from unc.envs import Environment
 from unc.agents import Agent, LSTMAgent
 from unc.utils import ReplayBuffer, EpisodeBuffer
 from unc.utils.data import Batch, zip_batches, get_action_encoding
@@ -17,9 +17,11 @@ from unc.debug import summarize_checks, all_unchecked_rock_q_vals
 
 
 class BufferTrainer(Trainer):
-    def __init__(self, args: Args, agent: Agent, env: Union[RockSample, RockSampleWrapper],
-                 test_env: Union[RockSample, RockSampleWrapper],
+    def __init__(self, args: Args, agent: Agent,
+                 env: Environment,
+                 test_env: Environment,
                  rand_key: random.PRNGKey,
+                 checkpoint_dir: Path = None,
                  prefilled_buffer: ReplayBuffer = None):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
@@ -33,7 +35,7 @@ class BufferTrainer(Trainer):
         :param env: environment to train on (currently only supports rocksample)
         :param prefilled_buffer: buffer pre-filled from a certain policy
         """
-        super(BufferTrainer, self).__init__(args, agent, env, test_env)
+        super(BufferTrainer, self).__init__(args, agent, env, test_env, checkpoint_dir=checkpoint_dir)
 
         self.batch_size = args.batch_size
         self.arch = args.arch
@@ -109,6 +111,8 @@ class BufferTrainer(Trainer):
             episode_reward = 0
             episode_loss = 0
             episode_info = {}
+
+            checkpoint_after_ep = False
 
             # LSTM hidden state
             hs = None
@@ -209,6 +213,8 @@ class BufferTrainer(Trainer):
                     self._print(f"Remaining time: {time_remaining / 60:.2f}")
                     prev_time = curr_time
 
+                if self.checkpoint_freq > 0 and self.num_steps % self.checkpoint_freq == 0:
+                    checkpoint_after_ep = True
 
                 if done:
                     break
@@ -225,6 +231,9 @@ class BufferTrainer(Trainer):
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t,
                                     additional_info=episode_info)
+
+            if checkpoint_after_ep:
+                self.checkpoint()
 
         time_end = time()
         self._print(f"Ending training at {ctime(time_end)}")

@@ -5,12 +5,13 @@ from jax import random
 from pathlib import Path
 
 from unc.envs import get_env
-from unc.args import Args, get_results_fname
-from unc.trainers import Trainer, BufferTrainer
+from unc.args import Args
+from unc.trainers import get_or_load_trainer
 from unc.models import build_network
 from unc.sampler import Sampler
-from unc.agents import DQNAgent, NoisyNetAgent, LSTMAgent, kLSTMAgent, DistributionalLSTMAgent
+from unc.agents import get_agent
 from unc.utils import save_info, save_video
+from unc.utils.files import init_files
 from unc.optim import get_optimizer
 from unc.eval import test_episodes
 from definitions import ROOT_DIR
@@ -20,9 +21,8 @@ if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
 
-    # Some argument post-processing
-    results_fname, results_fname_npy = get_results_fname(args)
-    args.results_fname = results_fname_npy
+    # Some filesystem initialization
+    results_path, checkpoint_dir = init_files(args)
 
     # Setting our platform
     # TODO: GPU determinism?
@@ -71,55 +71,27 @@ if __name__ == "__main__":
     optimizer = get_optimizer(args.optim, args.step_size)
 
     # for both lstm and cnn_lstm
-    agent_key, rand_key = random.split(rand_key, 2)
-    if 'lstm' in args.arch:
-        features_shape = train_env.observation_space.shape
-        n_actions = train_env.action_space.n
-
-        # Currently we only do action conditioning with the LSTM agent.
-        if args.action_cond == 'cat':
-            features_shape = features_shape[:-1] + (features_shape[-1] + n_actions,)
-
-        if args.k_rnn_hs > 1:
-            # value network takes as input mean + variance of hidden states and cell states.
-            value_network = build_network(args.n_hidden, train_env.action_space.n, model_str="seq_value")
-            value_optimizer = get_optimizer(args.optim, args.value_step_size)
-            agent = kLSTMAgent(network, value_network, optimizer, value_optimizer,
-                               features_shape, n_actions, agent_key, args)
-        elif args.distributional:
-            agent = DistributionalLSTMAgent(network, optimizer, features_shape,
-                                            n_actions, agent_key, args)
-        else:
-            agent = LSTMAgent(network, optimizer, features_shape,
-                              n_actions, agent_key, args)
-    elif args.arch == 'nn' and args.exploration == 'noisy':
-        agent = NoisyNetAgent(network, optimizer, train_env.observation_space.shape,
-                              train_env.action_space.n, agent_key, args)
-    else:
-        agent = DQNAgent(network, optimizer, train_env.observation_space.shape,
-                         train_env.action_space.n, agent_key, args)
+    features_shape = train_env.observation_space.shape
+    n_actions = train_env.action_space.n
+    agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer)
 
     # Initialize our trainer
-    if args.replay:
-        rand_key, buffer_rand_key = random.split(rand_key, 2)
-        trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key, prefilled_buffer=prefilled_buffer)
-    else:
-        trainer = Trainer(args, agent, train_env, test_env)
-    trainer.reset()
+    trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env, checkpoint_dir,
+                                            prefilled_buffer=prefilled_buffer)
 
     # Train!
     trainer.train()
 
     # Save results
-    results_path = args.results_dir / args.results_fname
     info = trainer.get_info()
 
     # Potentially run a test episode
+
     if args.view_test_ep:
         imgs, rews = test_episodes(agent, test_env, n_episodes=args.test_episodes,
                                    render=True, test_eps=args.test_eps,
                                    max_episode_steps=args.max_episode_steps)
-        vod_path = args.results_dir / f"{results_fname}.mp4"
+        vod_path = results_path.parents[0] / f"{results_path.stem}.mp4"
 
         print(f"Saving render of test episode(s) to {vod_path}")
 
@@ -129,7 +101,7 @@ if __name__ == "__main__":
         info['test_rews'] = rews
 
     if args.save_model:
-        model_path = args.results_dir / f"{results_fname}.pth"
+        model_path = results_path.parents[0] / f"{results_path.stem}.pth"
         print(f"Saving model parameters to {model_path}")
 
         agent.save(model_path)
