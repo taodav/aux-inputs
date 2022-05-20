@@ -94,6 +94,28 @@ if __name__ == "__main__":
 
     loaded_trainer.train()
 
+    # Now comes the actual hard test - training to see if model weights match up
+    # after reinitializing
+    np.random.seed(seed)
+    new_rng = np.random.RandomState(seed)
+    new_rand_key = random.PRNGKey(seed)
+
+    # clear our checkpoints
+    for ckpt in checkpoint_dir.iterdir():
+        ckpt.unlink(missing_ok=True)
+
+    new_rand_key, prev_new_rand_key = random.split(new_rand_key, 2)
+    no_break_trainer, new_rand_key = init_everything(args_1, new_rng, prev_new_rand_key, checkpoint_dir)
+    rand_key, prev_rand_key = random.split(rand_key, 2)
+
+    no_break_trainer.train()
+
+    nb_params = no_break_trainer.agent.network_params
+    for loaded_layer_k, loaded_layer_v in loaded_trainer.agent.network_params.items():
+        for loaded_el_k, loaded_el_v in loaded_layer_v.items():
+            assert np.all(nb_params[loaded_layer_k][loaded_el_k] == loaded_el_v), "Network params don't match up"
+
+
     print("All tests passed")
 
 
