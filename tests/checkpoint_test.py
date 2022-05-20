@@ -1,4 +1,5 @@
 import numpy as np
+import shutil
 from jax import random
 from pathlib import Path
 
@@ -115,6 +116,8 @@ if __name__ == "__main__":
         for loaded_el_k, loaded_el_v in loaded_layer_v.items():
             assert np.all(nb_params[loaded_layer_k][loaded_el_k] == loaded_el_v), "Network params don't match up"
 
+    # clean up our results directory
+    shutil.rmtree(results_path.parent)
 
     print("All tests passed")
 
