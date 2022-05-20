@@ -25,6 +25,7 @@ def get_uf_example_args(seed: int) -> Args:
     args.buffer_size = 1000
     args.total_steps = 2000
     args.checkpoint_freq = 500
+    args.save_all_checkpoints = False
     args.platform = "cpu"
     args.arch = "nn"
     # we use uf6p here b/c no one uses uf6p for any experiment..

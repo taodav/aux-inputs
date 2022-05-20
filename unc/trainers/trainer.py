@@ -90,6 +90,10 @@ class Trainer:
             print("Can't save checkpoint with no path!")
             return
 
+        if not self.save_all_checkpoints:
+            for f in self.checkpoint_dir.iterdir():
+                f.unlink()
+
         checkpoint_path = self.checkpoint_dir / f"{self.num_steps}.pkl"
         with open(checkpoint_path, "wb") as f:
             dill.dump(self, f)
