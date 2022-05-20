@@ -8,8 +8,10 @@ if [ -d "snapshot" ]; then
   rm -r snapshot
 fi
 mkdir snapshot
-cp -vr results/ snapshot/
-cp -vr analysis/ snapshot/
+mkdir snapshot/results/
+mkdir snapshot/analysis/
+cp -vr results/ snapshot/results/
+cp -vr analysis/ snapshot/analysis/
 tar -czvf $FILE_NAME snapshot/
 
 rm -r snapshot
