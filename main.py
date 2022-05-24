@@ -1,5 +1,5 @@
 import numpy as np
-import optax
+import random
 import jax
 from jax import random
 from pathlib import Path
@@ -21,6 +21,11 @@ if __name__ == "__main__":
     parser = Args()
     args = parser.parse_args()
 
+    # Seeding
+    np.random.seed(args.seed)
+    rng = np.random.RandomState(args.seed)
+    rand_key = random.PRNGKey(args.seed)
+
     # Some filesystem initialization
     results_path, checkpoint_dir = init_files(args)
 
@@ -28,10 +33,6 @@ if __name__ == "__main__":
     # TODO: GPU determinism?
     jax.config.update('jax_platform_name', args.platform)
 
-    # Seeding
-    np.random.seed(args.seed)
-    rng = np.random.RandomState(args.seed)
-    rand_key = random.PRNGKey(args.seed)
 
     test_rng = np.random.RandomState(args.seed + 10)
     test_rand_key = random.PRNGKey(args.seed + 10)

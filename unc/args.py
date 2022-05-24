@@ -158,7 +158,10 @@ def hash_training_args(args: Args, to_skip: List[str] = None) -> str:
     for k in to_skip:
         del args_dict[k]
 
-    return hashlib.md5(str(args_dict).encode('utf-8')).hexdigest()
+    # now we need to order our args
+    args_list = sorted([(k, v) for k, v in args_dict.items()], key=lambda x: x[0])
+
+    return hashlib.md5(str(args_list).encode('utf-8')).hexdigest()
 
 
 
