@@ -147,7 +147,7 @@ def hash_training_args(args: Args, to_skip: List[str] = None) -> str:
     default_to_skip = [
         'platform', 'test_eps', 'offline_eval_freq', 'checkpoint_freq',
         'save_all_checkpoints', 'view_test_ep', 'test_episodes', 'save_model',
-        'total_steps'
+        'results_dir', 'total_steps'
     ]
     if to_skip is None:
         to_skip = default_to_skip
