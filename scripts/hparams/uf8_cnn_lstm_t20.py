@@ -20,6 +20,8 @@ hparams = {
             'buffer_size': [100000],
             'total_steps': [6000000],
             'offline_eval_freq': [10000],
+            'checkpoint_freq': [20000],
+            'save_all_checkpoints': [False],
             'platform': ["gpu"],
             'seed': [(i + 2020) for i in range(5)]
             # 'seed': [(i + 2020) for i in range(10)]

@@ -1,6 +1,9 @@
 import hashlib
 from tap import Tap
-from typing import List
+from pathlib import Path
+from typing import List, Union
+
+from definitions import ROOT_DIR
 
 
 class Args(Tap):
@@ -110,8 +113,20 @@ class Args(Tap):
     view_test_ep: bool = False  # Do we create a gif of a test episode after training?
     test_episodes: int = 5  # How many episodes do we test on at the end of training/during offline eval?
     save_model: bool = False  # Do we save our model after finishing training?
+    results_dir: Union[Path, str] = Path(ROOT_DIR, 'results')  # What directory do we save our results in?
+
+    def configure(self) -> None:
+        def to_path(str_path: str) -> Path:
+            return Path(str_path)
+
+        self.add_argument('--results_dir', type=to_path)
 
     def process_args(self) -> None:
+
+        self.results_dir /= f"{self.env}_{self.arch}"
+        # self.results_dir /= str(self.size)
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+
         if self.exploration == 'noisy':
             self.epsilon = 0.
 
