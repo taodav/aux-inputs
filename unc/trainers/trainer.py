@@ -98,6 +98,8 @@ class Trainer:
         with open(checkpoint_path, "wb") as f:
             dill.dump(self, f)
 
+        print(f"Saved checkpoint to {checkpoint_path}")
+
     @staticmethod
     def load_checkpoint(checkpoint_path: Path):
         with open(checkpoint_path, "rb") as f:

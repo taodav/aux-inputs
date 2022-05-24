@@ -25,7 +25,7 @@ LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 echo "${LOWER_IDX},${UPPER_IDX}p"
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf8_cnn_lstm_t10.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf8_cnn_lstm_t1.txt)
 echo "$TO_RUN"
 
 # The -u means ungrouped - output is ungrouped and printed.
