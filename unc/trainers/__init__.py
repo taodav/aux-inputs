@@ -24,6 +24,7 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
 
             if checkpoint_steps <= args.total_steps:
                 # continue training
+                print(f"Loading trainer {checkpoint_path}")
                 if args.replay:
                     trainer = BufferTrainer.load_checkpoint(checkpoint_path)
                 else:

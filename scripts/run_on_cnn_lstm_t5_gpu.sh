@@ -1,15 +1,16 @@
 #!/bin/bash
 
-#SBATCH --account=def-whitem
+#SBATCH --account=def-amw8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/on-cnn-lstm-t5-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/uncertainty/on-cnn-lstm-t5-%j-%n-%a.out
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=3
-#SBATCH --mem=6G
-#SBATCH --time=1-00:00
-#SBATCH --array=1-80
+#SBATCH --mem=9G
+#SBATCH --time=0-20:00
+##SBATCH --time=1-08:00
+#SBATCH --array=19
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 

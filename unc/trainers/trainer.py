@@ -90,15 +90,18 @@ class Trainer:
             print("Can't save checkpoint with no path!")
             return
 
-        if not self.save_all_checkpoints:
-            for f in self.checkpoint_dir.iterdir():
-                f.unlink()
-
         checkpoint_path = self.checkpoint_dir / f"{self.num_steps}.pkl"
         with open(checkpoint_path, "wb") as f:
             dill.dump(self, f)
 
         print(f"Saved checkpoint to {checkpoint_path}")
+
+        # we do this check AFTER in case our job time limit ends
+        # as we're saving.
+        if not self.save_all_checkpoints:
+            for f in self.checkpoint_dir.iterdir():
+                if f != checkpoint_path:
+                    f.unlink()
 
     @staticmethod
     def load_checkpoint(checkpoint_path: Path):
