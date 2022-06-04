@@ -1,5 +1,7 @@
 from jax import random
+import sys
 from pathlib import Path
+from pickle import UnpicklingError
 
 from .trainer import Trainer
 from .buffer_trainer import BufferTrainer
@@ -20,25 +22,35 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
         if sorted_ckpts:
             # if we're here, the stem of this path should be the number of steps done.
             checkpoint_path = sorted_ckpts[-1]
-            checkpoint_steps = int(checkpoint_path.stem)
+            latest_checkpoint_steps = int(checkpoint_path.stem)
 
-            if checkpoint_steps <= args.total_steps:
+            if latest_checkpoint_steps <= args.total_steps:
                 # continue training
-                print(f"Loading trainer {checkpoint_path}")
-                if args.replay:
-                    trainer = BufferTrainer.load_checkpoint(checkpoint_path)
-                else:
-                    trainer = Trainer.load_checkpoint(checkpoint_path)
+                trainer = None
+                while len(sorted_ckpts) > 0 and trainer is None:
+                    try:
+                        checkpoint_path = sorted_ckpts[-1]
+                        print(f"Loading trainer {checkpoint_path}")
+                        if args.replay:
+                            trainer = BufferTrainer.load_checkpoint(checkpoint_path)
+                        else:
+                            trainer = Trainer.load_checkpoint(checkpoint_path)
+                    except UnpicklingError as e:
+                        print(f"Pickling error for file {checkpoint_path}, deleting and trying next file", file=sys.stderr)
+                        checkpoint_path.unlink(missing_ok=True)
+                        sorted_ckpts = sorted_ckpts[:-1]
 
-                # we have to replace all of our
-                trainer.total_steps = args.total_steps
-                trainer.offline_eval_freq = args.offline_eval_freq
-                trainer.test_eps = args.test_eps
-                trainer.test_episodes = args.test_episodes
-                trainer.checkpoint_freq = args.checkpoint_freq
-                trainer.checkpoint_dir = checkpoint_dir
-                trainer.save_all_checkpoints = args.save_all_checkpoints
-                return trainer, rand_key
+
+                if trainer is not None:
+                    # we have to replace all of our
+                    trainer.total_steps = args.total_steps
+                    trainer.offline_eval_freq = args.offline_eval_freq
+                    trainer.test_eps = args.test_eps
+                    trainer.test_episodes = args.test_episodes
+                    trainer.checkpoint_freq = args.checkpoint_freq
+                    trainer.checkpoint_dir = checkpoint_dir
+                    trainer.save_all_checkpoints = args.save_all_checkpoints
+                    return trainer, rand_key
 
 
     if args.replay:
