@@ -1,7 +1,7 @@
 import haiku as hk
 import optax
 from jax import random
-from typing import Tuple
+from typing import Tuple, List
 
 from .base import Agent
 from .dqn import DQNAgent
@@ -10,13 +10,16 @@ from .rock_sampler import RockSamplerAgent
 from .lstm import LSTMAgent
 from .k_lstm import kLSTMAgent
 from .dist_lstm import DistributionalLSTMAgent
+from .gvf import GVFAgent
 from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.args import Args
+from unc.utils.gvfs import GeneralValueFunction
 
 
 def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_key: random.PRNGKey,
-              network: hk.Transformed, optimizer: optax.GradientTransformation):
+              network: hk.Transformed, optimizer: optax.GradientTransformation,
+              gvfs: List[GeneralValueFunction] = None):
     """
     Get our agent!
     """
@@ -43,7 +46,11 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
     else:
-        agent = DQNAgent(network, optimizer, features_shape,
-                         n_actions, agent_key, args)
+        if args.gvf_features > 0 :
+            agent = GVFAgent(gvfs, network, optimizer, features_shape, n_actions,
+                             agent_key, args)
+        else:
+            agent = DQNAgent(network, optimizer, features_shape,
+                             n_actions, agent_key, args)
 
     return agent, rand_key
