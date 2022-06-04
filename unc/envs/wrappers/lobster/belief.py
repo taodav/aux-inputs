@@ -9,13 +9,13 @@ from unc.envs.lobster import LobsterFishing, all_lobster_states
 def get_lobster_state_map():
     flat_map = [
         # node 0
-        [[0, 1], [3, 4]],  # r1, r2
+        [[0, 1], [2, 3]],  # r1, r2
 
         # node 1
-        [[5, 6], [7, 8]],
+        [[4, 5], [6, 7]],
 
         # node 2
-        [[9, 10], [11, 12]]
+        [[8, 9], [10, 11]]
     ]
     return np.array(flat_map)
 
