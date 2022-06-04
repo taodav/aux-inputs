@@ -101,6 +101,6 @@ if __name__ == "__main__":
     generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname='main.py',
                   results_dir=results_dir)
 
-    print(f"Runs wrote to {hparam_path}")
+    print(f"Runs wrote to {runs_dir / hparams['file_name']}")
 
 

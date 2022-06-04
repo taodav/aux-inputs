@@ -1,8 +1,14 @@
 import numpy as np
 import gym
+from itertools import product
 
 from typing import Tuple
 from .base import Environment
+
+
+def all_lobster_states():
+    all_states = np.array(list(product([0, 1, 2], [0, 1], [0, 1])))
+    return all_states
 
 
 class LobsterFishing(Environment):
@@ -41,7 +47,7 @@ class LobsterFishing(Environment):
         2 for whether the cages are full
         IN THIS ORDER
         """
-        state_features = np.zeros(3)
+        state_features = np.zeros(3, dtype=np.uint8)
         state_features[0] = self.position
         state_features[1:] = self.cages_full.copy()
         return state_features
@@ -51,9 +57,26 @@ class LobsterFishing(Environment):
         self.position = state[0]
         self.cages_full = state[1:]
 
-    def all_states(self):
-        positions = [0, 1, 2]
-        cages = []
+    def sample_start_states(self, n: int = 100):
+        """
+        Sample start states. It's non stochastic so it's just a repeat of
+        the start state
+        """
+        start_states = np.zeros((n, 3), dtype=np.uint8)
+        start_states[:, 0] = 0
+        start_states[:, 1:] = 1
+        return start_states
+
+    def sample_all_states(self, n: int = -1):
+        """
+        Sample all states.
+        if n = -1 or 0, return all states.
+        """
+        states = all_lobster_states()
+        if n > 0:
+            idxes = self.rng.randint(0, states.shape[0], size=n)
+            states = states[idxes]
+        return states
 
     def get_terminal(self) -> bool:
         """
@@ -96,6 +119,12 @@ class LobsterFishing(Environment):
         self.cages_full = np.ones(2)
         return self.get_obs(self.state)
 
+    def batch_transition(self, states: np.ndarray, actions: np.ndarray):
+        raise NotImplementedError
+
+    def emit_prob(self, states: np.ndarray, obs: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         new_state = state.copy()
         pos = int(state[0])
@@ -117,7 +146,6 @@ class LobsterFishing(Environment):
         # We clear reward if we collect in either states 1 or 2.
         # Since reward is calculated based on diff of prev state and current state,
         # rewards are given if prev state cage was full, but current state cage is empty.
-
         if state[0] != 0 and action == 2:
             # we need to deal with resetting rewards if there are any
             new_pos = int(new_state[0])

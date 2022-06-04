@@ -8,15 +8,8 @@ from .wrapper import CompassWorldWrapper
 
 class CompassParticleFilterWrapper(CompassWorldWrapper):
     """
-    Particle filter observations.
+    Particle filter (not incl observations, see local_state wrapper).
 
-    Observations are structured like so:
-    [mean_y, var_y, mean_x, var_x, mean_dir, var_dir, *obs]
-
-    if mean_only is True:
-    [mean_y, mean_x, mean_dir, *obs]
-
-    similar for if vars_only is True.
 
     n_particles describes the number of particles to start with and maintain.
     if the value is set to -1, we start with |S| - 1 number of particles (number of states
@@ -36,7 +29,6 @@ class CompassParticleFilterWrapper(CompassWorldWrapper):
         self.n_particles = n_particles
         self.resample_interval = resample_interval if resample_interval is not None else float('inf')
 
-
     def reset(self, **kwargs) -> np.ndarray:
         color_obs = self.env.reset(**kwargs)
         # Instantiate particles and weights
@@ -47,7 +39,6 @@ class CompassParticleFilterWrapper(CompassWorldWrapper):
         self.weights = np.ones(self.particles.shape[0]) / self.particles.shape[0]
 
         # Update them based on the first observation
-        # color_obs = self.unwrapped.get_obs(self.state)
         self.weights, self.particles = batch_step(self.weights, self.particles, color_obs,
                                             self.batch_transition, self.emit_prob)
 

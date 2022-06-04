@@ -24,6 +24,14 @@ class LobsterFishingWrapper(gym.Wrapper):
     def n_rewards(self) -> int:
         return self.unwrapped.n_rewards
 
+    @property
+    def traverse_prob(self) -> float:
+        return self.unwrapped.traverse_prob
+
+    @property
+    def pmfs_1(self) -> float:
+        return self.unwrapped.pmfs_1
+
     @state.setter
     def state(self, state) -> None:
         self.env.state = state
@@ -37,7 +45,7 @@ class LobsterFishingWrapper(gym.Wrapper):
     # we do these assertions here b/c LobsterFishing is an env where we don't want
     # to use particle filters.
     def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
-        assert NotImplementedError
+        return self.env.batch_get_obs(states)
 
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         return self.env.get_obs(state)
@@ -49,7 +57,7 @@ class LobsterFishingWrapper(gym.Wrapper):
         return self.env.get_terminal()
 
     def batch_transition(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
-        assert NotImplementedError
+        return self.env.batch_transition(states, actions)
 
     def transition(self, state: np.ndarray, action: int) -> np.ndarray:
         return self.env.transition(state, action)
@@ -57,11 +65,8 @@ class LobsterFishingWrapper(gym.Wrapper):
     def emit_prob(self, state: np.ndarray, obs: np.ndarray) -> float:
         assert NotImplementedError
 
-    def sample_states(self, n: int = 10) -> np.ndarray:
-        return self.env.sample_states(n)
-
-    def sample_all_states(self) -> np.ndarray:
-        return self.env.sample_all_states()
+    def sample_start_states(self, n: int = 10) -> np.ndarray:
+        return self.env.sample_start_states(n)
 
     def render(self, mode='rgb_array', **kwargs):
         return self.env.render(mode=mode, **kwargs)

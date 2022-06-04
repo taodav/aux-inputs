@@ -6,10 +6,10 @@
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/on-cnn-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/uncertainty/on-cnn-%j-%n-%a.out
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=6
-#SBATCH --mem=12G
-#SBATCH --time=0-12:00
-#SBATCH --array=1-4
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=15G
+#SBATCH --time=1-00:00
+#SBATCH --array=1-20
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
@@ -27,7 +27,7 @@ UPPER_IDX=$((SLURM_ARRAY_TASK_ID * RUNS_PER_JOB))
 LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf4_cnn.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/runs_uf8_cnn_low_unc.txt)
 
 echo "$TO_RUN"
 

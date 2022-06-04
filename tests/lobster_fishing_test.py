@@ -2,14 +2,19 @@ import numpy as np
 from jax import random
 
 from unc.envs import get_env
+from unc.args import Args
 
 
 if __name__ == "__main__":
+    parser = Args()
+    args = parser.parse_args()
+    args.env = "2"
+
     seed = 2023
     np.random.seed(seed)
     rng = np.random.RandomState(seed)
     rand_key = random.PRNGKey(seed)
-    env = get_env(rng, rand_key, env_str="2")
+    env = get_env(rng, rand_key, args)
 
     obs = env.reset()
 

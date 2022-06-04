@@ -61,7 +61,9 @@ four_room_wrapper_map = {
 
 lobster_wrapper_map = {
     'o': lf.BoundedDecayingTraceObservationWrapper,
-    'g': lf.GroundTruthStateWrapper
+    'g': lf.GroundTruthStateWrapper,
+    'p': lf.LobsterParticleFilterWrapper,
+    'b': lf.BeliefStateWrapper
 }
 
 ocean_nav_wrapper_map = {
@@ -170,6 +172,7 @@ def get_lobster_env(rng: np.random.RandomState,
                     traverse_prob: float = 0.6,
                     render: bool = True,
                     trace_decay: float = 0.8,
+                    n_particles: int = 100,
                     **kwargs):
 
     env = LobsterFishing(rng, traverse_prob=traverse_prob)
@@ -180,6 +183,8 @@ def get_lobster_env(rng: np.random.RandomState,
     for w in ordered_wrapper_list:
         if w == lf.BoundedDecayingTraceObservationWrapper:
             env = w(env, decay=trace_decay)
+        elif w == lf.LobsterParticleFilterWrapper:
+            env = w(env, n_particles=n_particles)
         else:
             env = w(env)
 

@@ -13,6 +13,13 @@ class LocalStateObservationWrapper(CompassWorldWrapper):
     def __init__(self, env: Union[CompassWorld, CompassWorldWrapper], *args,
                  mean_only: bool = False, vars_only: bool = False, **kwargs):
         """
+        Observations are structured like so:
+        [mean_y, var_y, mean_x, var_x, mean_dir, var_dir, *obs]
+
+        if mean_only is True:
+        [mean_y, mean_x, mean_dir, *obs]
+
+        similar for if vars_only is True.
         Locally encode observation wrapper. Local in this case meaning
         with summary statistics of the particles
         :param env:
