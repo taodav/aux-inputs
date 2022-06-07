@@ -19,7 +19,7 @@ from unc.utils.gvfs import GeneralValueFunction
 
 def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_key: random.PRNGKey,
               network: hk.Transformed, optimizer: optax.GradientTransformation,
-              gvfs: List[GeneralValueFunction] = None):
+              gvf: GeneralValueFunction = None):
     """
     Get our agent!
     """
@@ -46,8 +46,8 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
     else:
-        if args.gvf_features > 0 :
-            agent = GVFAgent(gvfs, network, optimizer, features_shape, n_actions,
+        if args.gvf_features > 0:
+            agent = GVFAgent(gvf, network, optimizer, features_shape, n_actions,
                              agent_key, args)
         else:
             agent = DQNAgent(network, optimizer, features_shape,

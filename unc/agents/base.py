@@ -13,6 +13,9 @@ class Agent:
     def set_eps(self, eps: float):
         pass
 
+    def get_eps(self) -> float:
+        pass
+
     def reset(self):
         pass
 

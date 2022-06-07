@@ -68,6 +68,7 @@ class Args(Tap):
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100
+    weight_init: str = 'fan_avg'  # How do we initialize our model parameters? (fan_avg | zero)
     """
     How many nodes in our hidden layer of our neural network?
     0 for linear function approximation.

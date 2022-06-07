@@ -31,7 +31,12 @@ class Trainer:
         self.agent = agent
         self.env = env
         self.n_actions = env.action_space.n
+
+        # For LSTMS
         self.action_cond = args.action_cond
+
+        # For GVFAgents
+        self.gvf_features = args.gvf_features
 
         self.total_steps = args.total_steps
         self.test_env = test_env
@@ -139,7 +144,6 @@ class Trainer:
         total_target_updates = self.total_steps // log_interval
         num_logs = 0
         avg_time_per_log = 0
-        # use_pf = 'p' in self.args.env
 
         while self.num_steps < self.total_steps:
             episode_reward = 0
@@ -155,10 +159,6 @@ class Trainer:
                                     reward=deque(maxlen=self.trunc), next_action=deque(maxlen=self.trunc),
                                     state=deque(maxlen=self.trunc), next_state=deque(maxlen=self.trunc))
 
-            # For logging particle filter statistics
-            # pf_episode_means = []
-            # pf_episode_vars = []
-
             obs = self.env.reset()
             # Action conditioning
             if self.action_cond == 'cat':
@@ -173,21 +173,24 @@ class Trainer:
             if self.trunc > 0:
                 hs = self.agent.state[None, :]
 
+            # Cumulant predictions for GVF training
+            gvf_predictions, next_gvf_predictions, current_pi = None, None, None
+            if self.gvf_features > 0:
+                gvf_predictions = self.agent.current_gvf_predictions
+
             action = self.agent.act(obs)
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
 
-                # Log particle means and variances
-                # if use_pf:
-                #     state_info = obs[0][:6]
-                #     means = state_info[::2]
-                #     vars = state_info[1::2]
-                #     pf_episode_means.append(means)
-                #     pf_episode_vars.append(vars)
-
                 if self.trunc > 0:
                     next_hs = self.agent.state[None, :]
+
+                if self.gvf_features > 0:
+                    greedy_action = np.argmax(self.agent.curr_q, axis=1)
+                    current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
+                    current_pi[greedy_action] += (1 - self.agent.get_eps())
+                    next_gvf_predictions = self.agent.current_gvf_predictions
 
                 next_obs, reward, done, info = self.env.step(action.item())
 
@@ -206,7 +209,9 @@ class Trainer:
                 next_action = self.agent.act(next_obs)
 
                 batch = Batch(obs=obs, action=action, next_obs=next_obs,
-                              gamma=gamma, reward=reward, next_action=next_action)
+                              gamma=gamma, reward=reward, next_action=next_action,
+                              predictions=gvf_predictions, next_predictions=next_gvf_predictions,
+                              policy=current_pi)
 
                 # This is for real-time RNN training
                 if self.trunc > 0:
@@ -244,6 +249,7 @@ class Trainer:
                 obs = next_obs
                 action = next_action
                 hs = next_hs
+                gvf_predictions = next_gvf_predictions
 
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t)

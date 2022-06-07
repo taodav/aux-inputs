@@ -14,7 +14,8 @@ def get_network(hidden_size: int, output_size: int, x: jnp.ndarray):
 
 
 def build_network(hidden_size: int, output_size: int,
-                  model_str: str = 'nn', with_bias: bool = True):
+                  model_str: str = 'nn', with_bias: bool = True,
+                  init: str = 'fan_avg'):
     """
     Currently yes. But if we do some stuff with TC then we need to change this.
     with_bias - only set to false if we're in the linear LFA w/ g.t. states. (TABULAR)
@@ -31,7 +32,9 @@ def build_network(hidden_size: int, output_size: int,
         network_fn = partial(noisy_network, layers, output_size)
         network = hk.transform(network_fn)
     elif model_str == 'nn' or model_str == 'linear':
-        network_fn = partial(nn, layers, output_size, with_bias=with_bias)
+        network_fn = partial(nn, layers, output_size,
+                             with_bias=with_bias,
+                             init=init)
         network = hk.without_apply_rng(hk.transform(network_fn))
     elif model_str == 'lstm':
         network_fn = partial(lstm, hidden_size, output_size)

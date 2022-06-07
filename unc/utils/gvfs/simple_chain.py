@@ -3,16 +3,14 @@ import numpy as np
 from .base import GeneralValueFunction
 
 
-class LobsterGVFs(GeneralValueFunction):
+class SimpleChainGVF(GeneralValueFunction):
     """
-    Two GVFs with policies that always do left and right respectively.
-    Everything is done with batches!
+    One GVF with a policy that always goes right.
     """
     def __init__(self,
                  n_actions: int,
                  gamma: float):
-        super(LobsterGVFs, self).__init__(n_actions)
-        self.action_idxes = np.array([0, 1], dtype=int)
+        super(SimpleChainGVF, self).__init__(n_actions)
         self.gamma = gamma
 
     def cumulant(self, obs: np.ndarray) -> np.ndarray:
@@ -21,19 +19,18 @@ class LobsterGVFs(GeneralValueFunction):
         node 1 or 2 are visible and present.
         obs: batch_size x obs_size
         """
-        return obs[:, [4, 7]]
+        return obs[:, [-1]]
 
     def termination(self, obs: np.ndarray) -> np.ndarray:
-        return np.zeros((obs.shape[0], 2)) + self.gamma
+        return np.zeros((obs.shape[0], 1)) + self.gamma
 
     def policy(self, state: np.ndarray) -> np.ndarray:
-        pis = np.zeros((state.shape[0], 2, self.n_actions))
-        pis[:, np.arange(pis.shape[1]), [0, 1]] = 1
+        pis = np.ones((state.shape[0], 1, self.n_actions))
         return pis
 
     def impt_sampling_ratio(self, state: np.ndarray, b: np.ndarray) -> np.ndarray:
         """
         Return importance sampling ratios for actions left and right.
         """
-        is_ratios = super(LobsterGVFs, self).impt_sampling_ratio(state, b)
-        return is_ratios[:, np.arange(is_ratios.shape[1]), [0, 1]]
+        is_ratios = super(SimpleChainGVF, self).impt_sampling_ratio(state, b)
+        return is_ratios[:, np.arange(is_ratios.shape[1]), [0]]

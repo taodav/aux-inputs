@@ -28,7 +28,16 @@ class GeneralValueFunction:
         raise NotImplementedError
 
     def impt_sampling_ratio(self, state: np.ndarray, b: np.ndarray) -> np.ndarray:
-        return self.policy(state) / b
+        """
+        Assume the policy returned is batch_size x num_gvfs x n_actions,
+        while the behavior policy is batch_size x n_actions
+
+        return importance sampling ratios of size batch_size x num_gvfs x n_actions
+        """
+        pis = self.policy(state)
+        pis_n_gvfs_first = pis.transpose((1, 0, 2))
+        transposed_is_ratios = pis_n_gvfs_first / b
+        return transposed_is_ratios.transpose((1, 0, 2))
 
 
 

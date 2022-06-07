@@ -129,6 +129,11 @@ class BufferTrainer(Trainer):
             if self.save_hidden:
                 hs = self.agent.state
 
+            # Cumulant predictions for GVF training
+            gvf_predictions, next_gvf_predictions = None, None
+            if self.gvf_features > 0:
+                gvf_predictions = self.agent.current_gvf_predictions
+
             action = self.agent.act(obs).item()
 
             # DEBUGGING: if we check a rock that's never been sampled before
@@ -148,6 +153,9 @@ class BufferTrainer(Trainer):
                 if self.save_hidden:
                     next_hs = self.agent.state
 
+                if self.gvf_features > 0:
+                    next_gvf_predictions = self.agent.current_gvf_predictions
+
                 next_obs, reward, done, info = self.env.step(action)
 
                 # Action conditioning
@@ -160,7 +168,9 @@ class BufferTrainer(Trainer):
                 next_action = self.agent.act(next_obs).item()
 
                 sample = Batch(obs=obs, reward=reward, next_obs=next_obs, action=action, done=done,
-                               next_action=next_action, state=hs, next_state=next_hs, end=done or (t == self.max_episode_steps - 1))
+                               next_action=next_action, state=hs, next_state=next_hs,
+                               end=done or (t == self.max_episode_steps - 1),
+                               predictions=gvf_predictions, next_predictions=next_gvf_predictions)
                 self.buffer.push(sample)
 
                 self.info['reward'].append(reward)

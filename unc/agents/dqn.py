@@ -45,9 +45,13 @@ class DQNAgent(Agent):
             self.error_fn = expected_sarsa_error
         elif args.algo == 'qlearning':
             self.error_fn = qlearning_error
+        self.batch_error_fn = vmap(self.error_fn)
 
     def set_eps(self, eps: float):
         self.eps = eps
+
+    def get_eps(self) -> float:
+        return self.eps
 
     def act(self, state: np.ndarray) -> np.ndarray:
         action, self._rand_key, self.curr_q = self.functional_act(state, self.network_params, self._rand_key)
@@ -57,7 +61,7 @@ class DQNAgent(Agent):
     def functional_act(self, state: jnp.ndarray,
                        network_params: hk.Params,
                        rand_key: random.PRNGKey) \
-            -> Tuple[np.ndarray, random.PRNGKey]:
+            -> Tuple[np.ndarray, random.PRNGKey, jnp.ndarray]:
         """
         Get epsilon-greedy actions given a state
         :param state: (*state.shape) State to find actions
@@ -113,8 +117,7 @@ class DQNAgent(Agent):
         q = self.network.apply(network_params, state)
         q1 = self.network.apply(network_params, next_state)
 
-        batch_loss = vmap(self.error_fn)
-        td_err = batch_loss(q, action, reward, gamma, q1, next_action)
+        td_err = self.batch_error_fn(q, action, reward, gamma, q1, next_action)
         return mse(td_err)
 
     @partial(jit, static_argnums=0)
@@ -142,7 +145,8 @@ class DQNAgent(Agent):
         """
 
         loss, self.network_params, self.optimizer_state = \
-            self.functional_update(self.network_params, self.optimizer_state, b.obs, b.action, b.next_obs, b.gamma, b.reward, b.next_action)
+            self.functional_update(self.network_params, self.optimizer_state,
+                                   b.obs, b.action, b.next_obs, b.gamma, b.reward, b.next_action)
         return loss, {}
 
     def save(self, path: Path):

@@ -22,6 +22,9 @@ class Batch:
     zero_mask: Union[np.ndarray, Iterable] = None
     end: Union[np.ndarray, Iterable] = None  # End is done or max_steps == timesteps
     indices: Union[np.ndarray, Iterable] = None  # Indices that were sampled
+    predictions: Union[np.ndarray, Iterable] = None
+    next_predictions: Union[np.ndarray, Iterable] = None
+    policy: Union[np.ndarray, Iterable] = None  # Policy is a distribution over actions, given the observation in this batch.
 
 
 def preprocess_step(obs: np.ndarray,

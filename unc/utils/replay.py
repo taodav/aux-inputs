@@ -9,7 +9,8 @@ class ReplayBuffer:
     def __init__(self, capacity: int, rand_key: random.PRNGKey,
                  obs_size: Tuple,
                  obs_dtype: type,
-                 state_size: Tuple = None):
+                 state_size: Tuple = None,
+                 prediction_size: int = 0):
         """
         Replay buffer that saves both observation and state.
         :param capacity:
@@ -19,15 +20,21 @@ class ReplayBuffer:
         self.capacity = capacity
         self.rand_key = rand_key
         self.state_size = state_size
+        self.prediction_size = prediction_size
         self.obs_size = obs_size
 
-        # TODO: change this to half precision to save GPU memory.
+        # TODO: change these to half precision to save GPU memory.
         if self.state_size is not None:
             self.s = np.zeros((self.capacity, *self.state_size))
+
+        if self.prediction_size > 0:
+            self.predictions = np.zeros((self.capacity, self.prediction_size))
+
         if obs_dtype is not None:
             self.obs = np.zeros((self.capacity, *self.obs_size), dtype=obs_dtype)
         else:
             self.obs = np.zeros((self.capacity, *self.obs_size))
+
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
         self.r = np.zeros(self.capacity, dtype=np.float)
@@ -45,6 +52,9 @@ class ReplayBuffer:
     def reset(self):
         if self.state_size is not None:
             self.s = np.zeros((self.capacity, *self.state_size))
+        if self.prediction_size > 0:
+            self.predictions = np.zeros((self.capacity, self.prediction_size))
+
         self.obs = np.zeros((self.capacity, *self.obs_size))
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
@@ -63,6 +73,10 @@ class ReplayBuffer:
         if self.state_size is not None and batch.state is not None and batch.next_state is not None:
             self.s[self._cursor] = batch.state
             self.s[next_cursor] = batch.next_state
+
+        if self.prediction_size > 0 and batch.predictions is not None and batch.next_predictions is not None:
+            self.predictions[self._cursor] = batch.predictions
+            self.predictions[next_cursor] = batch.predictions
 
         self.obs[self._cursor] = batch.obs
         self.d[self._cursor] = batch.done
@@ -99,6 +113,11 @@ class ReplayBuffer:
         if self.state_size is not None:
             batch['state'] = self.s[sample_idx]
             batch['next_state'] = self.s[(sample_idx + 1) % self.capacity]
+
+        if self.prediction_size > 0:
+            batch['predictions'] = self.predictions[sample_idx]
+            batch['next_predictions'] = self.predictions[(sample_idx + 1) % self.capacity]
+
         batch['obs'] = self.obs[sample_idx]
         batch['next_obs'] = self.obs[(sample_idx + 1) % self.capacity]
         batch['action'] = self.a[sample_idx]
@@ -144,6 +163,10 @@ class EpisodeBuffer(ReplayBuffer):
         batch['next_state'] = self.s[(sample_idx + 1) % self.capacity]
         batch['obs'] = self.obs[sample_idx]
         batch['next_obs'] = self.obs[(sample_idx + 1) % self.capacity]
+        if hasattr(self, 'predictions') and self.predictions is not None:
+            batch['predictions'] = self.predictions[sample_idx]
+            batch['next_predictions'] = self.predictions[(sample_idx + 1) % self.capacity]
+
         batch['action'] = self.a[sample_idx]
         batch['next_action'] = self.next_a[sample_idx]
         batch['done'] = self.d[sample_idx]
