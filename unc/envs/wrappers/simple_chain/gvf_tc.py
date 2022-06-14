@@ -23,7 +23,7 @@ class GVFTileCodingWrapper(SimpleChainWrapper):
             'dims': self.gvf_features,
 
             'input_ranges': [(0, 1)],
-            'scale_input': False
+            'scale_output': False
         })
 
         self.observation_space = gym.spaces.Box(

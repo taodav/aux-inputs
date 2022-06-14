@@ -104,6 +104,10 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args
         # r for rocksample
         env_str = env_str.replace('r', '')
         env = get_rocksample_env(rng, rand_key, env_str, **kwargs)
+    elif "2" in env_str:
+        # 2 for 2 room / lobster env
+        env_str = env_str.replace('2', '')
+        env = get_lobster_env(rng, env_str, **kwargs)
     elif "t" in env_str:
         # t for tiger env
         env = get_tiger_env(rng, env_str, **kwargs)
@@ -117,10 +121,6 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args
         # 4 for 4 room
         env_str = env_str.replace('4', '')
         env = get_four_room_env(rng, env_str, **kwargs)
-    elif "2" in env_str:
-        # 2 for 2 room / lobster env
-        env_str = env_str.replace('2', '')
-        env = get_lobster_env(rng, env_str, **kwargs)
     else:
         env = get_compass_env(rng, env_str=env_str, **kwargs)
     return env

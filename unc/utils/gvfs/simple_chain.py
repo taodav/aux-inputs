@@ -27,6 +27,7 @@ class SimpleChainGVF(GeneralValueFunction):
 
     def termination(self, obs: np.ndarray) -> np.ndarray:
         return np.zeros((obs.shape[0], 1)) + self.gamma
+        # return np.ones((obs.shape[0], 1))
 
     def policy(self, state: np.ndarray) -> np.ndarray:
         pis = np.ones((state.shape[0], 1, self.n_actions))

@@ -1,5 +1,4 @@
 import numpy as np
-import jax
 import jax.numpy as jnp
 from jax import random
 
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     args.n_hidden = 10
     args.epsilon = 0.
     args.step_size = 0.01
-    args.seed = 2021
+    args.seed = 2020
     args.env = '2g'
     # args.arch = 'linear'
     # args.weight_init = 'zero'
@@ -99,8 +98,8 @@ if __name__ == "__main__":
 
         action = agent.act(obs)
         all_qs.append(agent.curr_q)
-        # train_env.predictions = agent.current_gvf_predictions[0]
-        train_env.predictions = actual_vals[0:1]
+        train_env.predictions = agent.current_gvf_predictions[0]
+        # train_env.predictions = actual_vals[0:1]
 
         for t in range(9):
             next_obs, reward, done, info = train_env.step(action.item())
@@ -123,14 +122,13 @@ if __name__ == "__main__":
             batch.impt_sampling_ratio = gvf.impt_sampling_ratio(batch.next_obs, current_pi)
 
             # After acting, agent.current_gvf_predictions is set to the predictions.
-            # train_env.predictions = agent.current_gvf_predictions[0]
-            if t + 2 < actual_vals.shape[0]:
-                # set the ground truth gvf predictions for the next action
-                # normally we don't need this.
-                # next_gvf_predictions = np.expand_dims(actual_vals[t + 1:t + 2], 0)
-                train_env.predictions = actual_vals[t + 1:t + 2]
-            else:
-                train_env.predictions = np.ones(1)
+            train_env.predictions = agent.current_gvf_predictions[0]
+            # if t + 2 < actual_vals.shape[0]:
+            # #     set the ground truth gvf predictions for the next action
+            # #     normally we don't need this.
+            #     train_env.predictions = actual_vals[t + 1:t + 2]
+            # else:
+            #     train_env.predictions = np.ones(1)
 
             batch.cumulants = gvf.cumulant(batch.next_obs)
             batch.cumulant_terminations = gvf.termination(batch.next_obs)

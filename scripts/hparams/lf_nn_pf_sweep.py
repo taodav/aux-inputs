@@ -7,6 +7,8 @@ hparams = {
             'env': ['2pb'],
             'discounting': [0.9],
             'n_hidden': [5],
+            'platform': ['cpu'],
+            'n_particles': [100],
             'step_size': [0.00001, 0.0001, 0.001, 0.01, 0.1],
             # 'step_size': [0.01, 0.1],
             'total_steps': [250000],

@@ -26,7 +26,7 @@ class LobsterFishingWrapper(gym.Wrapper):
 
     @property
     def gvf_idxes(self):
-        return self.env.gvf_idxes()
+        return self.env.gvf_idxes
 
     @property
     def state(self) -> np.ndarray:

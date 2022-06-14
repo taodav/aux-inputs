@@ -40,13 +40,8 @@ if __name__ == "__main__":
     train_env_key, test_env_key, rand_key = random.split(rand_key, 3)
 
     # Initializing our environment, args we need are filtered out in get_env
-    train_env = get_env(rng,
-                        train_env_key,
-                        args)
-
-    test_env = get_env(test_rng,
-                       test_env_key,
-                       args)
+    train_env = get_env(rng, train_env_key, args)
+    test_env = get_env(test_rng, test_env_key, args)
 
     # Getting our pre-filled replay buffer if we need it.
     prefilled_buffer = None

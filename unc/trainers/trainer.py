@@ -152,6 +152,7 @@ class Trainer:
             episode_loss = 0
 
             checkpoint_after_ep = False
+            self.agent.reset()
 
             # For RNN training
             trunc_batch = None
@@ -172,7 +173,6 @@ class Trainer:
                 obs = np.concatenate([obs, action_encoding], axis=-1)
 
             obs = np.expand_dims(obs, 0)
-            self.agent.reset()
 
             # Hidden state for RNN training
             hs, next_hs = None, None

@@ -21,10 +21,10 @@ class GVFTileCodingWrapper(LobsterFishingWrapper):
         self.tc = TileCoder({
             'tiles': 4,
             'tilings': 16,
-            'dim': self.gvf_features,
+            'dims': self.gvf_features,
 
             'input_ranges': [(0, max_episode_steps), (0, max_episode_steps)],
-            'scale_input': False
+            'scale_output': False
         })
 
         self.observation_space = gym.spaces.Box(
