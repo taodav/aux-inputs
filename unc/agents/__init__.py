@@ -1,5 +1,6 @@
 import haiku as hk
 import optax
+import numpy as np
 from jax import random
 from typing import Tuple, List
 
@@ -19,7 +20,7 @@ from unc.utils.gvfs import GeneralValueFunction
 
 def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_key: random.PRNGKey,
               network: hk.Transformed, optimizer: optax.GradientTransformation,
-              gvf: GeneralValueFunction = None):
+              gvf_idxes: np.ndarray = None):
     """
     Get our agent!
     """
@@ -46,8 +47,8 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
     else:
-        if args.gvf_features > 0:
-            agent = GVFAgent(gvf, network, optimizer, features_shape, n_actions,
+        if '2' in args.env and ('g' in args.env or 't' in args.env):
+            agent = GVFAgent(gvf_idxes, network, optimizer, features_shape, n_actions,
                              agent_key, args)
         else:
             agent = DQNAgent(network, optimizer, features_shape,

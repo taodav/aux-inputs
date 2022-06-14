@@ -9,6 +9,7 @@ from unc.envs import Environment
 from unc.agents import Agent, LSTMAgent
 from unc.utils import ReplayBuffer, EpisodeBuffer
 from unc.utils.data import Batch, zip_batches, get_action_encoding
+from unc.utils.gvfs import GeneralValueFunction
 
 from .trainer import Trainer
 
@@ -22,7 +23,8 @@ class BufferTrainer(Trainer):
                  test_env: Environment,
                  rand_key: random.PRNGKey,
                  checkpoint_dir: Path = None,
-                 prefilled_buffer: ReplayBuffer = None):
+                 prefilled_buffer: ReplayBuffer = None,
+                 gvf: GeneralValueFunction = None):
         """
         Double buffer trainer. Essentially Sarsa except with two experience replay buffers.
 
@@ -35,7 +37,7 @@ class BufferTrainer(Trainer):
         :param env: environment to train on (currently only supports rocksample)
         :param prefilled_buffer: buffer pre-filled from a certain policy
         """
-        super(BufferTrainer, self).__init__(args, agent, env, test_env, checkpoint_dir=checkpoint_dir)
+        super(BufferTrainer, self).__init__(args, agent, env, test_env, checkpoint_dir=checkpoint_dir, gvf=gvf)
 
         self.batch_size = args.batch_size
         self.arch = args.arch

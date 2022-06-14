@@ -11,4 +11,5 @@ jaxlib
 optax
 dm-haiku
 tqdm
+PyFixedReps-andnp==1.0.0
 -e .

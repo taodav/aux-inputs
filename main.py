@@ -1,6 +1,6 @@
 import numpy as np
-import sys
 import jax
+import jax.numpy as jnp
 from jax import random
 from pathlib import Path
 
@@ -68,30 +68,29 @@ if __name__ == "__main__":
         output_size = train_env.action_space.n * args.atoms
 
     # GVFs for Lobster env.
-    if args.gvf_features > 0:
-        assert '2' in args.env
-        output_size += args.gvf_features
-        features_shape = (features_shape[0] + args.gvf_features, )
+    n_actions_gvfs = None
+    gvf, gvf_idxes = None, None
+    if '2' in args.env and ('g' in args.env or 't' in args.env):
+        gvf = get_gvfs(train_env, gamma=args.discounting)
+        n_actions_gvfs = train_env.action_space.n
+        output_size += gvf.n
+        gvf_idxes = train_env.gvf_idxes
 
     # we don't use a bias unit if we're using ground-truth states
-    with_bias = not ('g' in args.env and model_str == 'linear')
+    with_bias = not (('g' in args.env or 's' in args.env) and model_str == 'linear')
     network = build_network(args.n_hidden, output_size, model_str=model_str, with_bias=with_bias,
-                            init=args.weight_init)
+                            init=args.weight_init, n_actions_gvfs=n_actions_gvfs)
     optimizer = get_optimizer(args.optim, args.step_size)
 
-    # Initialize GVFs if we have any
-    gvf = None
-    if args.gvf_features > 0:
-        gvf = get_gvfs(train_env, gamma=args.discounting)
 
     # Initialize agent
     n_actions = train_env.action_space.n
     agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer,
-                                gvf=gvf)
+                                gvf_idxes=gvf_idxes)
 
     # Initialize our trainer
     trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env, checkpoint_dir,
-                                            prefilled_buffer=prefilled_buffer)
+                                            prefilled_buffer=prefilled_buffer, gvf=gvf)
 
     # Train!
     trainer.train()

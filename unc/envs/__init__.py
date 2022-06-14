@@ -61,9 +61,11 @@ four_room_wrapper_map = {
 
 lobster_wrapper_map = {
     'o': lf.BoundedDecayingTraceObservationWrapper,
-    'g': lf.GroundTruthStateWrapper,
+    's': lf.GroundTruthStateWrapper,
     'p': lf.LobsterParticleFilterWrapper,
-    'b': lf.BeliefStateWrapper
+    'b': lf.BeliefStateWrapper,
+    'g': lf.GVFWrapper,
+    't': lf.GVFTileCodingWrapper
 }
 
 ocean_nav_wrapper_map = {
@@ -95,7 +97,8 @@ def get_env(rng: np.random.RandomState, rand_key: jax.random.PRNGKey, args: Args
                   distance_unc_encoding=args.distance_unc_encoding,
                   uncertainty_decay=args.uncertainty_decay,
                   task_fname=args.task_fname,
-                  random_reward_start=args.random_reward_start)
+                  random_reward_start=args.random_reward_start,
+                  max_episode_steps=args.max_episode_steps)
 
     if "r" in env_str:
         # r for rocksample
@@ -173,6 +176,7 @@ def get_lobster_env(rng: np.random.RandomState,
                     render: bool = True,
                     trace_decay: float = 0.8,
                     n_particles: int = 100,
+                    max_episode_steps: int = 200,
                     **kwargs):
 
     env = LobsterFishing(rng, traverse_prob=traverse_prob)
@@ -185,6 +189,8 @@ def get_lobster_env(rng: np.random.RandomState,
             env = w(env, decay=trace_decay)
         elif w == lf.LobsterParticleFilterWrapper:
             env = w(env, n_particles=n_particles)
+        elif w == lf.GVFTileCodingWrapper:
+            env = w(env, max_episode_steps=max_episode_steps)
         else:
             env = w(env)
 

@@ -1,8 +1,5 @@
 import numpy as np
-import gym
 from typing import Union
-
-from unc.envs import Environment
 
 
 class GeneralValueFunction:
@@ -17,6 +14,10 @@ class GeneralValueFunction:
     def __init__(self,
                  n_actions: int):
         self.n_actions = n_actions
+
+    @property
+    def n(self) -> int:
+        raise NotImplementedError
 
     def cumulant(self, obs: np.ndarray) -> Union[float, np.ndarray]:
         raise NotImplementedError

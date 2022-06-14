@@ -4,3 +4,6 @@ from .state import GroundTruthStateWrapper
 from .render import LobsterFishingRenderWrapper
 from .pf import LobsterParticleFilterWrapper
 from .belief import BeliefStateWrapper
+from .gvf import GVFWrapper
+from .gvf_tc import GVFTileCodingWrapper
+

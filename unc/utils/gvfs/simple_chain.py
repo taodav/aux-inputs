@@ -13,13 +13,17 @@ class SimpleChainGVF(GeneralValueFunction):
         super(SimpleChainGVF, self).__init__(n_actions)
         self.gamma = gamma
 
+    @property
+    def n(self):
+        return 1
+
     def cumulant(self, obs: np.ndarray) -> np.ndarray:
         """
         Our cumulants for this GVF is whether or not the rewards in
         node 1 or 2 are visible and present.
         obs: batch_size x obs_size
         """
-        return obs[:, [-1]]
+        return obs[:, [1]]
 
     def termination(self, obs: np.ndarray) -> np.ndarray:
         return np.zeros((obs.shape[0], 1)) + self.gamma

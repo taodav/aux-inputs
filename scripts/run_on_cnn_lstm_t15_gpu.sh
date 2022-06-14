@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=9G
-#SBATCH --time=3-00:00
-#SBATCH --array=1-80
+#SBATCH --time=0-12:00
+#SBATCH --array=64
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 

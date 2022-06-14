@@ -37,7 +37,6 @@ class Args(Tap):
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
     arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm)
     optim: str = 'adam'  # What kind of optimizer do we use? (adam | sgd)
-    gvf_features: int = 0  # [LOBSTER currently] Do we learn any GVF features for control? 0 means no, > 0 means the out/input of our f.a. has + aux_tasks
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 9  # How large do we want each dimension of our gridworld to be?
     slip_prob: float = 0.0  # [STOCHASTICITY] With what probability do we slip and stay in the same grid when moving forward?

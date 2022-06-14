@@ -24,7 +24,9 @@ class Batch:
     indices: Union[np.ndarray, Iterable] = None  # Indices that were sampled
     predictions: Union[np.ndarray, Iterable] = None
     next_predictions: Union[np.ndarray, Iterable] = None
-    policy: Union[np.ndarray, Iterable] = None  # Policy is a distribution over actions, given the observation in this batch.
+    cumulants: Union[np.ndarray, Iterable] = None
+    cumulant_terminations: Union[np.ndarray, Iterable] = None
+    impt_sampling_ratio: Union[np.ndarray, Iterable] = None
 
 
 def preprocess_step(obs: np.ndarray,

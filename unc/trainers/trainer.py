@@ -10,6 +10,7 @@ from collections import deque
 from unc.args import Args
 from unc.agents import Agent
 from unc.utils.data import Batch, preprocess_step, get_action_encoding
+from unc.utils.gvfs import GeneralValueFunction
 from unc.eval import test_episodes
 
 
@@ -17,7 +18,8 @@ class Trainer:
     def __init__(self, args: Args, agent: Agent,
                  env: Union[gym.Env, gym.Wrapper],
                  test_env: Union[gym.Env, gym.Wrapper],
-                 checkpoint_dir: Path = None):
+                 checkpoint_dir: Path = None,
+                 gvf: GeneralValueFunction = None):
         self.args = args
         self.discounting = args.discounting
 
@@ -36,7 +38,7 @@ class Trainer:
         self.action_cond = args.action_cond
 
         # For GVFAgents
-        self.gvf_features = args.gvf_features
+        self.gvf = gvf
 
         self.total_steps = args.total_steps
         self.test_env = test_env
@@ -159,6 +161,10 @@ class Trainer:
                                     reward=deque(maxlen=self.trunc), next_action=deque(maxlen=self.trunc),
                                     state=deque(maxlen=self.trunc), next_state=deque(maxlen=self.trunc))
 
+            # Cumulant predictions for GVF training
+            if self.gvf is not None:
+                self.env.predictions = self.agent.current_gvf_predictions[0]
+
             obs = self.env.reset()
             # Action conditioning
             if self.action_cond == 'cat':
@@ -173,24 +179,15 @@ class Trainer:
             if self.trunc > 0:
                 hs = self.agent.state[None, :]
 
-            # Cumulant predictions for GVF training
-            gvf_predictions, next_gvf_predictions, current_pi = None, None, None
-            if self.gvf_features > 0:
-                gvf_predictions = self.agent.current_gvf_predictions
-
             action = self.agent.act(obs)
+            if self.gvf is not None:
+                self.env.predictions = self.agent.current_gvf_predictions[0]
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
 
                 if self.trunc > 0:
                     next_hs = self.agent.state[None, :]
-
-                if self.gvf_features > 0:
-                    greedy_action = np.argmax(self.agent.curr_q, axis=1)
-                    current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
-                    current_pi[greedy_action] += (1 - self.agent.get_eps())
-                    next_gvf_predictions = self.agent.current_gvf_predictions
 
                 next_obs, reward, done, info = self.env.step(action.item())
 
@@ -209,9 +206,18 @@ class Trainer:
                 next_action = self.agent.act(next_obs)
 
                 batch = Batch(obs=obs, action=action, next_obs=next_obs,
-                              gamma=gamma, reward=reward, next_action=next_action,
-                              predictions=gvf_predictions, next_predictions=next_gvf_predictions,
-                              policy=current_pi)
+                              gamma=gamma, reward=reward, next_action=next_action)
+
+                if self.gvf is not None:
+                    greedy_action = np.argmax(self.agent.curr_q, axis=1)
+                    current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
+                    current_pi[greedy_action] += (1 - self.agent.get_eps())
+                    batch.impt_sampling_ratio = self.gvf.impt_sampling_ratio(batch.next_obs, current_pi)
+
+                    self.env.predictions = self.agent.current_gvf_predictions[0]
+
+                    batch.cumulants = self.gvf.cumulant(batch.obs)
+                    batch.cumulant_terminations = self.gvf.termination(batch.obs)
 
                 # This is for real-time RNN training
                 if self.trunc > 0:
@@ -249,7 +255,6 @@ class Trainer:
                 obs = next_obs
                 action = next_action
                 hs = next_hs
-                gvf_predictions = next_gvf_predictions
 
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t)

@@ -26,7 +26,7 @@ if __name__ == "__main__":
     network = build_network(args.n_hidden, train_env.action_space.n, model_str="lstm")
     optimizer = optax.adam(args.step_size)
 
-    agent = LSTMAgent(network, optimizer, train_env.observation_space.shape[0],
+    agent = LSTMAgent(network, optimizer, train_env.observation_space.shape,
                       train_env.action_space.n, rand_key, args)
     agent.set_eps(args.epsilon)
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
             lstm_state = agent._rewrap_hidden(batch.state[:, 0])
             hist_q_vals, final_hs, new_hidden = agent.Qs(batch.obs, lstm_state, agent.network_params)
             hist_q_vals = hist_q_vals[0, :, 0]
-            actual_vals = args.discounting ** np.arange(hist_q_vals.shape[0])
+            actual_vals = args.discounting ** np.arange(hist_q_vals.shape[0] - 1, -1, -1)
             msve = np.mean(0.5 * (hist_q_vals - actual_vals) ** 2)
             print(f"Episode {eps}, "
                   f"Loss {loss:.6f}, "

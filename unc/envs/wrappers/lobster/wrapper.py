@@ -17,6 +17,18 @@ class LobsterFishingWrapper(gym.Wrapper):
             assert self.env.priority <= self.priority
 
     @property
+    def predictions(self):
+        return self.env.predictions
+
+    @predictions.setter
+    def predictions(self, predictions: np.ndarray):
+        self.env.predictions = predictions
+
+    @property
+    def gvf_idxes(self):
+        return self.env.gvf_idxes()
+
+    @property
     def state(self) -> np.ndarray:
         return self.env.state
 
