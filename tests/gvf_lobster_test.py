@@ -43,3 +43,35 @@ if __name__ == "__main__":
     n_actions_gvfs = train_env.action_space.n
     output_size += gvf.n
     gvf_idxes = train_env.gvf_idxes
+
+    # we don't use a bias unit if we're using ground-truth states
+    with_bias = not (('g' in args.env or 's' in args.env) and args.arch == 'linear')
+    network = build_network(args.n_hidden, output_size, model_str=args.arch, with_bias=with_bias,
+                            init=args.weight_init, n_actions_gvfs=n_actions_gvfs)
+    optimizer = get_optimizer(args.optim, args.step_size)
+
+    n_actions = train_env.action_space.n
+    agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer,
+                                gvf_idxes=gvf_idxes)
+
+    print("Starting test for GVFAgent on Lobster environment")
+    steps = 0
+    eps = 0
+
+    while steps < args.total_steps:
+        # all_predictions, all_qs, all_losses = [], [], []
+        # ep_batches = []
+
+        agent.reset()
+        train_env.predictions = agent.current_gvf_predictions[0]
+
+        obs = np.expand_dims(train_env.reset(), 0)
+
+        action = agent.act(obs)
+        train_env.predictions = agent.current_gvf_predictions[0]
+
+        for t in range(args.max_episode_steps):
+            next_obs, reward, done, info = train_env.step(action.item())
+            next_obs, reward, done, info, action = preprocess_step(next_obs, reward, done, info, action.item())
+
+            gamma = (1 - done) * args.discounting

@@ -41,6 +41,6 @@ class LobsterGVFs(GeneralValueFunction):
         Return importance sampling ratios for actions left and right.
         """
         is_ratios = super(LobsterGVFs, self).impt_sampling_ratio(state, b)
-        rejection_sampling_mask = is_ratios < 2
-        is_ratios *= rejection_sampling_mask
+        # rejection_sampling_mask = is_ratios < 2
+        # is_ratios *= rejection_sampling_mask
         return is_ratios[:, np.arange(is_ratios.shape[1]), [0, 1]]

@@ -119,6 +119,11 @@ class BufferTrainer(Trainer):
             # LSTM hidden state
             hs = None
             next_hs = None
+
+            # Cumulant predictions for GVF training
+            if self.gvf is not None:
+                self.env.predictions = self.agent.current_gvf_predictions[0]
+
             obs = self.env.reset()
 
             # Action conditioning
@@ -131,12 +136,10 @@ class BufferTrainer(Trainer):
             if self.save_hidden:
                 hs = self.agent.state
 
-            # Cumulant predictions for GVF training
-            gvf_predictions, next_gvf_predictions = None, None
-            if self.gvf_features > 0:
-                gvf_predictions = self.agent.current_gvf_predictions
-
             action = self.agent.act(obs).item()
+
+            if self.gvf is not None:
+                self.env.predictions = self.agent.current_gvf_predictions[0]
 
             # DEBUGGING: if we check a rock that's never been sampled before
             # checked_rocks_info = {}
@@ -155,9 +158,6 @@ class BufferTrainer(Trainer):
                 if self.save_hidden:
                     next_hs = self.agent.state
 
-                if self.gvf_features > 0:
-                    next_gvf_predictions = self.agent.current_gvf_predictions
-
                 next_obs, reward, done, info = self.env.step(action)
 
                 # Action conditioning
@@ -169,11 +169,22 @@ class BufferTrainer(Trainer):
 
                 next_action = self.agent.act(next_obs).item()
 
-                sample = Batch(obs=obs, reward=reward, next_obs=next_obs, action=action, done=done,
+                batch = Batch(obs=obs, reward=reward, next_obs=next_obs, action=action, done=done,
                                next_action=next_action, state=hs, next_state=next_hs,
-                               end=done or (t == self.max_episode_steps - 1),
-                               predictions=gvf_predictions, next_predictions=next_gvf_predictions)
-                self.buffer.push(sample)
+                               end=done or (t == self.max_episode_steps - 1))
+
+                if self.gvf is not None:
+                    greedy_action = np.argmax(self.agent.curr_q, axis=1)
+                    current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
+                    current_pi[greedy_action] += (1 - self.agent.get_eps())
+                    batch.impt_sampling_ratio = self.gvf.impt_sampling_ratio(batch.next_obs, current_pi)
+
+                    self.env.predictions = self.agent.current_gvf_predictions[0]
+
+                    batch.cumulants = self.gvf.cumulant(batch.obs)
+                    batch.cumulant_terminations = self.gvf.termination(batch.obs)
+
+                self.buffer.push(batch)
 
                 self.info['reward'].append(reward)
 

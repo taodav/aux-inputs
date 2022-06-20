@@ -78,7 +78,6 @@ if __name__ == "__main__":
     actual_vals = args.discounting ** np.arange(9 - 1, -1, -1)
 
     print("Starting test for GVFAgent on SingleChain environment")
-    gvf_predictions = None
     steps = 0
 
     eps = 0
@@ -94,7 +93,6 @@ if __name__ == "__main__":
 
         # Set gvf_predictions for our batch
         all_predictions.append(agent.current_gvf_predictions)
-
 
         action = agent.act(obs)
         all_qs.append(agent.curr_q)
