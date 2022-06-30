@@ -1,14 +1,9 @@
 import numpy as np
 import gym
-from itertools import product
-
 from typing import Tuple
+
+from unc.utils.lobster import all_lobster_states
 from .base import Environment
-
-
-def all_lobster_states():
-    all_states = np.array(list(product([0, 1, 2], [0, 1], [0, 1])))
-    return all_states
 
 
 class LobsterFishing(Environment):
@@ -108,10 +103,13 @@ class LobsterFishing(Environment):
 
         return obs
 
-    def get_reward(self, prev_state: np.ndarray) -> int:
-        collected_reward = (prev_state[1:] - self.state[1:]) == 1
-        if np.any(collected_reward):
-            return 1
+    def get_reward(self, prev_state: np.ndarray, action: int) -> int:
+        if action == 2:
+            if prev_state[0] == 1 and prev_state[1] == 1:
+                return 1
+            elif prev_state[0] == 2 and prev_state[2] == 1:
+                return 1
+
         return 0
 
     def reset(self):
@@ -164,7 +162,7 @@ class LobsterFishing(Environment):
 
         self.state = self.transition(self.state, action)
 
-        return self.get_obs(self.state), self.get_reward(prev_state), self.get_terminal(), {}
+        return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
 
 
 

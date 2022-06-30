@@ -3,7 +3,8 @@ import numpy as np
 from typing import Union, Tuple
 
 from .wrapper import LobsterFishingWrapper
-from unc.envs.lobster import LobsterFishing, all_lobster_states
+from unc.envs.lobster import LobsterFishing
+from unc.utils.lobster import all_lobster_states
 
 
 def get_lobster_state_map():

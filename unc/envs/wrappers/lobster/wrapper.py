@@ -62,8 +62,8 @@ class LobsterFishingWrapper(gym.Wrapper):
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         return self.env.get_obs(state)
 
-    def get_reward(self) -> float:
-        return self.env.get_reward()
+    def get_reward(self, *args, **kwargs) -> float:
+        return self.env.get_reward(*args, **kwargs)
 
     def get_terminal(self) -> bool:
         return self.env.get_terminal()

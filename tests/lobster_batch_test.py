@@ -2,7 +2,7 @@ import numpy as np
 from jax import random
 
 from unc.envs import get_env
-from unc.envs.lobster import all_lobster_states
+from unc.utils.lobster import all_lobster_states
 from unc.args import Args
 
 

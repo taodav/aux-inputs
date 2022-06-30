@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union, Tuple
 
 from .wrapper import LobsterFishingWrapper
-from unc.envs.lobster import LobsterFishing, all_lobster_states
+from unc.envs.lobster import LobsterFishing
 
 
 class GVFWrapper(LobsterFishingWrapper):

@@ -4,7 +4,7 @@ import numpy as np
 from typing import Union, Tuple
 
 from .wrapper import LobsterFishingWrapper
-from unc.envs.lobster import LobsterFishing, all_lobster_states
+from unc.envs.lobster import LobsterFishing
 
 
 class GVFTileCodingWrapper(LobsterFishingWrapper):
@@ -18,18 +18,26 @@ class GVFTileCodingWrapper(LobsterFishingWrapper):
                  max_episode_steps: int = 200):
         super(GVFTileCodingWrapper, self).__init__(env)
         self.gvf_features = 2
-        self.tc = TileCoder({
-            'tiles': 4,
-            'tilings': 8,
-            'dims': self.gvf_features,
+        self.tc1 = TileCoder({
+            'tiles': 8,
+            'tilings': 1,
+            'dims': 1,
 
-            'input_ranges': [(0, 1), (0, 1)],
+            'input_ranges': [(0, 1)],
+            'scale_output': False
+        })
+        self.tc2 = TileCoder({
+            'tiles': 8,
+            'tilings': 1,
+            'dims': 1,
+
+            'input_ranges': [(0, 1)],
             'scale_output': False
         })
 
         self.observation_space = gym.spaces.Box(
-            low=np.zeros(9 + self.tc.features()),
-            high=np.ones(9 + self.tc.features()),
+            low=np.zeros(9 + self.tc1.features() + self.tc2.features()),
+            high=np.ones(9 + self.tc1.features() + self.tc2.features()),
         )
 
         self._predictions = None
@@ -45,9 +53,10 @@ class GVFTileCodingWrapper(LobsterFishingWrapper):
     def get_obs(self, state: np.ndarray) -> np.ndarray:
         unwrapped_obs = self.unwrapped.get_obs(state)
 
-        tc_obs = self.tc.encode(self._predictions)
+        tc1_obs = self.tc1.encode(self._predictions[0:1])
+        tc2_obs = self.tc1.encode(self._predictions[1:2])
 
-        return np.concatenate((unwrapped_obs, tc_obs), axis=0)
+        return np.concatenate((unwrapped_obs, tc1_obs, tc2_obs), axis=0)
 
     @property
     def gvf_idxes(self):

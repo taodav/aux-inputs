@@ -109,6 +109,7 @@ class LobsterParticleFilterWrapper(LobsterFishingWrapper):
 
         return new_states
 
+
     def reset(self, **kwargs) -> np.ndarray:
         obs = self.env.reset(**kwargs)
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --account=rrg-whitem
+#SBATCH --account=def-amw8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/on-cnn-lstm-t5-%j-%n-%a.err
@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=9G
 #SBATCH --time=1-00:00
-#SBATCH --array=1-80
+#SBATCH --array=2-80
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
