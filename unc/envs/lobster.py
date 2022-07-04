@@ -27,8 +27,8 @@ class LobsterFishing(Environment):
         self.action_space = gym.spaces.Discrete(3)
 
         self.traverse_prob = traverse_prob
-        self.lambs = 1 / self.reward_inverse_rates
-        self.pmfs_1 = self.lambs * np.exp(-self.lambs)
+        self.r = 1 / self.reward_inverse_rates
+        self.pmfs_1 = self.r * np.exp(-self.r)
         self.rng = rng
 
         self.position = 0

@@ -65,7 +65,8 @@ lobster_wrapper_map = {
     'p': lf.LobsterParticleFilterWrapper,
     'b': lf.BeliefStateWrapper,
     'g': lf.GVFWrapper,
-    't': lf.GVFTileCodingWrapper
+    't': lf.GVFTileCodingWrapper,
+    'e': lf.PredictionObservationWrapper
 }
 
 ocean_nav_wrapper_map = {

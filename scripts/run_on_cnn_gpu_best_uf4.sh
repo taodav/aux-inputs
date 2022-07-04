@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=12G
 #SBATCH --time=0-12:00
-#SBATCH --array=1-20
+#SBATCH --array=1-10
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
@@ -19,7 +19,7 @@ module load gcc python/3.8 cuda/11.4 cudnn/8.2
 cd ../  # Go to main project folder
 source venv/bin/activate
 
-export XLA_PYTHON_CLIENT_MEM_FRACTION=0.25
+export XLA_PYTHON_CLIENT_MEM_FRACTION=0.3
 
 RUNS_PER_JOB=3
 

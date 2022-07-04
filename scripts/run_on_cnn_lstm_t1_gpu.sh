@@ -10,7 +10,7 @@
 #SBATCH --mem=9G
 #SBATCH --time=1-00:00
 ##SBATCH --array=1-80
-#SBATCH --array=1,2,3,4,5,6,7,8,62
+#SBATCH --array=62
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 
