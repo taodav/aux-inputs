@@ -14,8 +14,7 @@ class GVFTileCodingWrapper(LobsterFishingWrapper):
     """
     priority = 3
 
-    def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper],
-                 max_episode_steps: int = 200):
+    def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper]):
         super(GVFTileCodingWrapper, self).__init__(env)
         self.gvf_features = 2
         self.tc1 = TileCoder({

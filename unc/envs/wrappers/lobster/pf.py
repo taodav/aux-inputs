@@ -122,8 +122,7 @@ class LobsterParticleFilterWrapper(LobsterFishingWrapper):
 
         return obs
 
-    def step(self, action: int):
-        obs, reward, done, info = self.env.step(action)
+    def _update_particles_weights(self, obs: np.ndarray, action: int):
         self.env_step += 1
 
         # Update our particles and weights after doing a transition
@@ -139,6 +138,11 @@ class LobsterParticleFilterWrapper(LobsterFishingWrapper):
 
         if self.env_step % self.resample_interval == 0:
             self.weights, self.particles = resample(self.weights, self.particles, rng=self.rng)
+
+
+    def step(self, action: int):
+        obs, reward, done, info = self.env.step(action)
+        self._update_particles_weights(obs, action)
 
         return obs, reward, done, info
 
