@@ -28,6 +28,8 @@ class GVFAgent(DQNAgent):
         self.current_gvf_predictions = None
         self.gvf_idxes = gvf_idxes
         self.use_tc = 't' in self.args.env
+        self.denom = self.n_actions if self.n_actions > 0 else 0.0001
+        self.jitted_qs_and_cumulant_vs = partial(jit, self.Qs_and_cumulant_Vs, static_argnums=0)
 
     def reset(self):
         self.current_gvf_predictions = jnp.zeros((1, len(self.gvf_idxes)))
@@ -52,9 +54,16 @@ class GVFAgent(DQNAgent):
         return Qs, cumulant_Vs
 
     def act(self, state: jnp.ndarray) -> jnp.ndarray:
-        action, self._rand_key, self.curr_q, self.current_gvf_predictions =\
-            self.functional_act(state, self.network_params, self._rand_key)
-        return action
+        if self.n_actions > 0:
+            action, self._rand_key, self.curr_q, self.current_gvf_predictions =\
+                self.functional_act(state, self.network_params, self._rand_key)
+            return action
+        else:
+            self.update_predictions(state)
+            return jnp.array([])
+
+    def update_predictions(self, state: jnp.ndarray) -> jnp.ndarray:
+        _, self.current_gvf_predictions = self.jitted_qs_and_cumulant_vs(state, self.network_params)
 
     @partial(jit, static_argnums=0)
     def functional_act(self, state: jnp.ndarray,

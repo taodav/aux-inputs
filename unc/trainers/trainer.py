@@ -180,6 +180,9 @@ class Trainer:
                 hs = self.agent.state[None, :]
 
             action = self.agent.act(obs)
+            if self.agent.n_actions == 0:
+                action = np.array([self.env.action_space.sample()])
+
             if self.gvf is not None:
                 self.env.predictions = self.agent.current_gvf_predictions[0]
 
@@ -204,15 +207,22 @@ class Trainer:
                 gamma = (1 - done) * self.discounting
 
                 next_action = self.agent.act(next_obs)
+                if self.agent.n_actions == 0:
+                    next_action = np.array([self.env.action_space.sample()])
 
                 batch = Batch(obs=obs, action=action, next_obs=next_obs,
                               gamma=gamma, reward=reward, next_action=next_action)
 
                 if self.gvf is not None:
-                    greedy_action = np.argmax(self.agent.curr_q, axis=1)
-                    current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
-                    current_pi[greedy_action] += (1 - self.agent.get_eps())
+                    if self.agent.n_actions > 0:
+                        greedy_action = np.argmax(self.agent.curr_q, axis=1)
+                        current_pi = np.zeros(self.n_actions) + (self.agent.get_eps() / self.n_actions)
+                        current_pi[greedy_action] += (1 - self.agent.get_eps())
+                    else:
+                        # prediction setting
+                        current_pi = np.ones(self.n_actions) / self.n_actions
                     batch.impt_sampling_ratio = self.gvf.impt_sampling_ratio(batch.next_obs, current_pi)
+
 
                     self.env.predictions = self.agent.current_gvf_predictions[0]
 
