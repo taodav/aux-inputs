@@ -1,6 +1,7 @@
 from typing import Union
 
-from unc.envs import Environment, LobsterFishing
+from unc.envs.base import Environment
+from unc.envs.lobster import LobsterFishing
 from unc.envs.wrappers.lobster import LobsterFishingWrapper
 from unc.envs.simple_chain import SimpleChain
 from unc.envs.wrappers.simple_chain.wrapper import SimpleChainWrapper

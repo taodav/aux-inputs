@@ -32,6 +32,11 @@ class GVFAgent(DQNAgent):
 
     def reset(self):
         self.current_gvf_predictions = jnp.zeros((1, len(self.gvf_idxes)))
+        if '2' in self.args.env:
+            # Traverse probability here. This init is b/c we know we initialize with
+            # rewards present in both cases
+            # TODO: refactor for any init.
+            self.current_gvf_predictions += self.args.discounting * 0.6
 
     def Qs(self, state: jnp.ndarray, network_params: hk.Params, *args) -> jnp.ndarray:
         """

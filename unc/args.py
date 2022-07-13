@@ -62,11 +62,14 @@ class Args(Tap):
 
     trace_decay: float = 0.9   # [FOUR ROOM] for bounded trace decay obs, at what rate do we decay?
 
+    fixed_gvf_path: Union[Path, str] = None  # [LOBSTER] If we used fixed GVFs, pass in the trainer path to file.
+
     count_decay: float = 1.  # If we use count observations, do we decay our counts? If so by what rate?
     unnormalized_counts: bool = False  # Do we normalize our count-based observations?
 
     step_size: float = 0.0001  # Step size for our neural network
     n_hidden: int = 100
+    layers: int = 1
     weight_init: str = 'fan_avg'  # How do we initialize our model parameters? (fan_avg | zero)
     """
     How many nodes in our hidden layer of our neural network?
@@ -121,6 +124,7 @@ class Args(Tap):
             return Path(str_path)
 
         self.add_argument('--results_dir', type=to_path)
+        self.add_argument('--fixed_gvf_path', type=to_path)
 
     def process_args(self) -> None:
 

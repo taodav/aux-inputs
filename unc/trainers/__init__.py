@@ -11,6 +11,7 @@ from unc.args import Args
 from unc.envs import Environment
 from unc.utils.gvfs import GeneralValueFunction
 from unc.utils.replay import ReplayBuffer
+from unc.utils.files import load_checkpoint
 
 
 def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
@@ -33,10 +34,7 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
                     try:
                         checkpoint_path = sorted_ckpts[-1]
                         print(f"Loading trainer {checkpoint_path}")
-                        if args.replay:
-                            trainer = BufferTrainer.load_checkpoint(checkpoint_path)
-                        else:
-                            trainer = Trainer.load_checkpoint(checkpoint_path)
+                        trainer = load_checkpoint(checkpoint_path)
                     except UnpicklingError as e:
                         print(f"Pickling error for file {checkpoint_path}, deleting and trying next file", file=sys.stderr)
                         checkpoint_path.unlink(missing_ok=True)

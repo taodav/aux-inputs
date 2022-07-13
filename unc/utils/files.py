@@ -1,3 +1,4 @@
+import dill
 from pathlib import Path
 from time import time, ctime
 from typing import Tuple
@@ -18,3 +19,9 @@ def init_files(args: Args) -> Tuple[Path, Path]:
 
     return results_path, checkpoints_dir
 
+
+def load_checkpoint(checkpoint_path: Path):
+    with open(checkpoint_path, "rb") as f:
+        trainer = dill.load(f)
+
+    return trainer

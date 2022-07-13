@@ -7,4 +7,6 @@ from .predict import PredictionObservationWrapper
 from .belief import BeliefStateWrapper
 from .gvf import GVFWrapper
 from .gvf_tc import GVFTileCodingWrapper
+from .fixed_gvf import FixedGVFWrapper
+from .fixed_gvf_tc import FixedGVFTileCodingWrapper
 

@@ -9,7 +9,8 @@ from definitions import ROOT_DIR
 
 def generate_runs(run_dicts: List[dict], runs_dir: Path, runs_fname: str = 'runs.txt',
                   main_fname: str = 'main.py',
-                  results_dir: Path = None) -> List[str]:
+                  results_dir: Path = None,
+                  pairs: List = None) -> List[str]:
     """
     :param runs_dir: Directory to put the runs
     :param runs_fname: What do we call our run file?
@@ -27,9 +28,22 @@ def generate_runs(run_dicts: List[dict], runs_dir: Path, runs_fname: str = 'runs
     num_runs = 0
     for run_dict in run_dicts:
         keys, values = [], []
+
+        # For pairs, we assume the indices of p1 correspond to the index of p2
+        pairees = []
+        pair_maps = []
+        if pairs:
+            for p1, p2 in pairs:
+                assert len(run_dict[p1]) == len(run_dict[p2])
+                pairees.append(p2)
+                pair_maps.append({v1: run_dict[p2][i] for i, v1 in enumerate(run_dict[p1])})
+
         for k, v in run_dict.items():
+            if k in pairees:
+                continue
             keys.append(k)
             values.append(v)
+
         for i, args in enumerate(product(*values)):
 
             arg = {k: v for k, v in zip(keys, args)}
@@ -49,6 +63,12 @@ def generate_runs(run_dicts: List[dict], runs_dir: Path, runs_fname: str = 'runs
             if 'distance_noise' in arg and 'distance_unc_encoding' in arg:
                 if 'uf' in arg['env'] and not arg['distance_noise'] and arg['distance_unc_encoding']:
                     continue
+
+            # add our pairees
+            if pairees:
+                for j, (p1, p2) in enumerate(pairs):
+                    v2 = arg[p1]
+                    arg[p2] = pair_maps[j][v2]
 
             run_string = f"python {main_fname}"
 
@@ -98,8 +118,16 @@ if __name__ == "__main__":
     # Make our directories if it doesn't exist
     runs_dir.mkdir(parents=True, exist_ok=True)
 
-    generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname='main.py',
-                  results_dir=results_dir)
+    main_fname = 'main.py'
+    if 'entry' in hparams:
+        main_fname = hparams['entry']
+
+    pairs = None
+    if 'pairs' in hparams:
+        pairs = hparams['pairs']
+
+    generate_runs(hparams['args'], runs_dir, runs_fname=hparams['file_name'], main_fname=main_fname,
+                  results_dir=results_dir, pairs=pairs)
 
     print(f"Runs wrote to {runs_dir / hparams['file_name']}")
 

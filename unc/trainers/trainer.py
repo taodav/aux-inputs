@@ -110,13 +110,6 @@ class Trainer:
                 if f != checkpoint_path:
                     f.unlink()
 
-    @staticmethod
-    def load_checkpoint(checkpoint_path: Path):
-        with open(checkpoint_path, "rb") as f:
-            trainer = dill.load(f)
-
-        return trainer
-
     def collect_rnn_batch(self, b: Batch, hs: np.ndarray, next_hs: np.ndarray, trunc_batch: Batch) -> Tuple[Batch, Batch]:
         trunc_batch.obs.append(b.obs), trunc_batch.action.append(b.action), trunc_batch.next_obs.append(b.next_obs)
         trunc_batch.gamma.append(b.gamma), trunc_batch.reward.append(b.reward), trunc_batch.next_action.append(b.next_action)
@@ -221,7 +214,9 @@ class Trainer:
                     else:
                         # prediction setting
                         current_pi = np.ones(self.n_actions) / self.n_actions
-                    batch.impt_sampling_ratio = self.gvf.impt_sampling_ratio(batch.next_obs, current_pi)
+                    batch.impt_sampling_ratio = self.gvf.impt_sampling_ratio(batch.next_obs,
+                                                                             np.expand_dims(current_pi, 0),
+                                                                             action)
 
 
                     self.env.predictions = self.agent.current_gvf_predictions[0]

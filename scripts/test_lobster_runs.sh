@@ -18,14 +18,14 @@ source venv/bin/activate
 
 RUNS_PER_JOB=5
 
-UPPER_IDX=$((60 * RUNS_PER_JOB))
+UPPER_IDX=$((30 * RUNS_PER_JOB))
 LOWER_IDX=$(($UPPER_IDX - $RUNS_PER_JOB + 1))
 
 #SED_STR=""
 echo "${LOWER_IDX},${UPPER_IDX}p"
 
 # First we get the RUNS_PER_JOBS lines that we're going to run
-TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/lobster_nn_gvf_sweep.txt)
+TO_RUN=$(sed -n "${LOWER_IDX},${UPPER_IDX}p" scripts/runs/lobster_linear_fixed_gvf_sweep.txt)
 echo "$TO_RUN"
 
 # The -u means ungrouped - output is ungrouped and printed.

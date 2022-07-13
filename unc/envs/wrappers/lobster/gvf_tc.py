@@ -18,16 +18,20 @@ class GVFTileCodingWrapper(LobsterFishingWrapper):
         super(GVFTileCodingWrapper, self).__init__(env)
         self.gvf_features = 2
         self.tc1 = TileCoder({
-            'tiles': 8,
-            'tilings': 1,
+            # 'tiles': 8,
+            'tiles': 16,
+            # 'tilings': 1,
+            'tilings': 4,
             'dims': 1,
 
             'input_ranges': [(0, 1)],
             'scale_output': False
         })
         self.tc2 = TileCoder({
-            'tiles': 8,
-            'tilings': 1,
+            # 'tiles': 8,
+            'tiles': 16,
+            # 'tilings': 1,
+            'tilings': 4,
             'dims': 1,
 
             'input_ranges': [(0, 1)],

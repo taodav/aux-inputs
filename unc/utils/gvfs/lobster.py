@@ -36,11 +36,17 @@ class LobsterGVFs(GeneralValueFunction):
         pis[:, np.arange(pis.shape[1]), [0, 1]] = 1
         return pis
 
-    def impt_sampling_ratio(self, state: np.ndarray, b: np.ndarray) -> np.ndarray:
+    def impt_sampling_ratio(self, state: np.ndarray, b: np.ndarray, actions: np.ndarray) -> np.ndarray:
         """
         Return importance sampling ratios for actions left and right.
+        state: batch x state_size
+        b: batch x n_actions
+        actions: batch
         """
-        is_ratios = super(LobsterGVFs, self).impt_sampling_ratio(state, b)
-        # rejection_sampling_mask = is_ratios < 2
-        # is_ratios *= rejection_sampling_mask
-        return is_ratios[:, np.arange(is_ratios.shape[1]), [0, 1]]
+        all_is_ratios = super(LobsterGVFs, self).all_impt_sampling_ratios(state, b)
+        actions_mask = np.zeros((actions.shape[0], self.n_actions), dtype=bool)
+        actions_mask[np.arange(actions.shape[0]), actions] = True
+        actions_mask_n_gvfs_repeat = np.expand_dims(actions_mask, 1).repeat(all_is_ratios.shape[1], 1)
+        flattened_all_is_ratios = all_is_ratios[actions_mask_n_gvfs_repeat]
+        is_ratios = flattened_all_is_ratios.reshape(all_is_ratios.shape[0], all_is_ratios.shape[1])
+        return is_ratios

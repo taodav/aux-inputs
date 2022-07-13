@@ -12,7 +12,7 @@ from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.agents import get_agent
 from unc.utils import save_info
-from unc.utils.files import init_files
+from unc.utils.files import init_files, load_checkpoint
 
 
 def init_and_train(args: Args):
@@ -87,6 +87,14 @@ if __name__ == "__main__":
 
     results_fname = Path(ROOT_DIR, 'results', 'lobster_diff_obs_other_behavior.npy')
 
+    # get gt gvf predictions
+    gvf_predictions_checkpoints = Path(ROOT_DIR, 'results', '2t_nn_prediction', 'checkpoints')
+
+    # we just grab the first one.
+    gvf_predictions_fname = list(list(gvf_predictions_checkpoints.iterdir())[0].iterdir())[0]
+    gvf_prediction_trainer = load_checkpoint(gvf_predictions_fname)
+    gvf_prediction_agent = gvf_prediction_trainer.agent
+
     parser = Args()
     gt_args = parser.parse_args()
 
@@ -129,7 +137,7 @@ if __name__ == "__main__":
     gvf_args.arch = "nn"
     gvf_args.n_hidden = 20
     gvf_args.discounting = discounting
-    gvf_args.step_size = step_size
+    gvf_args.step_size = 1e-4
     gvf_args.total_steps = total_steps
     gvf_args.max_episode_steps = max_episode_steps
     gvf_args.seed = 2023
@@ -155,6 +163,9 @@ if __name__ == "__main__":
         '2o': [],
         '2pb': [],
         '2g': [],
+        '2t': [],
+        '2t_prediction': [],
+        '2t_state': [],
     }
 
     # now we roll out gather_n_episodes episodes based on our gt agent
@@ -166,8 +177,12 @@ if __name__ == "__main__":
             '2o': [],
             '2pb': [],
             '2g': [],
+            '2t': [],
+            '2t_prediction': [],
+            '2t_state': [],
         }
         gvf_agent.reset()
+        gvf_prediction_agent.reset()
         gvf_env.predictions = gvf_agent.current_gvf_predictions[0]
         gvf_non_t_env.predictions = gvf_agent.current_gvf_predictions[0]
 
@@ -185,6 +200,7 @@ if __name__ == "__main__":
         # all_eps_obs['2o'].append(trace_obs[0])
         # all_eps_obs['2pb'].append(pf_obs[0])
         # all_eps_obs['2g'].append(gvf_obs[0])
+        all_eps_obs['2t_state'].append(gvf_env.state)
 
         for t in range(max_episode_steps):
             trace_agent.set_eps(trace_args.epsilon)
@@ -194,8 +210,11 @@ if __name__ == "__main__":
             trace_action = trace_agent.act(trace_obs)
             pf_action = pf_agent.act(pf_obs)
             gvf_action = gvf_agent.act(gvf_obs)
+            gvf_prediction_agent.act(gvf_obs)
             gvf_non_t_env.predictions = gvf_agent.current_gvf_predictions[0]
             gvf_env.predictions = gvf_agent.current_gvf_predictions[0]
+
+            all_eps_obs['2t_prediction'].append(gvf_prediction_agent.current_gvf_predictions[0])
 
             # append our gt predictions
             gt_trace_env.state = trace_env.state
@@ -222,10 +241,13 @@ if __name__ == "__main__":
 
             # Deal with our GVFs.
             all_eps_obs['2g'].append(gvf_non_t_env.get_obs(gvf_env.state))
+            all_eps_obs['2t'].append(gvf_obs[0])
+            all_eps_obs['2t_state'].append(gvf_env.state)
 
             next_trace_obs, trace_reward, done, info = trace_env.step(trace_action.item())
             next_pf_obs, pf_reward, done, info = pf_env.step(pf_action.item())
-            next_gvf_obs, gvf_reward, done, info = gvf_env.step(gvf_action.item())
+            # next_gvf_obs, gvf_reward, done, info = gvf_env.step(gvf_action.item())
+            next_gvf_obs, gvf_reward, done, info = gvf_env.step(0)
             gvf_non_t_env.state = gvf_env.state
 
             trace_obs = np.expand_dims(next_trace_obs, 0)

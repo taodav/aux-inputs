@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # we don't use a bias unit if we're using ground-truth states
     with_bias = not (('g' in args.env or 's' in args.env) and model_str == 'linear')
     network = build_network(args.n_hidden, output_size, model_str=model_str, with_bias=with_bias,
-                            init=args.weight_init, n_actions_gvfs=n_actions_gvfs)
+                            init=args.weight_init, n_actions_gvfs=n_actions_gvfs, layers=args.layers)
     optimizer = get_optimizer(args.optim, args.step_size)
 
 

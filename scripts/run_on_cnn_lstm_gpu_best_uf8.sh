@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --account=rrg-whitem
+#SBATCH --account=def-amw8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/on-cnn-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/uncertainty/on-cnn-%j-%n-%a.out
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=3
-#SBATCH --mem=6G
+#SBATCH --mem=9G
 #SBATCH --time=0-24:00
 #SBATCH --array=1-60
 
