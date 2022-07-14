@@ -2,11 +2,14 @@ import numpy as np
 from jax import random
 from itertools import product
 from functools import partial
+from pathlib import Path
 
 from unc.envs import get_env
+from unc.utils import save_info
 from unc.utils.lobster import all_lobster_states, transition_prob, batch_reward
 from unc.args import Args
 from unc.agents import Agent
+from definitions import ROOT_DIR
 
 
 class OptimalLobsterFisher(Agent):
@@ -125,3 +128,12 @@ if __name__ == "__main__":
     mean = episode_rewards.mean()
     std_err = episode_rewards.std() / np.sqrt(episode_rewards.shape[0])
     print(f"Finished testing optimal policy on {episodes} episodes. Average return: {mean} ± {std_err}")
+
+    results = {
+        'episode_rewards': episode_rewards,
+        'qs': qs,
+        'state_to_idx': state_to_idx
+    }
+    optimal_qs_fpath = Path(ROOT_DIR, 'results', 'optimal_lobster_results.npy')
+
+    save_info(optimal_qs_fpath, results)

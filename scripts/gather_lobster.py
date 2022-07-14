@@ -177,6 +177,7 @@ if __name__ == "__main__":
     # print(f"Training 2g agent")
     # gt_agent, gt_test_env = init_and_train(gt_args)
 
+    parser = Args()
     obs_str_args = [
         '--algo', 'sarsa',
         '--arch', 'linear',
@@ -194,6 +195,7 @@ if __name__ == "__main__":
     # print(f"Training 2 agent")
     # obs_agent, obs_test_env = init_and_train(obs_args)
 
+    parser = Args()
     unc_str_args = [
         '--algo', 'sarsa',
         '--arch', 'linear',
@@ -211,6 +213,7 @@ if __name__ == "__main__":
     # print(f"Training 2o agent")
     # unc_agent, unc_test_env = init_and_train(unc_args)
 
+    parser = Args()
     pb_str_args = [
         '--algo', 'sarsa',
         '--arch', 'linear',
@@ -229,6 +232,7 @@ if __name__ == "__main__":
     print(f"Training 2pb agent")
     pb_agent, pb_test_env = init_and_train(pb_args)
 
+    parser = Args()
     gvf_str_args = [
         '--algo', 'sarsa',
         '--arch', 'linear',
@@ -238,7 +242,7 @@ if __name__ == "__main__":
         '--total_steps', total_steps,
         '--max_episode_steps', max_episode_steps,
         '--fixed_gvf_path', "/Users/ruoyutao/Documents/uncertainty/results/2t_nn_prediction/checkpoints/2_layer_fd72f6afb33bb0c574cd3d55e94d9d12/500000.pkl",
-        '--seed', 2022,
+        '--seed', 2060,
         '--epsilon', 0.1
     ]
     gvf_str_args = [str(s) for s in gvf_str_args]

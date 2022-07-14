@@ -20,6 +20,10 @@ class FixedGVFWrapper(GVFTileCodingWrapper):
             low=np.zeros(9 + 2),
             high=np.ones(9 + 2),
         )
+        # self.observation_space = gym.spaces.Box(
+        #     low=np.zeros(2),
+        #     high=np.ones(2),
+        # )
         trainer = load_checkpoint(checkpoint_fname)
         self.prediction_agent = trainer.agent
 
@@ -27,6 +31,7 @@ class FixedGVFWrapper(GVFTileCodingWrapper):
         unwrapped_obs = self.unwrapped.get_obs(state)
 
         return np.concatenate((unwrapped_obs, self.predictions), axis=-1)
+        # return np.expand_dims(self.predictions, 0)
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
