@@ -56,36 +56,33 @@ if __name__ == "__main__":
     model_str = args.arch
     if model_str == 'nn' and args.exploration == 'noisy':
         model_str = args.exploration
-    output_size = train_env.action_space.n
+    n_actions = train_env.action_space.n
     features_shape = train_env.observation_space.shape
 
     if args.distributional:
-        output_size = train_env.action_space.n * args.atoms
+        n_actions = train_env.action_space.n * args.atoms
 
     # GVFs for Lobster env.
-    n_actions_gvfs = None
-    gvf, gvf_idxes = None, None
+    gvf, n_predictions = None, 0
     if '2' in args.env and ('g' in args.env or 't' in args.env):
-        gvf = get_gvfs(train_env, gamma=args.discounting)
-        n_actions_gvfs = train_env.action_space.n
-        output_size += gvf.n
-        gvf_idxes = train_env.gvf_idxes
+        gvf = get_gvfs(train_env, args.gvf_type, gamma=args.discounting)
+        n_predictions = gvf.n
 
     # we don't use a bias unit if we're using ground-truth states
     with_bias = not (('g' in args.env or 's' in args.env) and model_str == 'linear')
-    network = build_network(args.n_hidden, output_size, model_str=model_str, with_bias=with_bias,
-                            init=args.weight_init, n_actions_gvfs=n_actions_gvfs, layers=args.layers)
+    network = build_network(args.n_hidden, n_actions, model_str=model_str, with_bias=with_bias,
+                            init=args.weight_init, layers=args.layers, action_cond=args.action_cond)
     optimizer = get_optimizer(args.optim, args.step_size)
 
 
     # Initialize agent
     n_actions = train_env.action_space.n
     agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer,
-                                gvf_idxes=gvf_idxes)
+                                n_predictions=n_predictions)
 
     # Initialize our trainer
     trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env, checkpoint_dir,
-                                            prefilled_buffer=prefilled_buffer, gvf=gvf)
+                                            prefilled_buffer=prefilled_buffer, gvf=gvf, gvf_trainer=args.gvf_trainer)
 
     # Train!
     trainer.train()

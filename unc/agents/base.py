@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Any
 
 from unc.utils.data import Batch
@@ -17,5 +18,8 @@ class Agent:
         pass
 
     def reset(self):
+        pass
+
+    def policy(self, state: Any, *args, **kwargs) -> np.ndarray:
         pass
 

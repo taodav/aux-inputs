@@ -12,6 +12,7 @@ from typing import Union, Iterable, List, Tuple
 class Batch:
     obs: Union[np.ndarray, Iterable]
     action: Union[np.ndarray, Iterable]
+    prev_action: Union[np.ndarray, Iterable]
     next_obs: Union[np.ndarray, Iterable]
     reward: Union[np.ndarray, Iterable]
     done: Union[np.ndarray, Iterable] = None
@@ -22,8 +23,8 @@ class Batch:
     zero_mask: Union[np.ndarray, Iterable] = None
     end: Union[np.ndarray, Iterable] = None  # End is done or max_steps == timesteps
     indices: Union[np.ndarray, Iterable] = None  # Indices that were sampled
+    prev_predictions: Union[np.ndarray, Iterable] = None
     predictions: Union[np.ndarray, Iterable] = None
-    next_predictions: Union[np.ndarray, Iterable] = None
     cumulants: Union[np.ndarray, Iterable] = None
     cumulant_terminations: Union[np.ndarray, Iterable] = None
     impt_sampling_ratio: Union[np.ndarray, Iterable] = None

@@ -13,12 +13,15 @@ class GVFWrapper(LobsterFishingWrapper):
     """
     priority = 3
 
-    def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper]):
+    def __init__(self, env: Union[LobsterFishing, LobsterFishingWrapper],
+                 # n_gvfs: int = 1):
+                 n_gvfs: int = 2):
         super(GVFWrapper, self).__init__(env)
+        self.n_gvfs = n_gvfs
 
         self.observation_space = gym.spaces.Box(
-            low=np.zeros(9 + 2),
-            high=np.ones(9 + 2),
+            low=np.zeros(9 + self.n_gvfs),
+            high=np.ones(9 + self.n_gvfs),
         )
 
         self._predictions = None
@@ -38,7 +41,7 @@ class GVFWrapper(LobsterFishingWrapper):
 
     @property
     def gvf_idxes(self):
-        return np.arange(9, 9 + 2)
+        return np.arange(9, 9 + self.n_gvfs)
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)

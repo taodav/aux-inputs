@@ -7,12 +7,12 @@ from unc.utils.gvfs import get_gvfs
 from unc.envs import SimpleChain
 from unc.envs.wrappers.simple_chain.gvf_tc import GVFTileCodingWrapper
 from unc.args import Args
-from unc.agents import GVFAgent
+from unc.agents import GVFControlAgent
 from unc.models import build_network
 from unc.optim import get_optimizer
 
 
-def gvf_td_unit_test(agent: GVFAgent, b: Batch, step: int = -1, total_steps: int = -1):
+def gvf_td_unit_test(agent: GVFControlAgent, b: Batch, step: int = -1, total_steps: int = -1):
     state = b.obs
     next_state = b.next_obs
     reward = b.reward
@@ -71,8 +71,8 @@ if __name__ == "__main__":
     # Initialize GVFs if we have any
 
     gvf_idxes = train_env.gvf_idxes
-    agent = GVFAgent(gvf_idxes, network, optimizer, features_shape,
-                      train_env.action_space.n, rand_key, args)
+    agent = GVFControlAgent(gvf_idxes, network, optimizer, features_shape,
+                            train_env.action_space.n, rand_key, args)
     agent.set_eps(args.epsilon)
 
     actual_vals = args.discounting ** np.arange(9 - 1, -1, -1)

@@ -62,6 +62,10 @@ class Args(Tap):
 
     trace_decay: float = 0.9   # [FOUR ROOM] for bounded trace decay obs, at what rate do we decay?
 
+    gvf_trainer: str = 'control'  # [LOBSTER] prediction = gvf_prediction trainer, control = normal trainer
+    tile_code_gvfs: bool = False  # [LOBSTER] Do we tile code our GVF predictions before input?
+    gvf_tiles: int = 8  # Pretty self explanatory.
+    gvf_tilings: int = 8
     fixed_gvf_path: Union[Path, str] = None  # [LOBSTER] If we used fixed GVFs, pass in the trainer path to file.
 
     count_decay: float = 1.  # If we use count observations, do we decay our counts? If so by what rate?

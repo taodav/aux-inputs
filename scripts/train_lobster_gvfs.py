@@ -58,7 +58,7 @@ if __name__ == "__main__":
     test_env = get_env(test_rng, test_env_key, args)
 
     # GVFs for Lobster env.
-    gvf = get_gvfs(train_env, gamma=args.discounting)
+    gvf = get_gvfs(train_env, gvf_type=args.gvf_type, gamma=args.discounting)
     n_actions_gvfs = 0
     output_size = gvf.n
     gvf_idxes = train_env.gvf_idxes

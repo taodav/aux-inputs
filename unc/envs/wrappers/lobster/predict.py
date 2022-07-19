@@ -1,4 +1,5 @@
 import numpy as np
+import gym
 from typing import Union, Tuple
 
 from .wrapper import LobsterFishingWrapper
@@ -41,18 +42,18 @@ class PredictionObservationWrapper(LobsterFishingWrapper):
         r2_unobservable = obs[8] == 1
         if r1_unobservable or r2_unobservable:
             rts = self.counts * self.r
-            pmfs = rts * np.exp(-rts)
+            pmfs = np.exp(-rts)
 
             if r1_unobservable:
-                obs[4] = pmfs[0]
+                obs[4] = 1 - pmfs[0]
 
             if r2_unobservable:
-                obs[7] = pmfs[1]
+                obs[7] = 1 - pmfs[1]
 
         return obs
 
     def reset(self, **kwargs) -> np.ndarray:
-        obs = self.env.reset(**kwargs)
+        self.env.reset(**kwargs)
 
         self.counts = np.zeros(2)
         return self.get_obs(self.state)

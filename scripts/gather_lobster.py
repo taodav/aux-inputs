@@ -192,8 +192,8 @@ if __name__ == "__main__":
     obs_str_args = [str(s) for s in obs_str_args]
     obs_args = parser.parse_args(obs_str_args)
 
-    # print(f"Training 2 agent")
-    # obs_agent, obs_test_env = init_and_train(obs_args)
+    print(f"Training 2 agent")
+    obs_agent, obs_test_env = init_and_train(obs_args)
 
     parser = Args()
     unc_str_args = [
@@ -210,8 +210,8 @@ if __name__ == "__main__":
     unc_str_args = [str(s) for s in unc_str_args]
     unc_args = parser.parse_args(unc_str_args)
 
-    # print(f"Training 2o agent")
-    # unc_agent, unc_test_env = init_and_train(unc_args)
+    print(f"Training 2o agent")
+    unc_agent, unc_test_env = init_and_train(unc_args)
 
     parser = Args()
     pb_str_args = [
@@ -249,62 +249,95 @@ if __name__ == "__main__":
     gvf_args = parser.parse_args(gvf_str_args)
 
     print(f"Training 2f agent")
-    gvf_agent, gvf_test_env = init_and_train(gvf_args)
+    # gvf_agent, gvf_test_env = init_and_train(gvf_args)
+
+    parser = Args()
+    predict_str_args = [
+        '--algo', 'sarsa',
+        '--arch', 'linear',
+        '--env', '2e',
+        '--discounting', discounting,
+        '--step_size', 0.001,
+        '--total_steps', total_steps,
+        '--max_episode_steps', max_episode_steps,
+        '--seed', 2060,
+        '--epsilon', 0.5
+    ]
+    predict_str_args = [str(s) for s in predict_str_args]
+    predict_args = parser.parse_args(predict_str_args)
+
+    print(f"Training 2e agent")
+
+    predict_agent, predict_test_env = init_and_train(predict_args)
 
     episodes_to_collect = 500
 
-    # obs_collected_obs, obs_collected_rew, _ = collect_observations(obs_agent, obs_test_env,
-    #                                                             n_episodes=episodes_to_collect,
-    #                                                             max_episode_steps=obs_args.max_episode_steps,
-    #                                                             test_eps=0.)
-    #
-    # unc_collected_obs, unc_collected_rew, _ = collect_observations(unc_agent, unc_test_env,
-    #                                                             n_episodes=episodes_to_collect,
-    #                                                             max_episode_steps=unc_args.max_episode_steps,
-    #                                                             test_eps=0.)
+    obs_collected_obs, obs_collected_rew, _, obs_all_states = collect_observations(obs_agent, obs_test_env,
+                                                                n_episodes=episodes_to_collect,
+                                                                max_episode_steps=obs_args.max_episode_steps,
+                                                                test_eps=0.)
+
+    unc_collected_obs, unc_collected_rew, _, unc_all_states = collect_observations(unc_agent, unc_test_env,
+                                                                n_episodes=episodes_to_collect,
+                                                                max_episode_steps=unc_args.max_episode_steps,
+                                                                test_eps=0.)
 
     pb_collected_obs, pb_collected_rew, _, pb_all_states = collect_observations(pb_agent, pb_test_env,
                                                                 n_episodes=episodes_to_collect,
                                                                 max_episode_steps=pb_args.max_episode_steps,
-                                                                test_eps=0.5)
+                                                                test_eps=0.)
 
-    gvf_collected_obs, gvf_collected_rew, gvf_collected_predictions, gvf_all_states = collect_observations(
-        gvf_agent, gvf_test_env,
-                                                              n_episodes=episodes_to_collect,
-                                                              max_episode_steps=gvf_args.max_episode_steps,
-                                                              test_eps=0.5)
+    predict_collected_obs, predict_collected_rew, _, predict_all_states = collect_observations(predict_agent, predict_test_env,
+                                                                                n_episodes=episodes_to_collect,
+                                                                                max_episode_steps=predict_args.max_episode_steps,
+                                                                                test_eps=0.)
+
+    # gvf_collected_obs, gvf_collected_rew, gvf_collected_predictions, gvf_all_states = collect_observations(
+    #     gvf_agent, gvf_test_env,
+    #                                                           n_episodes=episodes_to_collect,
+    #                                                           max_episode_steps=gvf_args.max_episode_steps,
+    #                                                           test_eps=0.5)
 
     results = {
-    #     '2': {
-    #         'args': obs_args.as_dict(),
-    #         'obs': obs_collected_obs,
-    #         'rews': obs_collected_rew
-    #     },
-    #     '2o': {
-    #         'args': unc_args.as_dict(),
-    #         'obs': unc_collected_obs,
-    #         'rews': unc_collected_rew
-    #
-    #     }
+        '2': {
+            'args': obs_args.as_dict(),
+            'obs': obs_collected_obs,
+            'rews': obs_collected_rew,
+            'states': obs_all_states
+        },
+        '2o': {
+            'args': unc_args.as_dict(),
+            'obs': unc_collected_obs,
+            'rews': unc_collected_rew,
+            'states': unc_all_states
+
+        },
         '2pb': {
             'args': pb_args.as_dict(),
             'obs': pb_collected_obs,
             'rews': pb_collected_rew,
             'states': pb_all_states
         },
-        '2f': {
-            'args': gvf_args.as_dict(),
-            'obs': gvf_collected_obs,
-            'rews': gvf_collected_rew,
-            'states': gvf_all_states,
-            'predictions': gvf_collected_predictions
-        }
+        '2e': {
+            'args': predict_args.as_dict(),
+            'obs': predict_collected_obs,
+            'rews': predict_collected_rew,
+            'states': predict_all_states
+        },
+        # '2f': {
+        #     'args': gvf_args.as_dict(),
+        #     'obs': gvf_collected_obs,
+        #     'rews': gvf_collected_rew,
+        #     'states': gvf_all_states,
+        #     'predictions': gvf_collected_predictions
+        # }
     }
     results_fname = Path(ROOT_DIR, 'results', 'lobster_data.npy')
     gt_agent_fname = Path(ROOT_DIR, 'results', f'2g_{gt_args.arch}_agent.pth')
     obs_agent_fname = Path(ROOT_DIR, 'results', f'2_{obs_args.arch}_agent.pth')
     unc_agent_fname = Path(ROOT_DIR, 'results', f'2o_{unc_args.arch}_agent.pth')
     pb_agent_fname = Path(ROOT_DIR, 'results', f'2pb_{pb_args.arch}_agent.pth')
+    predict_agent_fname = Path(ROOT_DIR, 'results', f'2e_{predict_args.arch}_agent.pth')
     gvf_agent_fname = Path(ROOT_DIR, 'results', f'2f_{gvf_args.arch}_agent.pth')
 
     save_info(results_fname, results)
@@ -322,6 +355,9 @@ if __name__ == "__main__":
     pb_agent.save(pb_agent_fname)
     print(f"Saved 2pb agent to {pb_agent_fname}")
 
-    gvf_agent.save(gvf_agent_fname)
-    print(f"Saved 2f agent to {gvf_agent_fname}")
+    predict_agent.save(predict_agent_fname)
+    print(f"Saved 2e agent to {predict_agent_fname}")
+
+    # gvf_agent.save(gvf_agent_fname)
+    # print(f"Saved 2f agent to {gvf_agent_fname}")
 

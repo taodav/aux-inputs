@@ -64,11 +64,7 @@ lobster_wrapper_map = {
     's': lf.GroundTruthStateWrapper,
     'p': lf.LobsterParticleFilterWrapper,
     'b': lf.BeliefStateWrapper,
-    'g': lf.GVFWrapper,
-    't': lf.GVFTileCodingWrapper,
-    'e': lf.PredictionObservationWrapper,
-    'f': lf.FixedGVFWrapper,
-    'c': lf.FixedGVFTileCodingWrapper
+    'e': lf.PredictionObservationWrapper
 }
 
 ocean_nav_wrapper_map = {
@@ -180,8 +176,6 @@ def get_lobster_env(rng: np.random.RandomState,
                     render: bool = False,
                     trace_decay: float = 0.8,
                     n_particles: int = 100,
-                    tile_code_obs: bool = False,
-                    fixed_gvf_path: Path = None,
                     **kwargs):
 
     env = LobsterFishing(rng, traverse_prob=traverse_prob)
@@ -194,10 +188,6 @@ def get_lobster_env(rng: np.random.RandomState,
             env = w(env, decay=trace_decay)
         elif w == lf.LobsterParticleFilterWrapper:
             env = w(env, n_particles=n_particles)
-        elif w == lf.FixedGVFWrapper:
-            env = w(env, checkpoint_fname=fixed_gvf_path)
-        elif w == lf.FixedGVFTileCodingWrapper:
-            env = w(env, checkpoint_fname=fixed_gvf_path, tile_code_obs=tile_code_obs)
         else:
             env = w(env)
 

@@ -57,6 +57,12 @@ class DQNAgent(Agent):
         action, self._rand_key, self.curr_q = self.functional_act(state, self.network_params, self._rand_key)
         return action
 
+    def policy(self, state: jnp.ndarray, network_params: hk.Params) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
+        greedy_idx, qs = self.greedy_act(state, network_params)
+        probs = probs.at[greedy_idx].add(1 - self.eps)
+        return probs, qs
+
     @partial(jit, static_argnums=0)
     def functional_act(self, state: jnp.ndarray,
                        network_params: hk.Params,
@@ -68,13 +74,11 @@ class DQNAgent(Agent):
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: epsilon-greedy action
         """
-        probs = jnp.zeros(self.n_actions) + self.eps / self.n_actions
-        greedy_idx, qs = self.greedy_act(state, network_params)
-        probs = probs.at[greedy_idx].add(1 - self.eps)
+        policy, qs = self.policy(state, network_params)
 
         key, subkey = random.split(rand_key)
 
-        return random.choice(subkey, np.arange(self.n_actions), p=probs, shape=(state.shape[0],)), key, qs
+        return random.choice(subkey, np.arange(self.n_actions), p=policy, shape=(state.shape[0],)), key, qs
 
     @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> Tuple[jnp.ndarray, jnp.ndarray]:

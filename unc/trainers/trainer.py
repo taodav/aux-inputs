@@ -15,11 +15,14 @@ from unc.eval import test_episodes
 
 
 class Trainer:
-    def __init__(self, args: Args, agent: Agent,
+    def __init__(self,
+                 args: Args,
+                 agent: Agent,
                  env: Union[gym.Env, gym.Wrapper],
                  test_env: Union[gym.Env, gym.Wrapper],
                  checkpoint_dir: Path = None,
-                 gvf: GeneralValueFunction = None):
+                 gvf: GeneralValueFunction = None
+                 ):
         self.args = args
         self.discounting = args.discounting
 
@@ -173,8 +176,6 @@ class Trainer:
                 hs = self.agent.state[None, :]
 
             action = self.agent.act(obs)
-            if self.agent.n_actions == 0:
-                action = np.array([self.env.action_space.sample()])
 
             if self.gvf is not None:
                 self.env.predictions = self.agent.current_gvf_predictions[0]
@@ -200,8 +201,6 @@ class Trainer:
                 gamma = (1 - done) * self.discounting
 
                 next_action = self.agent.act(next_obs)
-                if self.agent.n_actions == 0:
-                    next_action = np.array([self.env.action_space.sample()])
 
                 batch = Batch(obs=obs, action=action, next_obs=next_obs,
                               gamma=gamma, reward=reward, next_action=next_action)
