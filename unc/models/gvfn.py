@@ -53,8 +53,8 @@ def mult_action_gvfn(layers: List[int],
     b_init = hk.initializers.Constant(0)
 
     w1 = hk.get_parameter('w1', shape=(n_actions, x.shape[-1], layers[0]), init=init)
-    selected_action_w1 = jnp.dot(one_hot_actions, w1)
-    current_output = jnp.dot(x, selected_action_w1)
+    selected_action_w1 = jnp.einsum('ij,jkl->ikl', one_hot_actions, w1)
+    current_output = jnp.einsum('ij,ijk->ik', x, selected_action_w1)
 
     if with_bias:
         b1 = hk.get_parameter('b1', shape=(n_actions, layers[0]), init=b_init)
@@ -66,8 +66,8 @@ def mult_action_gvfn(layers: List[int],
     i = 0
     while i < (len(layers) - 1):
         wi = hk.get_parameter(f'w{i}', shape=(n_actions, layers[i], layers[i + 1]), init=init)
-        selected_action_wi = jnp.dot(one_hot_actions, wi)
-        current_output = jnp.dot(current_output, selected_action_wi)
+        selected_action_wi = jnp.einsum('ij,jkl->ikl', one_hot_actions, wi)
+        current_output = jnp.einsum('ij,ijk->ik', current_output, selected_action_wi)
 
         if with_bias:
             bi = hk.get_parameter(f'b{i}', shape=(n_actions, layers[i + 1]), init=b_init)
@@ -77,8 +77,8 @@ def mult_action_gvfn(layers: List[int],
         current_output = jax.nn.relu(current_output)
 
     value_w = hk.get_parameter('wv', shape=(n_actions, layers[-1], n_predictions), init=init)
-    selected_action_wv = jnp.dot(one_hot_actions, value_w)
-    value = jnp.dot(current_output, selected_action_wv)
+    selected_action_wv = jnp.einsum('ij,jkl->ikl', one_hot_actions, value_w)
+    value = jnp.einsum('ij,ijk->ik', current_output, selected_action_wv)
 
     if with_bias:
         value_b = hk.get_parameter('bv', shape=(n_actions, n_predictions), init=b_init)

@@ -46,7 +46,7 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
     else:
-        if '2' in args.env and ('g' in args.env or 't' in args.env) and n_predictions > 0:
+        if n_predictions > 0:
             if gvf_trainer == 'control':
                 # TODO: incorporate a GVFPredictionAgent into the control agent.
                 raise NotImplementedError

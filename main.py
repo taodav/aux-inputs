@@ -71,14 +71,14 @@ if __name__ == "__main__":
     # we don't use a bias unit if we're using ground-truth states
     with_bias = not (('g' in args.env or 's' in args.env) and model_str == 'linear')
     network = build_network(args.n_hidden, n_actions, model_str=model_str, with_bias=with_bias,
-                            init=args.weight_init, layers=args.layers, action_cond=args.action_cond)
+                            init=args.weight_init, layers=args.layers, action_cond=args.action_cond, n_predictions=n_predictions)
     optimizer = get_optimizer(args.optim, args.step_size)
 
 
     # Initialize agent
     n_actions = train_env.action_space.n
     agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer,
-                                n_predictions=n_predictions)
+                                n_predictions=n_predictions, gvf_trainer=args.gvf_trainer)
 
     # Initialize our trainer
     trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env, checkpoint_dir,

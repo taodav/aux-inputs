@@ -41,8 +41,8 @@ def build_network(hidden_size: int, output_size: int,
     elif (model_str == 'nn' or model_str == 'linear') and n_predictions > 0:
         if action_cond == 'mult':
             # We have a sigmoid output if we DON'T tile code our inputs.
-            network_fn = partial(mult_action_gvfn, layers, output_size, n_predictions,
-                                 sigmoid_output=not tile_code_gvfs)
+            network_fn = partial(mult_action_gvfn, hidden_layers, output_size, n_predictions,
+                                 sigmoid_output=not tile_code_gvfs, with_bias=with_bias, init=init)
         else:
             raise NotImplementedError
             # network_fn = partial(gvfn, hidden_layers, n_actions_gvfs, output_size,

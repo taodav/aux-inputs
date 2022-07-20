@@ -77,6 +77,7 @@ class PredictionTrainer(Trainer):
 
             # we need o_2 observation here for our predictions
             obs, reward, done, info = self.env.step(prev_action.item())
+            obs, reward, done, info, prev_action = preprocess_step(obs, reward, done, info, prev_action.item())
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
