@@ -5,8 +5,5 @@ from .render import LobsterFishingRenderWrapper
 from .pf import LobsterParticleFilterWrapper
 from .predict import PredictionObservationWrapper
 from .belief import BeliefStateWrapper
-from .gvf import GVFWrapper
-from .gvf_tc import GVFTileCodingWrapper
-from .fixed_gvf import FixedGVFWrapper
-from .fixed_gvf_tc import FixedGVFTileCodingWrapper
+from .dummy_gvf import DummyGVFWrapper
 

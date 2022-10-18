@@ -8,7 +8,7 @@ from time import time, ctime
 from unc.envs import get_env
 from unc.args import Args, hash_training_args
 from unc.trainers import get_or_load_trainer
-from unc.utils.gvfs import get_gvfs
+from unc.gvfs import get_gvfs
 from unc.utils import save_info
 from unc.models import build_network
 from unc.agents import get_agent

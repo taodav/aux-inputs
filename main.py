@@ -1,6 +1,5 @@
 import numpy as np
 import jax
-import jax.numpy as jnp
 from jax import random
 from pathlib import Path
 
@@ -14,7 +13,7 @@ from unc.utils import save_info, save_video
 from unc.utils.files import init_files
 from unc.optim import get_optimizer
 from unc.eval import test_episodes
-from unc.utils.gvfs import get_gvfs
+from unc.gvfs import get_gvfs
 from definitions import ROOT_DIR
 
 

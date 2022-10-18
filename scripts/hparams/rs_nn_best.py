@@ -16,7 +16,8 @@ hparams = {
                 'offline_eval_freq': [2500],
                 'total_steps': [1500000],
                 'rock_obs_init': [0.5],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -34,7 +35,8 @@ hparams = {
                 'offline_eval_freq': [2500],
                 'total_steps': [1500000],
                 'rock_obs_init': [0.0],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -50,7 +52,8 @@ hparams = {
                 'offline_eval_freq': [2500],
                 'total_steps': [1500000],
                 'rock_obs_init': [0.5],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -67,7 +70,8 @@ hparams = {
                 'offline_eval_freq': [2500],
                 'total_steps': [1500000],
                 'rock_obs_init': [0.0],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -83,7 +87,8 @@ hparams = {
                 'offline_eval_freq': [2500],
                 'total_steps': [1500000],
                 'rock_obs_init': [0.0],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
 
         ]

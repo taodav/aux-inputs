@@ -70,6 +70,12 @@ class RockSample(Environment):
         self.current_rocks_obs = np.zeros(self.k) + rock_obs_init
 
         # Given a random seed, generate the map
+        """
+        TODO: refactor this so that rock positions are passed in, and sampled
+        outside of the environment init.
+        This is due to the train and test envs generating different
+        rock positions.
+        """
         self.generate_map()
 
     @property

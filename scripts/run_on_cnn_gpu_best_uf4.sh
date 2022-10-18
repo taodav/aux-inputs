@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=12G
 #SBATCH --time=0-12:00
-#SBATCH --array=1-10
+#SBATCH --array=1-5
 
 # MAKE SURE array here is num_jobs // RUNS_PER_JOB
 

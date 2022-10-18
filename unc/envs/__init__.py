@@ -64,6 +64,7 @@ lobster_wrapper_map = {
     's': lf.GroundTruthStateWrapper,
     'p': lf.LobsterParticleFilterWrapper,
     'b': lf.BeliefStateWrapper,
+    'd': lf.DummyGVFWrapper,
     'e': lf.PredictionObservationWrapper
 }
 

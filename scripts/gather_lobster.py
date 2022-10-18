@@ -7,7 +7,7 @@ from unc.envs import get_env, Environment
 from unc.envs.wrappers.lobster import FixedGVFTileCodingWrapper
 from unc.args import Args
 from unc.trainers import get_or_load_trainer
-from unc.utils.gvfs import get_gvfs
+from unc.gvfs import get_gvfs
 from unc.models import build_network
 from unc.agents import Agent, get_agent
 from unc.optim import get_optimizer

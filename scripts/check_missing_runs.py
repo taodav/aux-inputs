@@ -46,14 +46,16 @@ def compare_args(arg, res_arg):
 
 if __name__ == "__main__":
     # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'lobster_nn_gvf_sweep.txt')
-    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf8_cnn_best.txt')
+    # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf8_cnn_best.txt')
     # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_uf8_cnn_lstm_best.txt')
     # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'lobster_nn_gvf_fixed_sweep.txt')
+    run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_rs_best.txt')
     # results_dir_path = Path(ROOT_DIR, 'results')
     results_dir_path = Path(Path.home(), 'scratch', 'uncertainty', 'results')
-    all_results_paths = [results_dir_path / 'uf8m_cnn', results_dir_path / 'uf8a_cnn']
+    # all_results_paths = [results_dir_path / 'uf8m_cnn', results_dir_path / 'uf8a_cnn']
     # all_results_paths = [results_dir_path / 'uf8m_cnn_lstm']
     # all_results_paths = [results_dir_path / '2t_nn']
+    all_results_paths = [results_dir_path / 'rg_lstm', results_dir_path / 'rg_nn', results_dir_path / 'rpg_nn', results_dir_path / 'rsg_nn', results_dir_path / 'rxg_nn']
 
     # run_file_path = Path(ROOT_DIR, 'scripts', 'runs', 'runs_rs_lstm_no_cat.txt')
     # results_dir_path = Path(Path.home(), 'scratch', 'uncertainty', 'results')

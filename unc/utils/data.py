@@ -12,9 +12,9 @@ from typing import Union, Iterable, List, Tuple
 class Batch:
     obs: Union[np.ndarray, Iterable]
     action: Union[np.ndarray, Iterable]
-    prev_action: Union[np.ndarray, Iterable]
     next_obs: Union[np.ndarray, Iterable]
     reward: Union[np.ndarray, Iterable]
+    prev_action: Union[np.ndarray, Iterable] = None
     done: Union[np.ndarray, Iterable] = None
     gamma: Union[np.ndarray, Iterable] = None
     next_action: Union[np.ndarray, Iterable] = None

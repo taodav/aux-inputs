@@ -10,7 +10,7 @@ from .prediction_trainer import PredictionTrainer
 from unc.agents import Agent
 from unc.args import Args
 from unc.envs import Environment
-from unc.utils.gvfs import GeneralValueFunction
+from unc.gvfs import GeneralValueFunction
 from unc.utils.replay import ReplayBuffer
 from unc.utils.files import load_checkpoint
 

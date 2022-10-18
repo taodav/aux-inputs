@@ -1,14 +1,13 @@
 import gym
 import numpy as np
-from typing import Union
+from typing import Union, Callable
 from time import time, ctime
 from pathlib import Path
-from collections import deque
 
 from unc.args import Args
 from unc.agents import GVFPredictionAgent
-from unc.utils.data import Batch, preprocess_step, get_action_encoding
-from unc.utils.gvfs import GeneralValueFunction
+from unc.utils.data import Batch, preprocess_step
+from unc.gvfs import GeneralValueFunction
 from .trainer import Trainer
 
 
@@ -19,10 +18,27 @@ class PredictionTrainer(Trainer):
                  env: Union[gym.Env, gym.Wrapper],
                  test_env: Union[gym.Env, gym.Wrapper],
                  checkpoint_dir: Path = None,
-                 gvf: GeneralValueFunction = None
+                 gvf: GeneralValueFunction = None,
+                 eval_function: Callable = None,
                  ):
         super(PredictionTrainer, self).__init__(args, agent, env, test_env,
                                                 checkpoint_dir=checkpoint_dir, gvf=gvf)
+        self.eval_function = eval_function
+
+    def offline_evaluation(self):
+        # For offline evaluation, we want to evaluate on ground truth data.
+        # We compare to MSVE of the underlying ground-truth state.
+        if self.eval_function is not None:
+            eval_dict = self.eval_function(self.agent, self.gvf, self.test_env, gamma=self.discounting)
+
+            if 'eval_str' in eval_dict:
+                self._print(eval_dict['eval_str'])
+
+            for k, v in eval_dict.items():
+                if k != 'eval_str':
+                    if k not in self.info:
+                        self.info[k] = []
+                    self.info[k].append(v)
 
     def train(self) -> None:
         assert self.info is not None, "Reset the trainer before training"

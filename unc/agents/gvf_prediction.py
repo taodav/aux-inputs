@@ -40,6 +40,8 @@ class GVFPredictionAgent(DQNAgent):
                 'scale_output': False
             })
             features_shape = (features_shape[0] + self.tc.features(),)
+        else:
+            features_shape = (features_shape[0] + self.n_gvfs,)
 
         self.features_shape = features_shape
         self.n_hidden = args.n_hidden

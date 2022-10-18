@@ -11,7 +11,8 @@ hparams = {
                 'step_size': [0.0001],
                 'offline_eval_freq': [2000],
                 'total_steps': [1000000],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -22,7 +23,8 @@ hparams = {
                 'step_size': [0.001],
                 'offline_eval_freq': [2000],
                 'total_steps': [1000000],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
             {
                 'algo': ['sarsa'],
@@ -33,7 +35,8 @@ hparams = {
                 'step_size': [0.0001],
                 'offline_eval_freq': [2000],
                 'total_steps': [1000000],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             },
         ]
 }

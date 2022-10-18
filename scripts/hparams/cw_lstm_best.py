@@ -15,7 +15,8 @@ hparams = {
                 'batch_size': [64],
                 'buffer_size': [100000],
                 'total_steps': [1000000],
-                'seed': [(i + 2020) for i in range(30)]
+                # 'seed': [(i + 2020) for i in range(30)]
+                'seed': [(i + 2020) for i in range(30, 40)]
             }
         ]
 }

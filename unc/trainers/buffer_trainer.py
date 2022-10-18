@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Union, List
 from time import time, ctime
 from jax import random
 from pathlib import Path
@@ -9,12 +8,11 @@ from unc.envs import Environment
 from unc.agents import Agent, LSTMAgent
 from unc.utils import ReplayBuffer, EpisodeBuffer
 from unc.utils.data import Batch, zip_batches, get_action_encoding
-from unc.utils.gvfs import GeneralValueFunction
+from unc.gvfs import GeneralValueFunction
 
 from .trainer import Trainer
 
 # DEBUGGING
-from unc.debug import summarize_checks, all_unchecked_rock_q_vals
 
 
 class BufferTrainer(Trainer):

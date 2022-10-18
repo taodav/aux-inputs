@@ -5,11 +5,12 @@ from jax import random
 from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.agents import get_agent
+from unc.eval import lobster_gvf_eval
 from unc.trainers.prediction_trainer import PredictionTrainer
-from unc.gvfs.slightly_less_simple_chain import SlightlyLessSimpleChainGVF
-from unc.envs.slightly_less_simple_chain import SlightlyLessSimpleChain
-from unc.eval import slightly_less_simple_chain_gvf_eval
+from unc.gvfs.lobster import LobsterGVFs
+from unc.utils import save_info
 from unc.utils.files import init_files
+from unc.envs import get_env
 from unc.args import Args
 
 
@@ -17,15 +18,16 @@ if __name__ == "__main__":
     gvf_str_args = [
         '--algo', 'sarsa',
         '--arch', 'nn',
+        '--env', '2',
         '--discounting', 0.9,
         '--step_size', 0.00001,
         '--total_steps', int(5e5),
         '--max_episode_steps', 200,
-        '--seed', 2022,
-        '--epsilon', 0.1,
+        '--seed', 2024,
         '--offline_eval_freq', 1000,
         '--action_cond', 'mult',
         '--gvf_trainer', 'prediction',
+        # '--layers', 3,
         # '--tile_code_gvfs'
     ]
     gvf_str_args = [str(s) for s in gvf_str_args]
@@ -50,10 +52,10 @@ if __name__ == "__main__":
     train_env_key, test_env_key, rand_key = random.split(rand_key, 3)
 
     # Initializing our environment, args we need are filtered out in get_env
-    train_env = SlightlyLessSimpleChain()
-    test_env = SlightlyLessSimpleChain()
+    train_env = get_env(rng, train_env_key, args)
+    test_env = get_env(rng, test_env_key, args)
 
-    gvf = SlightlyLessSimpleChainGVF(train_env.action_space.n, args.discounting)
+    gvf = LobsterGVFs(train_env.action_space.n, args.discounting)
 
     model_str = args.arch
     features_shape = train_env.observation_space.shape
@@ -71,12 +73,20 @@ if __name__ == "__main__":
                                 n_predictions=n_predictions, gvf_trainer=args.gvf_trainer)
 
     trainer = PredictionTrainer(args, agent, train_env, test_env, checkpoint_dir, gvf,
-                                eval_function=slightly_less_simple_chain_gvf_eval)
+                                eval_function=lobster_gvf_eval)
+    # trainer = PredictionTrainer(args, agent, train_env, test_env, checkpoint_dir, gvf)
     trainer.reset()
 
     trainer.train()
 
+    trainer.checkpoint()
+
     info = trainer.get_info()
+
+    print(f"Saving results to {results_path}")
+    save_info(results_path, info)
+
+
 
 
 

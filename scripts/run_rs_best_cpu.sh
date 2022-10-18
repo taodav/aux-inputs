@@ -1,14 +1,14 @@
 #!/bin/sh
 
-#SBATCH --account=rrg-whitem
+#SBATCH --account=def-amw8
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rtao3@ualberta.ca
 #SBATCH --error=/home/taodav/scratch/log/uncertainty/rs-%j-%n-%a.err
 #SBATCH --output=/home/taodav/scratch/log/uncertainty/rs-%j-%n-%a.out
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=4G
-#SBATCH --time=0-12:00
-#SBATCH --array=1-150
+#SBATCH --time=0-24:00
+#SBATCH --array=18
 
 cd ../  # Go to main project folder
 source venv/bin/activate

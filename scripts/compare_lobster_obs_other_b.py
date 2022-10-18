@@ -7,7 +7,7 @@ from definitions import ROOT_DIR
 from unc.args import Args
 from unc.envs import get_env
 from unc.trainers import get_or_load_trainer
-from unc.utils.gvfs import get_gvfs
+from unc.gvfs import get_gvfs
 from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.agents import get_agent

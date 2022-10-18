@@ -1,7 +1,9 @@
 import numpy as np
 from typing import Union
 
+from unc.envs.slightly_less_simple_chain import SlightlyLessSimpleChain
 from .base import GeneralValueFunction
+
 
 
 class SlightlyLessSimpleChainGVF(GeneralValueFunction):
@@ -29,7 +31,8 @@ class SlightlyLessSimpleChainGVF(GeneralValueFunction):
         return state[:, -1] == 1
 
     def policy(self, state: np.ndarray) -> np.ndarray:
-        pis = np.ones((state.shape[0], 1, self.n_actions)) / self.n_actions
+        pis = np.zeros((state.shape[0], 1, self.n_actions))
+        pis[:, :, 1] = 1
         return pis
 
     def impt_sampling_ratio(self, state: np.ndarray, b: np.ndarray, actions: np.ndarray) -> np.ndarray:

@@ -10,7 +10,7 @@ from collections import deque
 from unc.args import Args
 from unc.agents import Agent
 from unc.utils.data import Batch, preprocess_step, get_action_encoding
-from unc.utils.gvfs import GeneralValueFunction
+from unc.gvfs import GeneralValueFunction
 from unc.eval import test_episodes
 
 

@@ -21,6 +21,7 @@ hparams = {
             'total_steps': [2000000],
             'offline_eval_freq': [2000],
             'platform': ["gpu"],
-            'seed': [(i + 2020) for i in range(30)]
+            # 'seed': [(i + 2020) for i in range(30)]
+            'seed': [(i + 2020) for i in range(30, 35)]
         }]
 }

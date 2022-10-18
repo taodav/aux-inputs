@@ -1,7 +1,7 @@
 import numpy as np
 from jax import random
 
-from unc.utils.gvfs.lobster import LobsterGVFs
+from unc.gvfs.lobster import LobsterGVFs
 from unc.envs import get_env
 from unc.args import Args
 

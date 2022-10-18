@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=3G
 #SBATCH --time=0-1:00
-#SBATCH --array=1-90
+#SBATCH --array=1-30
 
 cd ../  # Go to main project folder
 source venv/bin/activate
