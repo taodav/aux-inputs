@@ -34,8 +34,8 @@ class Args(Tap):
     d = [COMPASSWORLD] Noisy corridor environment.
     4 = [FOUR ROOM] Four room environment.
     """
-    algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa)
-    arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm)
+    algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa | ppo)
+    arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm | actor_critic)
     optim: str = 'adam'  # What kind of optimizer do we use? (adam | sgd)
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 9  # How large do we want each dimension of our gridworld to be?

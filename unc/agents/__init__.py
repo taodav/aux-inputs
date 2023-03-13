@@ -13,6 +13,7 @@ from .k_lstm import kLSTMAgent
 from .dist_lstm import DistributionalLSTMAgent
 from .gvf_control import GVFControlAgent
 from .gvf_prediction import GVFPredictionAgent
+from .ppo import PPOAgent
 from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.args import Args
@@ -45,6 +46,11 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
+    elif args.arch == 'actor_critic':
+        if args.algo != 'ppo':
+            raise NotImplementedError(f'{args.algo} algorithm w/ Actor-Critic arch not implemented yet')
+        actor_network, critic_network = network
+        agent = PPOAgent(actor_network, critic_network, optimizer, features_shape, n_actions, agent_key, args)
     else:
         if n_predictions > 0:
             if gvf_trainer == 'control':
