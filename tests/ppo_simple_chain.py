@@ -39,10 +39,18 @@ def test_ppo_simple_chain():
     n_actions = train_env.action_space.n
     agent, rand_key = get_agent(args, features_shape, n_actions, rand_key, network, optimizer)
 
-    trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env, checkpoint_dir,
-                                            prefilled_buffer=None)
+    trainer, rand_key = get_or_load_trainer(args, rand_key, agent, train_env, test_env)
 
     trainer.train()
+
+    all_obs = np.eye(n)
+    predicted_vs = agent.V(all_obs, agent.critic_network_params)
+    ground_truth_vs = args.discounting**np.arange(n - 1)
+    print("Final values learnt:")
+    print(predicted_vs)
+
+    print("Ground-truth values:")
+    print(ground_truth_vs)
 
 
 if __name__ == "__main__":

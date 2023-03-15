@@ -66,10 +66,10 @@ def build_network(hidden_size: int, output_size: int,
         network_fn = partial(cnn_lstm, hidden_size, output_size)
         network = hk.without_apply_rng(hk.transform(network_fn))
     elif model_str == 'actor_critic':
-        actor_fn = partial(actor_nn, hidden_size, output_size)
+        actor_fn = partial(actor_nn, hidden_layers, output_size)
         actor_network = hk.without_apply_rng(hk.transform(actor_fn))
 
-        critic_fn = partial(critic_nn, hidden_size, output_size)
+        critic_fn = partial(critic_nn, hidden_layers)
         critic_network = hk.without_apply_rng(hk.transform(critic_fn))
         return (actor_network, critic_network)
 

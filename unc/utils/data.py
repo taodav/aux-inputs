@@ -39,14 +39,15 @@ class Batch:
     advantages: Union[np.ndarray, Iterable] = None
 
     def tree_flatten(self):
-        children = ((field.name, getattr(self, field.name)) for field in fields(self))
+        children = tuple((field.name, getattr(self, field.name)) for field in fields(self))
         aux_data = None
         return (children, aux_data)
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        dict_children = {k: v for k, v in children}
-        return cls(**dict_children)
+        # dict_children = {k: v for k, v in children}
+        # return cls(**dict_children)
+        return cls(*children)
 
 
 def preprocess_step(obs: np.ndarray,

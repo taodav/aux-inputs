@@ -14,6 +14,7 @@ from typing import Tuple, Callable, Iterable
 from unc.args import Args
 from unc.models import build_network
 from unc.utils.data import Batch
+from unc.utils.math import mse
 
 from .base import Agent
 
@@ -26,15 +27,18 @@ def process_sampled_batch(b: Batch, gae_lambda: float = .95):
     """
 
     advantages = []
-    gae = 0.
-    for t in reversed(range(len(b.reward))):
-        value_diff = b.gamma * b.value[t + 1] - b.value[t]
-        delta = b.reward[t] + value_diff
-        gae = delta + b.gamma * gae_lambda * gae
+    gae = np.zeros(b.reward.shape[0])
+    gae_lambda_arr = np.ones_like(gae) * gae_lambda
+    for t in reversed(range(b.reward.shape[-1])):
+        value_diff = b.gamma[:, t] * b.value[:, t + 1] - b.value[:, t]
+        delta = b.reward[:, t] + value_diff
+        gae = delta + b.gamma[:, t] * gae_lambda_arr * gae
         advantages.append(gae)
     advantages = advantages[::-1]
-    advantages = jnp.array(advantages)
-    return advantages, advantages + b.value[:-1]
+    advantages = jnp.array(advantages).T
+    v_target = advantages + b.value[:, :-1]
+    return Batch(obs=b.obs, action=b.action, gamma=b.gamma, reward=b.reward, log_prob=b.log_prob,
+                 value=v_target, advantages=advantages)
 
 def ppo_loss(v_obs: np.ndarray, v_target: np.ndarray,
              pi: np.ndarray, action: int, old_log_prob: np.ndarray,
@@ -50,10 +54,10 @@ def ppo_loss(v_obs: np.ndarray, v_target: np.ndarray,
     # policy gradient
     log_prob = dist.log_prob(action)
 
-    ratio = np.exp(log_prob - old_log_prob)
+    ratio = jnp.exp(log_prob - old_log_prob)
     p_loss1 = ratio * advantages
-    p_loss2 = np.clip(ratio, 1 - eps, 1 + eps) * advantages
-    policy_loss = -np.fmin(p_loss1, p_loss2)
+    p_loss2 = jnp.clip(ratio, 1 - eps, 1 + eps) * advantages
+    policy_loss = -jnp.fmin(p_loss1, p_loss2)
 
     loss = policy_loss + 0.001 * entropy_loss + critic_loss
 
@@ -102,7 +106,9 @@ class PPOAgent(Agent):
         return self.eps
 
     def act(self, state: np.ndarray) -> np.ndarray:
-        action, self._rand_key, self.curr_pi = self.functional_act(state, self.actor_network_params, self._rand_key)
+        assert state.shape[0] <= 1
+        action, self._rand_key, batch_curr_pi = self.functional_act(state, self.actor_network_params, self._rand_key)
+        self.curr_pi = batch_curr_pi[0]
         return action
 
     def policy(self, state: jnp.ndarray, actor_network_params: hk.Params) -> Tuple[jnp.ndarray, None]:
@@ -120,11 +126,15 @@ class PPOAgent(Agent):
         :param network_params: Optional. Potentially use another model to find action-values.
         :return: epsilon-greedy action
         """
+        assert state.shape[0] <= 1
         policy, _ = self.policy(state, network_params)
 
         key, subkey = random.split(rand_key)
 
-        return random.choice(subkey, np.arange(self.n_actions), p=policy, shape=(state.shape[0],)), key, policy
+        # return random.choice(subkey, np.expand_dims(np.arange(self.n_actions), 0).repeat(state.shape[0], 0),
+        #                      p=policy, shape=(state.shape[0],)), key, policy
+        return random.choice(subkey, np.arange(self.n_actions),
+                             p=policy[0], shape=(state.shape[0],)), key, policy
 
     @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> Tuple[jnp.ndarray, jnp.ndarray]:
@@ -150,12 +160,17 @@ class PPOAgent(Agent):
     def _loss(self, pi_params: hk.Params,
               v_params: hk.Params,
               b: Batch):
-        pi = self.actor_network.apply(pi_params, b.obs)
-        v_obs = self.critic_network.apply(v_params, b.obs)
+        curr_obs = b.obs[:, :-1]
+        flat_obs = curr_obs.reshape((-1, *curr_obs.shape[2:]))
+        flat_pi = self.actor_network.apply(pi_params, flat_obs)
+        flat_v = self.critic_network.apply(v_params, flat_obs)[:, 0]
 
-        err = self.batch_error_fn(v_obs, b.value, pi, b.actions, b.log_prob, b.advantages, self.ppo_eps)
+        pi = flat_pi.reshape(curr_obs.shape[0], curr_obs.shape[1], *flat_pi.shape[1:])
+        v = flat_v.reshape(curr_obs.shape[0], curr_obs.shape[1], *flat_v.shape[1:])
 
-        return err
+        err = self.batch_error_fn(v, b.value, pi, b.action, b.log_prob, b.advantages, np.ones(b.obs.shape[0])*self.ppo_eps)
+
+        return err.mean()
 
     @partial(jit, static_argnums=0)
     def functional_update(self,

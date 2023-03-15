@@ -60,7 +60,7 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
         trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key,
                                 checkpoint_dir=checkpoint_dir, prefilled_buffer=prefilled_buffer, gvf=gvf)
     elif args.algo == 'ppo':
-        trainer = PPO
+        trainer = PPOTrainer(args, agent, train_env, test_env, checkpoint_dir=checkpoint_dir, gvf=gvf)
     elif gvf_trainer == 'prediction':
         trainer = PredictionTrainer(args, agent, train_env, test_env, checkpoint_dir=checkpoint_dir, gvf=gvf)
     else:
