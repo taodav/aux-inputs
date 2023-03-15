@@ -4,7 +4,6 @@ from typing import Any
 
 from unc.envs import Environment
 
-
 class SimpleChain(Environment):
     def __init__(self, n: int = 10, reward_in_obs: bool = False):
         """
@@ -65,3 +64,10 @@ class SimpleChain(Environment):
         self.state = self.transition(self.state.copy(), action)
         return self.get_obs(self.state), self.get_reward(), self.get_terminal(), {}
 
+class FullyObservableSimpleChain(SimpleChain):
+    def __init__(self, n: int = 10, reward_in_obs: bool = False):
+        super().__init__(n=n, reward_in_obs=reward_in_obs)
+        self.observation_space = gym.spaces.MultiBinary(n)
+
+    def get_obs(self, state: np.ndarray) -> np.ndarray:
+        return self.state.copy()

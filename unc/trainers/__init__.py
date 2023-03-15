@@ -6,6 +6,7 @@ from pickle import UnpicklingError
 from .trainer import Trainer
 from .buffer_trainer import BufferTrainer
 from .prediction_trainer import PredictionTrainer
+from .ppo_trainer import PPOTrainer
 
 from unc.agents import Agent
 from unc.args import Args
@@ -58,6 +59,8 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
         rand_key, buffer_rand_key = random.split(rand_key, 2)
         trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key,
                                 checkpoint_dir=checkpoint_dir, prefilled_buffer=prefilled_buffer, gvf=gvf)
+    elif args.algo == 'ppo':
+        trainer = PPO
     elif gvf_trainer == 'prediction':
         trainer = PredictionTrainer(args, agent, train_env, test_env, checkpoint_dir=checkpoint_dir, gvf=gvf)
     else:

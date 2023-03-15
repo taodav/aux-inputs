@@ -3,11 +3,13 @@ import jax.numpy as jnp
 import haiku as hk
 from pathlib import Path
 from jax import random
+from jax.tree_util import register_pytree_node_class
 from PIL import Image
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Union, Iterable, List, Tuple
 
 
+@register_pytree_node_class
 @dataclass
 class Batch:
     obs: Union[np.ndarray, Iterable]
@@ -32,10 +34,19 @@ class Batch:
     impt_sampling_ratio: Union[np.ndarray, Iterable] = None
 
     # PPO stuff
-    old_log_prob: np.ndarray = None
-    v_target: np.ndarray = None
-    advantages: np.ndarray = None
+    log_prob: Union[np.ndarray, Iterable] = None
+    value: Union[np.ndarray, Iterable] = None
+    advantages: Union[np.ndarray, Iterable] = None
 
+    def tree_flatten(self):
+        children = ((field.name, getattr(self, field.name)) for field in fields(self))
+        aux_data = None
+        return (children, aux_data)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        dict_children = {k: v for k, v in children}
+        return cls(**dict_children)
 
 
 def preprocess_step(obs: np.ndarray,

@@ -17,6 +17,25 @@ from unc.utils.data import Batch
 
 from .base import Agent
 
+@partial(jit, static_argnames='gae_lambda')
+def process_sampled_batch(b: Batch, gae_lambda: float = .95):
+    """
+    This function process a sampled sequence batch of (obs, action, gamma, reward, log_prob, value)
+    into a batch for updating a PPO agent.
+    It explicitly calculates an advantage.
+    """
+
+    advantages = []
+    gae = 0.
+    for t in reversed(range(len(b.reward))):
+        value_diff = b.gamma * b.value[t + 1] - b.value[t]
+        delta = b.reward[t] + value_diff
+        gae = delta + b.gamma * gae_lambda * gae
+        advantages.append(gae)
+    advantages = advantages[::-1]
+    advantages = jnp.array(advantages)
+    return advantages, advantages + b.value[:-1]
+
 def ppo_loss(v_obs: np.ndarray, v_target: np.ndarray,
              pi: np.ndarray, action: int, old_log_prob: np.ndarray,
              advantages: np.ndarray, eps: float):
@@ -48,7 +67,8 @@ class PPOAgent(Agent):
                  n_actions: int,
                  rand_key: random.PRNGKey,
                  args: Args,
-                 ppo_eps: float = 0.2):
+                 ppo_eps: float = 0.2,
+                 ppo_lambda: float = 0.95):
         self.features_shape = features_shape
         self.n_hidden = args.n_hidden
         self.n_actions = n_actions
@@ -64,10 +84,16 @@ class PPOAgent(Agent):
         self.critic_optimizer_state = self.optimizer.init(self.critic_network_params)
         self.eps = args.epsilon
         self.ppo_eps = ppo_eps
+        self.ppo_lambda = ppo_lambda
         self.args = args
         self.curr_q = None
+        self.curr_pi = None
 
         self.batch_error_fn = vmap(ppo_loss)
+
+    def reset(self):
+        super().reset()
+        self.curr_pi = None
 
     def set_eps(self, eps: float):
         self.eps = eps
@@ -76,7 +102,7 @@ class PPOAgent(Agent):
         return self.eps
 
     def act(self, state: np.ndarray) -> np.ndarray:
-        action, self._rand_key, _ = self.functional_act(state, self.actor_network_params, self._rand_key)
+        action, self._rand_key, self.curr_pi = self.functional_act(state, self.actor_network_params, self._rand_key)
         return action
 
     def policy(self, state: jnp.ndarray, actor_network_params: hk.Params) -> Tuple[jnp.ndarray, None]:
@@ -98,7 +124,7 @@ class PPOAgent(Agent):
 
         key, subkey = random.split(rand_key)
 
-        return random.choice(subkey, np.arange(self.n_actions), p=policy, shape=(state.shape[0],)), key, None
+        return random.choice(subkey, np.arange(self.n_actions), p=policy, shape=(state.shape[0],)), key, policy
 
     @partial(jit, static_argnums=0)
     def greedy_act(self, state: np.ndarray, network_params: hk.Params) -> Tuple[jnp.ndarray, jnp.ndarray]:
@@ -111,7 +137,8 @@ class PPOAgent(Agent):
         pi = self.actor_network.apply(state, network_params=network_params)
         return jnp.argmax(pi, axis=1), pi
 
-    def Vs(self, state: np.ndarray, critic_network_params: hk.Params, *args) -> jnp.ndarray:
+    @jit
+    def V(self, state: np.ndarray, critic_network_params: hk.Params, *args) -> jnp.ndarray:
         """
         Get all Q-values given a state.
         :param state: (b x *state.shape) State to find action-values
@@ -122,15 +149,12 @@ class PPOAgent(Agent):
 
     def _loss(self, pi_params: hk.Params,
               v_params: hk.Params,
-              state: np.ndarray,
-              action: np.ndarray,
-              old_log_prob: np.ndarray,
-              v_target: np.ndarray,
-              advantages: np.ndarray):
-        pi = self.actor_network.apply(pi_params, state)
-        v_obs = self.critic_network.apply(v_params, state)
+              b: Batch):
+        pi = self.actor_network.apply(pi_params, b.obs)
+        v_obs = self.critic_network.apply(v_params, b.obs)
 
-        err = self.batch_error_fn(v_obs, v_target, pi, action, old_log_prob, advantages, self.ppo_eps)
+        err = self.batch_error_fn(v_obs, b.value, pi, b.actions, b.log_prob, b.advantages, self.ppo_eps)
+
         return err
 
     @partial(jit, static_argnums=0)
@@ -139,13 +163,10 @@ class PPOAgent(Agent):
                           v_params: hk.Params,
                           pi_optimizer_state: hk.State,
                           v_optimizer_state: hk.State,
-                          state: np.ndarray,
-                          action: np.ndarray,
-                          old_log_prob: np.ndarray,
-                          v_target: np.ndarray,
-                          advantages: np.ndarray
+                          b: Batch
                           ):
-        loss, (pi_grad, v_grad) = jax.value_and_grad(self._loss, argnums=[0, 1])(pi_params, v_params, state, action, old_log_prob, v_target, advantages)
+        processed_b = process_sampled_batch(b, gae_lambda=self.ppo_lambda)
+        loss, (pi_grad, v_grad) = jax.value_and_grad(self._loss, argnums=[0, 1])(pi_params, v_params, processed_b)
         # actor update
         updates, optimizer_state = self.optimizer.update(pi_grad, pi_optimizer_state, pi_params)
         pi_params = optax.apply_updates(pi_params, updates)
@@ -162,11 +183,10 @@ class PPOAgent(Agent):
         :param batch: Batch of data
         :return: loss
         """
-
         loss, network_params, self.optimizer_state = \
             self.functional_update(self.actor_network_params, self.critic_network_params,
                                    self.actor_optimizer_state, self.critic_optimizer_state,
-                                   b.obs, b.action, b.old_log_prob, b.v_target, b.advantages)
+                                   b)
         self.actor_network_params, self.critic_network_params = network_params
         return loss, {}
 
