@@ -83,7 +83,7 @@ class PPOTrainer(Trainer):
 
             action = self.agent.act(obs)
             log_prob = np.log(self.agent.curr_pi[action])
-            value = self.agent.V(obs, self.agent.critic_network_params)[0]
+            value = self.agent.value(obs, self.agent.critic_network_params)[0]
 
             for t in range(self.max_episode_steps):
                 self.agent.set_eps(self.get_epsilon())
@@ -104,7 +104,7 @@ class PPOTrainer(Trainer):
 
                 next_action = self.agent.act(next_obs)
                 next_log_prob = np.log(self.agent.curr_pi[next_action])
-                next_value = self.agent.V(next_obs, self.agent.critic_network_params)[0]
+                next_value = self.agent.value(next_obs, self.agent.critic_network_params)[0]
 
                 batch = Batch(obs=obs, action=action, gamma=gamma, reward=reward,
                               log_prob=log_prob, value=value)
@@ -118,15 +118,15 @@ class PPOTrainer(Trainer):
                     self.offline_evaluation()
 
                 # Logging and timing
-                if self.num_steps % log_interval == 0:
-                    time_to_check = True
-
-                    curr_time = time()
-                    time_per_fix_freq = curr_time - prev_time
-                    avg_time_per_log += (1 / num_logs) * (time_per_fix_freq - avg_time_per_log)
-                    time_remaining = (total_target_updates - num_logs) * avg_time_per_log
-                    self._print(f"Remaining time: {time_remaining / 60:.2f}")
-                    prev_time = curr_time
+                # if self.num_steps % log_interval == 0:
+                #     time_to_check = True
+                #
+                #     curr_time = time()
+                #     time_per_fix_freq = curr_time - prev_time
+                #     avg_time_per_log += (1 / num_logs) * (time_per_fix_freq - avg_time_per_log)
+                #     time_remaining = (total_target_updates - num_logs) * avg_time_per_log
+                #     self._print(f"Remaining time: {time_remaining / 60:.2f}")
+                #     prev_time = curr_time
 
                 if self.checkpoint_freq > 0 and self.num_steps % self.checkpoint_freq == 0:
                     checkpoint_after_ep = True
@@ -145,15 +145,15 @@ class PPOTrainer(Trainer):
             n_step_batch.value = [v for v in n_step_batch.value] + [next_value]
 
             numpy_batch = self.numpyify_batch(n_step_batch)
-            self.agent.update(numpy_batch)
+            loss, _ = self.agent.update(numpy_batch)
 
             self.episode_num += 1
-            self.post_episode_print(episode_reward, episode_loss, t)
+            self.post_episode_print(episode_reward, loss, t)
 
             # TODO: FOR DEBUGGING! delete
-            if self.episode_num % 20 == 0:
+            if self.episode_num % 100 == 0:
                 print(f"Learnt values after {self.episode_num} episodes:")
-                vals = np.array(self.agent.V(numpy_batch.obs, self.agent.critic_network_params)[0, :, 0])
+                vals = np.array(self.agent.value(numpy_batch.obs, self.agent.critic_network_params)[0, :-1, 0])
                 print(vals.round(3))
 
             if checkpoint_after_ep:

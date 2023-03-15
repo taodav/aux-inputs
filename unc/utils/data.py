@@ -39,7 +39,7 @@ class Batch:
     advantages: Union[np.ndarray, Iterable] = None
 
     def tree_flatten(self):
-        children = tuple((field.name, getattr(self, field.name)) for field in fields(self))
+        children = tuple(getattr(self, field.name) for field in fields(self))
         aux_data = None
         return (children, aux_data)
 

@@ -60,6 +60,7 @@ def ppo_loss(v_obs: np.ndarray, v_target: np.ndarray,
     policy_loss = -jnp.fmin(p_loss1, p_loss2)
 
     loss = policy_loss + 0.001 * entropy_loss + critic_loss
+    # loss = critic_loss
 
     return loss.sum()
 
@@ -147,8 +148,8 @@ class PPOAgent(Agent):
         pi = self.actor_network.apply(state, network_params=network_params)
         return jnp.argmax(pi, axis=1), pi
 
-    @jit
-    def V(self, state: np.ndarray, critic_network_params: hk.Params, *args) -> jnp.ndarray:
+    @partial(jit, static_argnames='self')
+    def value(self, state: np.ndarray, critic_network_params: hk.Params, *args) -> jnp.ndarray:
         """
         Get all Q-values given a state.
         :param state: (b x *state.shape) State to find action-values
@@ -168,7 +169,7 @@ class PPOAgent(Agent):
         pi = flat_pi.reshape(curr_obs.shape[0], curr_obs.shape[1], *flat_pi.shape[1:])
         v = flat_v.reshape(curr_obs.shape[0], curr_obs.shape[1], *flat_v.shape[1:])
 
-        err = self.batch_error_fn(v, b.value, pi, b.action, b.log_prob, b.advantages, np.ones(b.obs.shape[0])*self.ppo_eps)
+        err = self.batch_error_fn(v, jax.lax.stop_gradient(b.value), pi, b.action, b.log_prob, b.advantages, np.ones(b.obs.shape[0])*self.ppo_eps)
 
         return err.mean()
 
@@ -182,15 +183,16 @@ class PPOAgent(Agent):
                           ):
         processed_b = process_sampled_batch(b, gae_lambda=self.ppo_lambda)
         loss, (pi_grad, v_grad) = jax.value_and_grad(self._loss, argnums=[0, 1])(pi_params, v_params, processed_b)
+
         # actor update
-        updates, optimizer_state = self.optimizer.update(pi_grad, pi_optimizer_state, pi_params)
+        updates, actor_optimizer_state = self.optimizer.update(pi_grad, pi_optimizer_state, pi_params)
         pi_params = optax.apply_updates(pi_params, updates)
 
         # critic update
-        updates, optimizer_state = self.optimizer.update(v_grad, v_optimizer_state, v_params)
+        updates, critic_optimizer_state = self.optimizer.update(v_grad, v_optimizer_state, v_params)
         v_params = optax.apply_updates(v_params, updates)
 
-        return loss, (pi_params, v_params), optimizer_state
+        return loss, (pi_params, v_params), (actor_optimizer_state, critic_optimizer_state)
 
     def update(self, b: Batch) -> Tuple[float, dict]:
         """
@@ -198,11 +200,12 @@ class PPOAgent(Agent):
         :param batch: Batch of data
         :return: loss
         """
-        loss, network_params, self.optimizer_state = \
+        loss, network_params, optimizer_states = \
             self.functional_update(self.actor_network_params, self.critic_network_params,
                                    self.actor_optimizer_state, self.critic_optimizer_state,
                                    b)
         self.actor_network_params, self.critic_network_params = network_params
+        self.actor_optimizer_state, self.critic_optimizer_state = optimizer_states
         return loss, {}
 
     def save(self, path: Path):

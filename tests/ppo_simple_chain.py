@@ -19,7 +19,8 @@ def test_ppo_simple_chain():
     args.algo = 'ppo'
     args.arch = 'actor_critic'
     args.layers = 2
-    args.n_hidden = 2
+    args.n_hidden = 10
+    args.step_size = 1e-2
 
     np.random.seed(seed)
     rng = np.random.RandomState(seed)
