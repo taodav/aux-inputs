@@ -150,11 +150,17 @@ class PPOTrainer(Trainer):
             self.episode_num += 1
             self.post_episode_print(episode_reward, loss, t)
 
-            # TODO: FOR DEBUGGING! delete
+            # # TODO: FOR DEBUGGING! delete
             if self.episode_num % 100 == 0:
                 print(f"Learnt values after {self.episode_num} episodes:")
                 vals = np.array(self.agent.value(numpy_batch.obs, self.agent.critic_network_params)[0, :-1, 0])
                 print(vals.round(3))
+                print()
+                print(f"Learnt policy after {self.episode_num} episodes:")
+                policy, _ = self.agent.policy(numpy_batch.obs, self.agent.actor_network_params)
+                policy = np.array(policy)[:, :-1]
+                print(policy.round(3))
+                print()
 
             if checkpoint_after_ep:
                 self.checkpoint()
