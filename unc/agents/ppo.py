@@ -132,8 +132,6 @@ class PPOAgent(Agent):
 
         key, subkey = random.split(rand_key)
 
-        # return random.choice(subkey, np.expand_dims(np.arange(self.n_actions), 0).repeat(state.shape[0], 0),
-        #                      p=policy, shape=(state.shape[0],)), key, policy
         return random.choice(subkey, np.arange(self.n_actions),
                              p=policy[0], shape=(state.shape[0],)), key, policy
 

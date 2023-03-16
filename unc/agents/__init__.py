@@ -46,7 +46,7 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
     elif args.arch == 'nn' and args.exploration == 'noisy':
         agent = NoisyNetAgent(network, optimizer, features_shape,
                               n_actions, agent_key, args)
-    elif args.arch == 'actor_critic':
+    elif 'actor_critic' in args.arch:
         if args.algo != 'ppo':
             raise NotImplementedError(f'{args.algo} algorithm w/ Actor-Critic arch not implemented yet')
         actor_network, critic_network = network

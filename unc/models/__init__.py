@@ -8,7 +8,7 @@ from .noisy import noisy_network
 from .lstm import lstm, value
 from .cnn import cnn
 from .cnn_lstm import cnn_lstm
-from .actor_critic import actor_nn, critic_nn
+from .actor_critic import actor_nn, critic_nn, actor_cnn, critic_cnn
 
 def get_network(hidden_size: int, output_size: int, x: jnp.ndarray):
     q = QNetwork(hidden_size, output_size)
@@ -70,6 +70,13 @@ def build_network(hidden_size: int, output_size: int,
         actor_network = hk.without_apply_rng(hk.transform(actor_fn))
 
         critic_fn = partial(critic_nn, hidden_layers)
+        critic_network = hk.without_apply_rng(hk.transform(critic_fn))
+        return (actor_network, critic_network)
+    elif model_str == 'cnn_actor_critic':
+        actor_fn = partial(actor_cnn, hidden_size, output_size)
+        actor_network = hk.without_apply_rng(hk.transform(actor_fn))
+
+        critic_fn = partial(critic_cnn, hidden_size)
         critic_network = hk.without_apply_rng(hk.transform(critic_fn))
         return (actor_network, critic_network)
 
