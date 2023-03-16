@@ -12,6 +12,6 @@ hparams = {
             'total_steps': [250000],
             'max_episode_steps': [200],
             'n_particles': [100],
-            'seed': [(i + 2020) for i in range(30, 60)]
+            'seed': [(i + 2020) for i in range(60, 130)]
         }]
 }

@@ -240,8 +240,9 @@ class PPOAgent(Agent):
             model_str = args.exploration
         network = build_network(args.n_hidden, loaded['n_actions'], model_str=model_str)
         optimizer = optax.adam(args.step_size)
+        actor_network, critic_network = network
 
-        agent = agent_class(network, optimizer, loaded['features_shape'], loaded['n_actions'], loaded['rand_key'], args)
+        agent = agent_class(actor_network, critic_network, optimizer, loaded['features_shape'], loaded['n_actions'], loaded['rand_key'], args)
         agent.actor_network_params = loaded['actor_network_params']
         agent.critic_network_params = loaded['critic_network_params']
         agent.actor_optimizer_state = loaded['actor_optimizer_state']
