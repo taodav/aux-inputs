@@ -38,6 +38,8 @@ class ReplayBuffer:
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
         self.r = np.zeros(self.capacity, dtype=np.float)
+        self.returns = np.zeros(self.capacity, dtype=np.float)
+        self.include_returns = False
         self.d = np.zeros(self.capacity, dtype=bool)
 
         self._cursor = 0
@@ -59,6 +61,7 @@ class ReplayBuffer:
         self.a = np.zeros(self.capacity, dtype=np.int16)
         self.next_a = np.zeros(self.capacity, dtype=np.int16)
         self.r = np.zeros(self.capacity, dtype=np.float)
+        self.returns = np.zeros(self.capacity, dtype=np.float)
         self.d = np.zeros(self.capacity, dtype=bool)
 
         self.ei_cursor = 0
@@ -76,7 +79,12 @@ class ReplayBuffer:
 
         if self.prediction_size > 0 and batch.predictions is not None and batch.next_predictions is not None:
             self.predictions[self._cursor] = batch.predictions
+            # TODO: IS THIS A BUG?
             self.predictions[next_cursor] = batch.predictions
+
+        if batch.returns is not None:
+            self.returns[self._cursor] = batch.returns
+            self.include_returns = True
 
         self.obs[self._cursor] = batch.obs
         self.d[self._cursor] = batch.done
@@ -92,7 +100,7 @@ class ReplayBuffer:
         self._cursor = next_cursor
 
     def __len__(self):
-        return len(self.eligible_idxes)
+        return self.n_eligible_idxes
 
     def sample_eligible_idxes(self, batch_size: int):
         length = self.n_eligible_idxes
@@ -124,6 +132,8 @@ class ReplayBuffer:
         batch['next_action'] = self.next_a[sample_idx]
         batch['done'] = self.d[sample_idx]
         batch['reward'] = self.r[sample_idx]
+        if self.include_returns:
+            batch['returns'] = self.returns[sample_idx]
         batch['indices'] = sample_idx
 
         return Batch(**batch)
@@ -171,6 +181,8 @@ class EpisodeBuffer(ReplayBuffer):
         batch['next_action'] = self.next_a[sample_idx]
         batch['done'] = self.d[sample_idx]
         batch['reward'] = self.r[sample_idx]
+        if self.include_returns:
+            batch['returns'] = self.returns[sample_idx]
         batch['indices'] = sample_idx
         ends = self.end[sample_idx]
 

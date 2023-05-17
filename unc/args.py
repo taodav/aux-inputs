@@ -35,7 +35,7 @@ class Args(Tap):
     4 = [FOUR ROOM] Four room environment.
     """
     algo: str = 'sarsa'  # Which learning algorithm do we use? (sarsa | qlearning | esarsa | ppo)
-    arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm | actor_critic)
+    arch: str = 'nn'  # What kind of model architecture do we use? (nn | lstm | linear | cnn | cnn_lstm | actor_critic | multihead_lstm)
     optim: str = 'adam'  # What kind of optimizer do we use? (adam | sgd)
     exploration: str = 'eps'  # Which exploration method do we use? (eps | noisy)
     size: int = 9  # How large do we want each dimension of our gridworld to be?
@@ -110,6 +110,14 @@ class Args(Tap):
     batch_size: int = 64  # Batch size for buffer training
     p_prefilled: float = 0.  # What percentage of each batch is sampled from our prefilled buffer?
     buffer_size: int = 20000  # How large is our "online" buffer?
+
+    # Lambda discrepancy hypers
+    reward_scale: float = 1.
+    action_selector_mode: str = 'td'
+    lambda_1: float = 1.
+    gamma_terminal: bool = True
+    lambda_coefficient: float = 1.
+    update_mode: str = 'lambda'
 
     seed: int = 2020  # Random seed
 

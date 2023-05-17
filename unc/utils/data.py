@@ -22,6 +22,7 @@ class Batch:
     next_action: Union[np.ndarray, Iterable] = None
     state: Union[np.ndarray, Iterable] = None
     next_state: Union[np.ndarray, Iterable] = None
+    returns: Union[np.ndarray, Iterable] = None
 
     # mostly GVF stuff
     zero_mask: Union[np.ndarray, Iterable] = None

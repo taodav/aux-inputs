@@ -34,6 +34,7 @@ class LSTMAgent(DQNAgent):
 
         self._rand_key, network_rand_key = random.split(rand_key)
         self.network = network
+        self.hidden_state = None
         self.reset()
         self.network_params = self.network.init(rng=network_rand_key, x=jnp.zeros((1, self.trunc, *self.features_shape)),
                                                 h=self.hidden_state)
@@ -44,7 +45,6 @@ class LSTMAgent(DQNAgent):
         self.curr_q = None
 
         self.er_hidden_update = args.er_hidden_update
-        self.reset()
         if self.er_hidden_update == "grad":
             self.hidden_optimizer = optax.sgd(args.step_size)
             # This line.... it does nothing.

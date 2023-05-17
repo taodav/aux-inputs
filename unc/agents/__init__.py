@@ -14,6 +14,7 @@ from .dist_lstm import DistributionalLSTMAgent
 from .gvf_control import GVFControlAgent
 from .gvf_prediction import GVFPredictionAgent
 from .ppo import PPOAgent
+from .multi_head import MultiHeadLSTMAgent
 from unc.models import build_network
 from unc.optim import get_optimizer
 from unc.args import Args
@@ -31,7 +32,10 @@ def get_agent(args: Args, features_shape: Tuple[int, ...], n_actions: int, rand_
         features_shape = features_shape[:-1] + (features_shape[-1] + n_actions,)
 
     if 'lstm' in args.arch:
-        if args.k_rnn_hs > 1:
+        if args.arch == 'multihead_lstm':
+            agent = MultiHeadLSTMAgent(network, optimizer, features_shape,
+                                       n_actions, agent_key, args)
+        elif args.k_rnn_hs > 1:
             # value network takes as input mean + variance of hidden states and cell states.
             value_network = build_network(args.n_hidden, n_actions, model_str="seq_value")
             value_optimizer = get_optimizer(args.optim, args.value_step_size)

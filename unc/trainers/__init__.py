@@ -5,6 +5,7 @@ from pickle import UnpicklingError
 
 from .trainer import Trainer
 from .buffer_trainer import BufferTrainer
+from .buffer_mc_trainer import BufferMCTrainer
 from .prediction_trainer import PredictionTrainer
 from .ppo_trainer import PPOTrainer
 
@@ -57,8 +58,12 @@ def get_or_load_trainer(args: Args, rand_key: random.PRNGKey, agent: Agent,
 
     if args.replay:
         rand_key, buffer_rand_key = random.split(rand_key, 2)
-        trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key,
-                                checkpoint_dir=checkpoint_dir, prefilled_buffer=prefilled_buffer, gvf=gvf)
+        if args.arch == 'multihead_lstm':
+            trainer = BufferMCTrainer(args, agent, train_env, test_env, buffer_rand_key,
+                                      checkpoint_dir=checkpoint_dir, prefilled_buffer=prefilled_buffer, gvf=gvf)
+        else:
+            trainer = BufferTrainer(args, agent, train_env, test_env, buffer_rand_key,
+                                    checkpoint_dir=checkpoint_dir, prefilled_buffer=prefilled_buffer, gvf=gvf)
     elif args.algo == 'ppo':
         trainer = PPOTrainer(args, agent, train_env, test_env, checkpoint_dir=checkpoint_dir, gvf=gvf)
     elif gvf_trainer == 'prediction':

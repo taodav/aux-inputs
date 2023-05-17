@@ -5,7 +5,7 @@ from functools import partial
 from .q_network import QNetwork, nn
 from .gvfn import mult_action_gvfn
 from .noisy import noisy_network
-from .lstm import lstm, value
+from .lstm import lstm, value, multihead_lstm
 from .cnn import cnn
 from .cnn_lstm import cnn_lstm
 from .actor_critic import actor_nn, critic_nn, actor_cnn, critic_cnn
@@ -52,6 +52,9 @@ def build_network(hidden_size: int, output_size: int,
     elif model_str == 'nn' or model_str == 'linear':
         network_fn = partial(nn, hidden_layers, output_size,
                              with_bias=with_bias, init=init)
+        network = hk.without_apply_rng(hk.transform(network_fn))
+    elif model_str == 'multihead_lstm':
+        network_fn = partial(multihead_lstm, hidden_size, output_size)
         network = hk.without_apply_rng(hk.transform(network_fn))
     elif model_str == 'lstm':
         network_fn = partial(lstm, hidden_size, output_size)
