@@ -39,6 +39,7 @@ def seq_sarsa_mc_error(q: jnp.ndarray, a: jnp.ndarray, ret: jnp.ndarray):
 def seq_sarsa_lambda_error(qtd: jnp.ndarray, qmc: jnp.ndarray, a: jnp.ndarray):
     q_vals_td = qtd[jnp.arange(a.shape[0]), a]
     q_vals_mc = qmc[jnp.arange(a.shape[0]), a]
+    q_vals_mc = jax.lax.stop_gradient(q_vals_mc)
 
     return q_vals_td - q_vals_mc
 
