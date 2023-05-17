@@ -204,7 +204,7 @@ class MultiHeadLSTMAgent(LSTMAgent):
 
     @partial(jit, static_argnums=(0, 1))
     def functional_update(self,
-                          mode: str, # td, both, lambda
+                          mode: str, # td0, both, lambda, td_lambda
                           network_params: hk.Params,
                           optimizer_state: hk.State,
                           hidden_state: hk.LSTMState,
