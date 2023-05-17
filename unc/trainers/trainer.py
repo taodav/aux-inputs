@@ -3,6 +3,7 @@ import logging
 import dill
 from time import time, ctime
 import numpy as np
+import jax.numpy as jnp
 from typing import List, Any, Tuple, Union
 from pathlib import Path
 from collections import deque
@@ -309,6 +310,12 @@ class Trainer:
             print_str += ", "
             for k, v in additional_info.items():
                 print_str += f"{k}: {v / (t + 1):.4f}, "
+                if isinstance(v, jnp.ndarray) and len(v.shape) == 0:
+                    v = v.item()
+                if k not in self.info:
+                    self.info[k] = [v]
+                else:
+                    self.info[k].append(v)
         self._print(print_str)
 
     def _maybe_convert_rewards(self, rewards: List[Any]):
