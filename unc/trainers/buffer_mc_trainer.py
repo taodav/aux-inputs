@@ -2,6 +2,7 @@ import numpy as np
 from time import time, ctime
 from jax import random
 from pathlib import Path
+from tqdm import tqdm
 
 from unc.args import Args
 from unc.envs import Environment
@@ -51,6 +52,7 @@ class BufferMCTrainer(BufferTrainer):
         total_target_updates = self.total_steps // log_interval
         num_logs = 0
         avg_time_per_log = 0
+        pbar = tqdm(total=self.total_steps, position=0, leave=True)
 
         while self.num_steps < self.total_steps:
             episode_reward = 0
@@ -191,6 +193,7 @@ class BufferMCTrainer(BufferTrainer):
                 b.returns = ret
                 self.buffer.push(b)
 
+            pbar.update(t + 1)
             self.episode_num += 1
             self.post_episode_print(episode_reward, episode_loss, t,
                                     additional_info=episode_info)

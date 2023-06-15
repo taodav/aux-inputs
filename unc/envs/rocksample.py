@@ -67,7 +67,7 @@ class RockSample(Environment):
         self.agent_position = None
         self.sampled_rocks = None
         self.checked_rocks = None
-        self.current_rocks_obs = np.zeros(self.k) + rock_obs_init
+        self.current_rocks_obs = jnp.zeros(self.k) + rock_obs_init
 
         # Given a random seed, generate the map
         """
@@ -94,7 +94,7 @@ class RockSample(Environment):
         rm = self.rock_morality.copy()
         sr = self.sampled_rocks.copy()
         cro = self.current_rocks_obs.copy()
-        return np.concatenate([ap, rm, sr, cro])
+        return jnp.concatenate([ap, rm, sr, cro])
 
     @state.setter
     def state(self, state: np.ndarray):
@@ -140,10 +140,10 @@ class RockSample(Environment):
 
         return np.stack(states)
 
-    def sample_morality(self) -> np.ndarray:
+    def sample_morality(self) -> jnp.ndarray:
         assert self.rock_positions is not None
         rand_int = self.rng.random_integers(0, (1 << self.k) - 1)
-        return ((rand_int & (1 << np.arange(self.k))) > 0).astype(int)
+        return ((rand_int & (1 << jnp.arange(self.k))) > 0).astype(int)
 
     def get_terminal(self) -> bool:
         return self.agent_position[1] == (self.size - 1)
@@ -151,7 +151,7 @@ class RockSample(Environment):
     def batch_get_obs(self, states: np.ndarray) -> np.ndarray:
         raise NotImplementedError()
 
-    def get_obs(self, state: np.ndarray) -> np.ndarray:
+    def get_obs(self, state: np.ndarray) -> jnp.ndarray:
         """
         Observation is dependent on action here.
         Observation is a k + 2 vector:
@@ -163,9 +163,9 @@ class RockSample(Environment):
         """
         position, _, _, rocks_obs = self.unpack_state(state)
 
-        return np.concatenate([position, rocks_obs])
+        return jnp.concatenate([position, rocks_obs])
 
-    def get_reward(self, prev_state: np.ndarray, action: int) -> int:
+    def get_reward(self, prev_state: jnp.ndarray, action: int) -> int:
         """
         NOTE: this should be called AFTER transition happens
         :param action: action that you're planning on taking
@@ -191,8 +191,8 @@ class RockSample(Environment):
         return rew
 
     def reset(self):
-        self.sampled_rocks = np.zeros(len(self.rock_positions)).astype(bool)
-        self.checked_rocks = np.zeros_like(self.sampled_rocks).astype(bool)
+        self.sampled_rocks = jnp.zeros(len(self.rock_positions)).astype(bool)
+        self.checked_rocks = jnp.zeros_like(self.sampled_rocks).astype(bool)
         self.rock_morality = self.sample_morality()
         self.agent_position = self.sample_positions(1)[0]
         self.current_rocks_obs = np.zeros_like(self.current_rocks_obs) + self.rock_obs_init
@@ -278,11 +278,11 @@ class RockSample(Environment):
         return position
 
     @partial(jit, static_argnums=0)
-    def _sample_transition(self, position: np.ndarray,
-                           sampled_rocks: np.ndarray,
-                           current_rocks_obs: np.ndarray,
-                           rock_mortality: np.ndarray,
-                           rock_positions: np.ndarray):
+    def _sample_transition(self, position: jnp.ndarray,
+                           sampled_rocks: jnp.ndarray,
+                           current_rocks_obs: jnp.ndarray,
+                           rock_mortality: jnp.ndarray,
+                           rock_positions: jnp.ndarray):
         ele = (rock_positions == position)
         bool_pos = (ele[:, 0] & ele[:, 1]).astype(int)
 
@@ -327,9 +327,9 @@ class RockSample(Environment):
         :return: array of 1's of shape (batch_size, )
         """
         if len(states.shape) > 1:
-            ones = np.ones(states.shape[0])
+            ones = jnp.ones(states.shape[0])
         else:
-            ones = np.ones(1)
+            ones = jnp.ones(1)
         return ones
 
     def step(self, action: int):
@@ -338,11 +338,11 @@ class RockSample(Environment):
 
         rock_idx = action - 5
         if rock_idx >= 0:
-            self.checked_rocks[rock_idx] = True
+            self.checked_rocks = self.checked_rocks.at[rock_idx].set(True)
 
         return self.get_obs(self.state), self.get_reward(prev_state, action), self.get_terminal(), {}
 
-    def generate_array(self) -> np.ndarray:
+    def generate_array(self) -> jnp.ndarray:
         """
         Generate numpy array representing state.
         Mappings are as follows:
@@ -360,7 +360,7 @@ class RockSample(Environment):
         viz_array[int(self.agent_position[0]), int(self.agent_position[1])] += 1
 
         viz_array[:, self.size - 1] = 4
-        return viz_array
+        return jnp.array(viz_array)
 
 
 

@@ -59,7 +59,7 @@ class Trainer:
         self.info = None
         self.trunc = args.trunc if 'lstm' in args.arch else 0
 
-        logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
+        # logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
 
     def reset(self):
         """
